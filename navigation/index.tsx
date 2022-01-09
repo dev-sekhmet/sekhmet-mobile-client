@@ -16,8 +16,17 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import TabOneScreen from '../screens/TabOneScreen';
 import TabTwoScreen from '../screens/TabTwoScreen';
-import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
+import Chat from '../screens/Chat';
+import {
+  AccountStackParamList,
+  RootStackParamList,
+  RootTabParamList,
+  RootTabScreenProps,
+  TabTwoStackParamList
+} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
+import Login from "../screens/login/login";
+import {Account} from "../screens/account/Account";
 
 export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
   return (
@@ -28,6 +37,7 @@ export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeNa
     </NavigationContainer>
   );
 }
+
 
 /**
  * A root stack navigator is often used for displaying modals on top of all other content.
@@ -46,6 +56,32 @@ function RootNavigator() {
     </Stack.Navigator>
   );
 }
+
+
+/**
+ * A root stack navigator is often used for displaying modals on top of all other content.
+ * https://reactnavigation.org/docs/modal
+ */
+const StackTabTwo = createNativeStackNavigator<TabTwoStackParamList>();
+const StackAccount = createNativeStackNavigator<AccountStackParamList>();
+
+function StackTabNavigator() {
+  return (
+    <StackTabTwo.Navigator   initialRouteName="Root">
+      <StackTabTwo.Screen name="Root" component={TabTwoScreen} />
+      <StackTabTwo.Screen name="Chat" component={Chat} />
+    </StackTabTwo.Navigator>
+  );
+}
+function StackAccountNavigator() {
+  return (
+    <StackAccount.Navigator   initialRouteName="Root">
+      <StackAccount.Screen name="Root" component={Account} />
+      <StackAccount.Screen name="Login" component={Login} />
+    </StackAccount.Navigator>
+  );
+}
+
 
 /**
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
@@ -86,10 +122,18 @@ function BottomTabNavigator() {
       />
       <BottomTab.Screen
         name="TabTwo"
-        component={TabTwoScreen}
+        component={StackTabNavigator}
         options={{
           title: 'Tab Two',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <BottomTab.Screen
+        name="Account"
+        component={StackAccountNavigator}
+        options={{
+          title: 'Account',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user-circle" color={color} />,
         }}
       />
     </BottomTab.Navigator>

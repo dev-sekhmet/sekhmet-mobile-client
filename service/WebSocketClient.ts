@@ -13,9 +13,11 @@ class WebSocketClient {
     }
 
     send(message: any) {
-        if (this.client && this.client.readyState === this.client.OPEN)
+        if (this.client && this.client.readyState === this.client.OPEN) {
             this.client.send(JSON.stringify(message));
-        else console.log('Could not send message: ', message);
+        } else {
+            console.log('Could not send message: ', message);
+        }
     }
 
     onMessage = (message: any) => {
@@ -32,6 +34,5 @@ class WebSocketClient {
     };
 }
 
-const client = new WebSocketClient('ws://localhost:8080/chat');
-
-export default client;
+export const clientText = new WebSocketClient('ws://localhost:8080/chat-text');
+export const clientBinary = new WebSocketClient('ws://localhost:8080/chat-binary');

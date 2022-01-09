@@ -1,0 +1,26 @@
+import { IChat } from './chat.model';
+import { IUser } from './user.model';
+
+export interface IMessage {
+  id?: string;
+  text?: string | null;
+  createdAt?: string | null;
+  image?: string | null;
+  video?: string | null;
+  file?: string | null;
+  audio?: string | null;
+  contentTypeMedia?: string | null;
+  system?: boolean | null;
+  sent?: boolean | null;
+  received?: boolean | null;
+  pending?: boolean | null;
+  chat?: IChat | null;
+  user?: IUser | null;
+}
+
+export const defaultValue: Readonly<IMessage> = {
+  system: false,
+  sent: false,
+  received: false,
+  pending: false,
+};
