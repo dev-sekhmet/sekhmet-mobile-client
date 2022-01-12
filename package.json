@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "test": "jest"
+    "test": "jest --watchAll"
   },
   "jest": {
     "preset": "jest-expo"
@@ -18,29 +18,19 @@
     "@react-navigation/bottom-tabs": "^6.0.5",
     "@react-navigation/native": "^6.0.2",
     "@react-navigation/native-stack": "^6.1.0",
-    "apollo-upload-client": "^16.0.0",
-    "axios": "^0.24.0",
-    "babel-preset-expo": "^9.0.2",
-    "expo": "^44.0.4",
+    "expo": "~44.0.0",
     "expo-asset": "~8.4.4",
     "expo-constants": "~13.0.0",
     "expo-font": "~10.0.4",
-    "expo-image-picker": "~11.0.3",
     "expo-linking": "~3.0.0",
     "expo-splash-screen": "~0.14.0",
     "expo-status-bar": "~1.2.0",
     "expo-web-browser": "~10.1.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "react-hook-form": "7.20.5",
     "react-native": "0.64.3",
-    "react-native-document-picker": "^6.1.1",
-    "react-native-gifted-chat": "https://github.com/dev-sekhmet/react-native-gifted-chat/archive/v0.16.4.tar.gz",
-    "react-native-image-picker": "^4.1.1",
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
-    "react-native-video": "^5.1.1",
-    "react-native-video-controls": "^2.8.1",
     "react-native-web": "0.17.1"
   },
   "devDependencies": {

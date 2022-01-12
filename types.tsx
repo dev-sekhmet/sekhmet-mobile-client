@@ -18,14 +18,6 @@ export type RootStackParamList = {
   Modal: undefined;
   NotFound: undefined;
 };
-export type TabTwoStackParamList = {
-  Root: NavigatorScreenParams<RootTabParamList> | undefined;
-  Chat: undefined
-};
-export type AccountStackParamList = {
-  Root: NavigatorScreenParams<RootTabParamList> | undefined;
-  Login: undefined
-};
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<
   RootStackParamList,
@@ -33,9 +25,10 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
 >;
 
 export type RootTabParamList = {
-  TabOne: undefined;
-  TabTwo: undefined;
-  Account: undefined;
+  Home: undefined;
+  Messages: undefined;
+  Notifications: undefined;
+  Profil: undefined;
 };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<
