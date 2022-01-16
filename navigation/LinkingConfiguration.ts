@@ -37,6 +37,8 @@ const linking: LinkingOptions<RootStackParamList> = {
           },
         },
       },
+      OnBoarding: 'OnBoarding',
+      Register: 'Register',
       Modal: 'modal',
       NotFound: '*',
     },

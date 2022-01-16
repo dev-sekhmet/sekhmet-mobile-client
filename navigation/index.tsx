@@ -3,12 +3,12 @@
  * https://reactnavigation.org/docs/getting-started
  *
  */
-import {FontAwesome} from '@expo/vector-icons';
+import {FontAwesome, MaterialIcons} from '@expo/vector-icons';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import * as React from 'react';
-import {ColorSchemeName, Pressable} from 'react-native';
+import {ColorSchemeName, Pressable, Text, View} from 'react-native';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -20,13 +20,21 @@ import {RootStackParamList, RootTabParamList, RootTabScreenProps} from '../types
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
+import OnBoardingScreen from "../screens/OnBoardingScreen";
+import {useContext} from "react";
+import AppContext from "../components/AppContext";
+import TermsConditionsScreen from "../screens/registration/TermsConditionsScreen";
+import InputPhoneNumberScreen from "../screens/registration/InputPhoneNumberScreen";
+import VerifyCodeScreen from "../screens/registration/VerifyCodeScreen";
+import RegisterScreen from "../screens/registration/RegisterScreen";
+import {createStackNavigator} from "@react-navigation/stack";
 
-export default function Navigation({colorScheme}: { colorScheme: ColorSchemeName }) {
+export default function Navigation({colorScheme, doneOnBoarding, handleLogin, handleLogout}) {
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
             theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <RootNavigator/>
+            <RootNavigator doneOnBoarding={doneOnBoarding} handleLogin={handleLogin}/>
         </NavigationContainer>
     );
 }
@@ -35,17 +43,29 @@ export default function Navigation({colorScheme}: { colorScheme: ColorSchemeName
  * A root stack navigator is often used for displaying modals on top of all other content.
  * https://reactnavigation.org/docs/modal
  */
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
-function RootNavigator() {
+// const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createStackNavigator();
+function RootNavigator({doneOnBoarding, handleLogin}) {
+    const context = useContext(AppContext);
     return (
-        <Stack.Navigator>
-            <Stack.Screen name="Root" component={BottomTabNavigator} options={{headerShown: false}}/>
-            <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
-            <Stack.Group screenOptions={{presentation: 'modal'}}>
-                <Stack.Screen name="Modal" component={ModalScreen}/>
-            </Stack.Group>
-        </Stack.Navigator>
+        context.onBoarding ?
+            context.login ?
+                <Stack.Navigator>
+                    <Stack.Screen name="Root" component={BottomTabNavigator} options={{headerShown: false}}/>
+                    <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
+                    <Stack.Group screenOptions={{presentation: 'modal'}}>
+                        <Stack.Screen name="Modal" component={ModalScreen}/>
+                    </Stack.Group>
+                </Stack.Navigator> : <Stack.Navigator screenOptions={{}}>
+                    <Stack.Screen options={{headerShown: false}} name="Terms" component={TermsConditionsScreen}/>
+                    <Stack.Screen options={{headerShadowVisible: false, headerStyle:{backgroundColor: 'white'}, headerTitle: ''}} name="InputPhone" component={InputPhoneNumberScreen}/>
+                    <Stack.Screen options={{headerShadowVisible: false, headerStyle:{backgroundColor: 'white'}, headerTitle: ''}} name="VerifyCode" component={VerifyCodeScreen}/>
+                    <Stack.Screen options={{headerShadowVisible: false, headerStyle:{backgroundColor: 'white'}, headerTitle: ''}} name="Register" children={() => {
+                        return (
+                            <RegisterScreen handleLogin={handleLogin}/>
+                        )
+                    }}/>
+                </Stack.Navigator> : <OnBoardingScreen done={doneOnBoarding}/>
     );
 }
 
@@ -62,28 +82,55 @@ function BottomTabNavigator() {
         <BottomTab.Navigator
             initialRouteName="Home"
             screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme].tint,
+                tabBarStyle: {
+                    paddingBottom: 5,
+                    paddingTop: 5,
+                    borderTopRightRadius: 10,
+                    borderTopLeftRadius: 10
+                },
+                tabBarIconStyle: {
+                  marginBottom: 3
+                },
+                tabBarBadgeStyle: {
+                    backgroundColor: "#62A01A"
+                },
+                tabBarActiveTintColor: "#62A01A",
             }}>
             <BottomTab.Screen
                 name="Home"
                 component={HomeScreen}
                 options={({navigation}: RootTabScreenProps<'Home'>) => ({
                     title: 'Home',
+                    headerShadowVisible: false,
                     tabBarLabelPosition: 'below-icon',
-                    tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
+                    tabBarIcon: ({color}) => <TabBarIcon name="home"  color={color}/>,
                     headerRight: () => (
+                        <View style={{flexDirection: 'row'}}>
                         <Pressable
-                            onPress={() => navigation.navigate('Modal')}
+                            onPress={() => {}}
                             style={({pressed}) => ({
                                 opacity: pressed ? 0.5 : 1,
                             })}>
                             <FontAwesome
-                                name="info-circle"
+                                name="search"
                                 size={25}
-                                color={Colors[colorScheme].text}
-                                style={{marginRight: 15}}
+                                color="grey"
+                                style={{marginRight: 15, fontWeight: 'bold'}}
                             />
                         </Pressable>
+                            <Pressable
+                                onPress={() => {}}
+                                style={({pressed}) => ({
+                                    opacity: pressed ? 0.5 : 1,
+                                })}>
+                                <MaterialIcons
+                                    name="more-vert"
+                                    size={25}
+                                    color="grey"
+                                    style={{marginRight: 15, fontWeight: 'bold'}}
+                                />
+                            </Pressable>
+                        </View>
                     ),
                 })}
             />
@@ -93,6 +140,7 @@ function BottomTabNavigator() {
                 options={{
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
+                    tabBarBadge: 5,
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>,
                 }}
             />
@@ -103,6 +151,7 @@ function BottomTabNavigator() {
                 options={{
                     title: 'Notifications',
                     tabBarLabelPosition: 'below-icon',
+                    tabBarBadge: 1,
                     tabBarIcon: ({color}) => <TabBarIcon name="bell" color={color}/>,
                 }}
             />
