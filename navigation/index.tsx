@@ -92,16 +92,19 @@ function BottomTabNavigator() {
                   marginBottom: 3
                 },
                 tabBarBadgeStyle: {
-                    backgroundColor: "#62A01A"
+                    backgroundColor: "#254304"
                 },
                 tabBarActiveTintColor: "#62A01A",
+                
             }}>
             <BottomTab.Screen
                 name="Home"
+                
                 component={HomeScreen}
                 options={({navigation}: RootTabScreenProps<'Home'>) => ({
                     title: 'Home',
                     headerShadowVisible: false,
+                    
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home"  color={color}/>,
                     headerRight: () => (
@@ -140,7 +143,7 @@ function BottomTabNavigator() {
                 options={{
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
-                    tabBarBadge: 5,
+                    tabBarBadge: 5,                    
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>,
                 }}
             />

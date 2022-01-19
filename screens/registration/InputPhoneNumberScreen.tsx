@@ -81,7 +81,7 @@ const InputPhoneNumberScreen = () => {
                         <View style={{height: 2.0, width: width * 0.8, backgroundColor: 'grey'}}/>
                     </View>
                     <View style={{paddingVertical: 10, marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
-                        <Button mode="contained"  onPress={check} contentStyle={{paddingHorizontal: 30}} style={{ borderRadius: 12, marginBottom: 10 }} color="#62A01A">
+                        <Button mode="contained"  onPress={check} contentStyle={{paddingHorizontal: 30}} style={{ borderRadius: 20, marginBottom: 10 }} color="#62A01A">
                             Continuer
                         </Button>
                     </View>

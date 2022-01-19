@@ -1,3 +1,4 @@
+import { FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React, {useRef, useState} from 'react';
 import {
     SafeAreaView,
@@ -118,14 +119,14 @@ const OnBoardingScreen = ({done}) => {
                             <View style={{height: 40}}>
                                 <TouchableOpacity onPress={done} style={{display: 'flex', justifyContent: 'flex-end', flexDirection: 'row' }}>
                                     <View style={{borderRadius: 12, backgroundColor: 'whitesmoke', paddingHorizontal: 10, paddingVertical: 5}}>
-                                        <Text style={{color: '#62A01A',}}>Commencer {'>>'}</Text>
+                                        <Text style={{color: '#62A01A',}}>Commencer  <FontAwesome size={15} name="angle-double-right" /></Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
                             :<View style={{height: 50}}>
                                 <TouchableOpacity onPress={skip} style={{display: 'flex', justifyContent: 'center', flexDirection: 'row' }}>
                                     <View style={{borderRadius: 12, backgroundColor: 'whitesmoke', paddingHorizontal: 10, paddingVertical: 5}}>
-                                        <Text style={{color: '#62A01A',}}>Skip {'>>'}</Text>
+                                        <Text style={{color: '#62A01A',}}>Skip  <FontAwesome size={15} name="angle-double-right" /></Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>

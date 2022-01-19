@@ -96,7 +96,7 @@ const RegisterScreen = ({handleLogin}) => {
 
                     <View style={{paddingVertical: 10, marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
                         <Button mode="contained" onPress={handleLogin} contentStyle={{paddingHorizontal: 50}}
-                                style={{borderRadius: 12, marginBottom: 10}} color="#62A01A">
+                                style={{borderRadius: 20, marginBottom: 10}} color="#62A01A">
                             Terminer
                         </Button>
                     </View>
