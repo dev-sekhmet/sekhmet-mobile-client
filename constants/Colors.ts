@@ -17,5 +17,5 @@ export default {
     tint: tintColorDark,
     tabIconDefault: '#ccc',
     sekhmetGreen: sekhmetGreen,
-  },
+  }
 };

@@ -169,6 +169,7 @@ function BottomTabNavigator() {
                 name="Message"
                 component={MessageStackNavigation}
                 options={{
+                    title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
                     headerRight: () => getRightView(),
