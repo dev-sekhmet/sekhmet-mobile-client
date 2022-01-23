@@ -38,9 +38,8 @@ export type RootTabParamList = {
 export type ChatParamList = {
   Messages: undefined,
   Chat: {
-    clickedUser: {
-      firstName: 'TEMATE',
-      lastName: 'Gaetan'
+    clickedChat: {
+      id: 'EKLK?DL?DK'
     }
   }
 };

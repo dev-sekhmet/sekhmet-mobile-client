@@ -1,10 +1,66 @@
-import {StyleSheet} from 'react-native';
+import {FlatList, StyleSheet, Alert} from 'react-native';
 
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import {Badge} from "react-native-paper";
-import {color} from "react-native-elements/dist/helpers";
+import ChatItem from "./ChatItem";
+
+const DATA : any[] = [
+    {
+        id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
+        title: 'First Item',
+        createdAt: '08:45',
+        nbUnReadMsgs: 1,
+        user: {
+            firstName: 'TEMATE',
+            isCoach: false,
+            lastName: 'Gaetan'
+        }
+    },   {
+        id: 'bd7acbea-c1b1-46c2-aeh5-3ad53abb28b1',
+        title: 'First Item',
+        createdAt: '08:45',
+        user: {
+            firstName: 'Wilson',
+            isCoach: false,
+            lastName: 'Fisc'
+        }
+    },
+    {
+        id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
+        title: 'Second Item',
+        createdAt: 'Avr 25 2021',
+        nbUnReadMsgs: 3,
+        user: {
+            firstName: 'Piere',
+            isCoach: true,
+            lastName: 'Felix'
+        }
+    },
+    {
+        id: '3ac68asc-c605-48d3-a4f8-fbd91aa97f6Z',
+        title: 'Second Item',
+        createdAt: 'Avr 25 2021',
+        nbUnReadMsgs: 3,
+        user: {
+            firstName: 'Samuel',
+            isCoach: false,
+            lastName: 'pitou'
+        }
+    },
+    {
+        id: '58694a0f-3da1-471f-bd96-145571e29d72',
+        title: 'Third Item',
+        createdAt: '11:45',
+        nbUnReadMsgs: 0,
+        user: {
+            firstName: 'Rigobert',
+            isCoach: false,
+            lastName: 'Jean'
+        }
+    },
+];
 
 export default function MessagesScreen({navigation}) {
     const Tab = createMaterialTopTabNavigator();
@@ -21,26 +77,36 @@ export default function MessagesScreen({navigation}) {
                             tabBarLabel: () => <View
                                 style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
-                                <Badge style={{marginVertical:10, backgroundColor: Colors.light.sekhmetGreen}}>2</Badge>
+                                <Badge
+                                    style={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}>
+                                    {DATA.filter(v=>v.nbUnReadMsgs).reduce((a, {nbUnReadMsgs}) => a + nbUnReadMsgs, 0)}
+                                </Badge>
                             </View>
                         }}
-                        component={Discussion}/>
+                        children={() => <Discussion navigation={navigation}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
                             </View>
                         }}
-                        component={Groupes}/>
+                        children={() => <Groupes navigation={navigation}/>}/>
         </Tab.Navigator>
     );
 }
+const Discussion = ({navigation}) => {
+    return (<View>
+        <FlatList
+            data={DATA}
+            renderItem={({item}) => (
+                <ChatItem item={item} navigation={navigation}/>
+            )}
+            keyExtractor={item => item.id}
+        />
+    </View>)
+}
 
-const Discussion = () => <View style={styles.container}>
-    <Text style={styles.title}>CHAT Tab</Text>
-</View>
-
-const Groupes = () => <View style={styles.container}>
+const Groupes = (navigation) => <View style={styles.container}>
     <Text style={styles.title}>GROUPE Tab</Text>
 </View>
 
