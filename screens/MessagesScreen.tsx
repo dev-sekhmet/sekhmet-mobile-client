@@ -1,10 +1,12 @@
 import {FlatList, StyleSheet, Alert} from 'react-native';
-
+import { FloatingAction } from "react-native-floating-action";
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import {Badge} from "react-native-paper";
 import ChatItem from "./ChatItem";
+import {FontAwesome} from "@expo/vector-icons";
+import * as React from "react";
 
 const DATA : any[] = [
     {
@@ -91,7 +93,9 @@ export default function MessagesScreen({navigation}) {
                             </View>
                         }}
                         children={() => <Groupes navigation={navigation}/>}/>
+
         </Tab.Navigator>
+
     );
 }
 const Discussion = ({navigation}) => {
@@ -102,6 +106,17 @@ const Discussion = ({navigation}) => {
                 <ChatItem item={item} navigation={navigation}/>
             )}
             keyExtractor={item => item.id}
+        />
+        <FloatingAction
+            floatingIcon={<FontAwesome
+                name="comments"
+                color={"white"}
+                size={25}
+            />}
+            color={Colors.light.sekhmetGreen}
+            onPressItem={name => {
+                console.log(`selected button: ${name}`);
+            }}
         />
     </View>)
 }

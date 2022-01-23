@@ -11,6 +11,8 @@ export default function ChatItem({item, navigation}) {
         navigation.navigate("Chat", {id: item.id});
     };
 
+    // @ts-ignore
+    // @ts-ignore
     return (
         <Pressable onPress={onPress} style={styles.container}>
             <Avatar
@@ -29,7 +31,13 @@ export default function ChatItem({item, navigation}) {
 
             <View style={styles.rightContainer}>
                 <View style={styles.row}>
-                    <Text style={styles.name}>{`${item.user.firstName} ${item.user.lastName}`}</Text>
+                    <View style={styles.row}>
+                        <Text style={styles.name}>{`${item.user.firstName} ${item.user.lastName}`}</Text>
+                        <Badge
+                            size={8}
+                            style={{backgroundColor: Colors.light.online, marginBottom:8, marginLeft:6}}>
+                        </Badge>
+                    </View>
                     {item.nbUnReadMsgs > 0 &&
                     <Badge
                         style={{backgroundColor: Colors.light.sekhmetGreen}}>
