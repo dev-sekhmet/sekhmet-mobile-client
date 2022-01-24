@@ -3,7 +3,7 @@ import {ChatType} from "../model/enumerations/chat-type.model";
 
 export const messages: IMessage[] = [{
     "id": "03489c4f-930e-4f1b-b338-9b30a3f4c021",
-    "text": "Reffed",
+    "text": "Bonjour chef",
     "createdAt": "2022-01-09T12:31:25.07637",
     "image": null,
     "video": null,
@@ -28,7 +28,7 @@ export const messages: IMessage[] = [{
     }
 }, {
     "id": "0956fbd9-40a1-472c-9284-b00aa45709be",
-    "text": "ddddd",
+    "text": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
     "createdAt": "2022-01-07T20:47:02.70609",
     "image": null,
     "video": null,
@@ -53,7 +53,7 @@ export const messages: IMessage[] = [{
     }
 }, {
     "id": "0ec9f809-5f08-4283-98c4-9d2fdbc088b9",
-    "text": "ddd",
+    "text": "Ha d'accord",
     "createdAt": "2022-01-07T20:57:13.16977",
     "image": null,
     "video": null,
@@ -78,9 +78,8 @@ export const messages: IMessage[] = [{
     }
 }, {
     "id": "4c90d08f-0a18-4f23-9f5d-8c46a9bd2753",
-    "text": "",
+    "text": "Bonjour comment ut vas",
     "createdAt": "2022-01-07T21:14:19.133872",
-    "image": "chat-content/da134f53-ee9c-4a8b-b44f-6d94d50298db/image/d2b6e63b-1ceb-4b62-9c1f-b2dbe5d61057-img2.jfif",
     "video": null,
     "file": null,
     "audio": null,
@@ -103,7 +102,7 @@ export const messages: IMessage[] = [{
     }
 }, {
     "id": "588bd561-4112-4c96-918b-6571a4b41d9c",
-    "text": "cccc",
+    "text": "Bonjour Nadine",
     "createdAt": "2022-01-07T20:57:25.614993",
     "image": null,
     "video": null,
@@ -128,7 +127,7 @@ export const messages: IMessage[] = [{
     }
 }, {
     "id": "74a9dce4-63c0-427c-9a36-5b215653e63c",
-    "text": "",
+    "text": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model",
     "createdAt": "2022-01-07T20:48:04.678819",
     "image": null,
     "video": null,

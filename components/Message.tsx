@@ -1,30 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ActivityIndicator,
-    Pressable,
-    Alert, Image,
-} from 'react-native';
-import { IUser } from '../model/user.model'
-import { useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useActionSheet } from '@expo/react-native-action-sheet';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, Alert, Image, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
+import {IUser} from '../model/user.model'
+import {Ionicons} from '@expo/vector-icons';
+import {useActionSheet} from '@expo/react-native-action-sheet';
 import AudioPlayer from './AudioPlayer';
-import { IMessage as MessageModel } from '../model/message.model';
+import {IMessage as MessageModel} from '../model/message.model';
 import MessageReply from './MessageReply';
-import { box } from 'tweetnacl';
-import {IChat} from "../model/chat.model";
+import {Text, View} from "./Themed";
+/*let TimeAgo = require('react-native-timeago');
 
-const blue = '#3777f0';
-const grey = 'lightgrey';
+let moment = require('moment'); //load moment module to set local language
+require('moment/locale/fr'); //for import moment local language file during the application build
+moment.locale('fr');//set moment local language to zh-cn*/
+
+const grey = '#F2F2F2';
+const blue = '#ECF3FE';
 
 const Message = (props) => {
-    const { setAsMessageReply, message: propMessage } = props;
+    const {setAsMessageReply, message: propMessage} = props;
 
     const [message, setMessage] = useState<MessageModel>(propMessage);
-    const [decryptedContent, setDecryptedContent] = useState("");
     const [repliedTo, setRepliedTo] = useState<MessageModel | undefined>(
         undefined
     );
@@ -33,25 +28,12 @@ const Message = (props) => {
     const [soundURI, setSoundURI] = useState<any>(null);
     const [isDeleted, setIsDeleted] = useState(false);
 
-    const { width } = useWindowDimensions();
-    const { showActionSheetWithOptions } = useActionSheet();
+    const {width} = useWindowDimensions();
+    const {showActionSheetWithOptions} = useActionSheet();
 
     useEffect(() => {
-        setUser({
-            id: 'ssss',
-            login: 'ddd',
-            firstName: 'dddd',
-            lastName: 'qssxs',
-            email: '',
-            activated: true,
-            langKey: '',
-            authorities: [],
-            createdBy: '',
-            createdDate: null,
-            lastModifiedBy: '',
-            lastModifiedDate: null,
-            password: '',
-        });
+        //DataStore.query(User, message.userID).then(setUser);
+        setUser(message.user);
     }, []);
 
     useEffect(() => {
@@ -59,6 +41,9 @@ const Message = (props) => {
     }, [propMessage]);
 
     useEffect(() => {
+        /*  DataStore.query(MessageModel, message.replyToMessageID).then(
+              setRepliedTo
+          );*/
         if (message?.replyToMessageID) {
             setRepliedTo({
                 id: "string",
@@ -81,19 +66,19 @@ const Message = (props) => {
 
     useEffect(() => {
         // subscription to websocket chat
-      /*  const subscription = DataStore.observe(MessageModel, message.id).subscribe(
-            (msg) => {
-                if (msg.model === MessageModel) {
-                    if (msg.opType === "UPDATE") {
-                        setMessage((message) => ({ ...message, ...msg.element }));
-                    } else if (msg.opType === "DELETE") {
-                        setIsDeleted(true);
-                    }
-                }
-            }
-        );
+        /*  const subscription = DataStore.observe(MessageModel, message.id).subscribe(
+              (msg) => {
+                  if (msg.model === MessageModel) {
+                      if (msg.opType === "UPDATE") {
+                          setMessage((message) => ({ ...message, ...msg.element }));
+                      } else if (msg.opType === "DELETE") {
+                          setIsDeleted(true);
+                      }
+                  }
+              }
+          );
 
-        return () => subscription.unsubscribe();*/
+          return () => subscription.unsubscribe();*/
     }, []);
 
     useEffect(() => {
@@ -114,7 +99,7 @@ const Message = (props) => {
             }
             //const authUser = await Auth.currentAuthenticatedUser();
             const authUser = {
-                id: 'ssss',
+                id: '555773d2-60d7-11ec-8607-0242ac132222',
                 login: 'ddd',
                 firstName: 'dddd',
                 lastName: 'qssxs',
@@ -139,34 +124,34 @@ const Message = (props) => {
             return;
         }
 
-/*        const decryptMessage = async () => {
-            const myKey = await getMySecretKey();
-            if (!myKey) {
-                return;
-            }
-            // decrypt message.content
-            const sharedKey = box.before(stringToUint8Array(user.publicKey), myKey);
-            console.log("sharedKey", sharedKey);
-            const decrypted = decrypt(sharedKey, message.content);
-            console.log("decrypted", decrypted);
-            setDecryptedContent(decrypted.message);
-        };
+        /*        const decryptMessage = async () => {
+                    const myKey = await getMySecretKey();
+                    if (!myKey) {
+                        return;
+                    }
+                    // decrypt message.content
+                    const sharedKey = box.before(stringToUint8Array(user.publicKey), myKey);
+                    console.log("sharedKey", sharedKey);
+                    const decrypted = decrypt(sharedKey, message.content);
+                    console.log("decrypted", decrypted);
+                    setDecryptedContent(decrypted.message);
+                };
 
-        decryptMessage();*/
+                decryptMessage();*/
     }, [message, user]);
 
     const setAsRead = async () => {
         if (isMe === false && message.read) {
-/*            await DataStore.save(
-                MessageModel.copyOf(message, (updated) => {
-                    updated.status = "READ";
-                })
-            );*/
+            /*            await DataStore.save(
+                            MessageModel.copyOf(message, (updated) => {
+                                updated.status = "READ";
+                            })
+                        );*/
         }
     };
 
     const deleteMessage = async () => {
-       // await DataStore.delete(message);
+        // await DataStore.delete(message);
     };
 
     const confirmDelete = () => {
@@ -213,7 +198,7 @@ const Message = (props) => {
     };
 
     if (!user) {
-        return <ActivityIndicator />;
+        return <ActivityIndicator/>;
     }
 
     return (
@@ -222,24 +207,29 @@ const Message = (props) => {
             style={[
                 styles.container,
                 isMe ? styles.rightContainer : styles.leftContainer,
-                { width: soundURI ? "75%" : "auto" },
+                {width: soundURI ? "75%" : "auto"},
             ]}
         >
-            {repliedTo && <MessageReply message={repliedTo} />}
+            {repliedTo && <MessageReply message={repliedTo}/>}
             <View style={styles.row}>
                 {message.image && (
-                    <View style={{ marginBottom: message.text ? 10 : 0 }}>
+                    <View style={{marginBottom: message.text ? 10 : 0}}>
                         <Image
                             source={{uri: message.image}}
                             style={{width: width * 0.65, aspectRatio: 4 / 3}}/>
                     </View>
                 )}
-                {soundURI && <AudioPlayer soundURI={soundURI} />}
-                {!!decryptedContent && (
-                    <Text style={{ color: isMe ? "black" : "white" }}>
-                        {isDeleted ? "message deleted" : decryptedContent}
+                {soundURI && <AudioPlayer soundURI={soundURI}/>}
+                {!!message.text && (
+                    <View>
+                    <Text style={{backgroundColor: isMe ? blue : grey}}>
+                        {isDeleted ? "message deleted" : message.text}
                     </Text>
-                )}
+                     {/*   <TimeAgo time={message.createdAt} hideAgo={true} />*/}
+                    </View>
+
+                    )
+                }
 
                 {isMe && !!message.sent && (
                     <Ionicons
@@ -248,7 +238,7 @@ const Message = (props) => {
                         }
                         size={16}
                         color="gray"
-                        style={{ marginHorizontal: 5 }}
+                        style={{marginHorizontal: 5}}
                     />
                 )}
             </View>
@@ -273,12 +263,12 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     leftContainer: {
-        backgroundColor: blue,
+        backgroundColor: grey,
         marginLeft: 10,
         marginRight: "auto",
     },
     rightContainer: {
-        backgroundColor: grey,
+        backgroundColor: blue,
         marginLeft: "auto",
         marginRight: 10,
         alignItems: "flex-end",
