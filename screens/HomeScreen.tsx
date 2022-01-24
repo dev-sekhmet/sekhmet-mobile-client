@@ -62,8 +62,8 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
         }, 2000);
     }
     const homePart = [
-        {text: 'Nos produits Sekhmet', data:  DataProducts},
-        {text: 'Conseils & Astuces de la semaine',data: DataAstuces},
+        {id: 1, text: 'Nos produits Sekhmet', data: DataProducts},
+        {id: 2, text: 'Conseils & Astuces de la semaine', data: DataAstuces},
     ]
 
     //For product listing
@@ -151,12 +151,12 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
                             color: 'black',
                             fontSize: 13,
                             marginBottom: 8
-                        }}>{item.title.length > 40 ? item.title.substr(0,40) + ' ...' : item.title}</Text>
+                        }}>{item.title.length > 40 ? item.title.substr(0, 40) + ' ...' : item.title}</Text>
                         <Text style={{
                             color: 'grey',
                             marginBottom: 5,
                             overflow: 'scroll'
-                        }}>{item.subtitle.substr(0,20) + '...'}</Text>
+                        }}>{item.subtitle.substr(0, 20) + '...'}</Text>
                     </View>
                     <View style={{
                         width: '40%',
@@ -178,7 +178,10 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
         <View style={styles.container}>
             <SafeAreaView/>
             <FlatList refreshing={false} onRefresh={() => {
-            }} data={homePart} contentContainerStyle={{alignContent: 'center', paddingHorizontal: 16}}
+            }}
+                      keyExtractor={(item: any) => item.id}
+                      data={homePart}
+                      contentContainerStyle={{alignContent: 'center', paddingHorizontal: 16}}
                       renderItem={({item, index}) => {
                           let parentIndex = index;
                           return <View style={{marginBottom: 12}}>
@@ -191,11 +194,14 @@ export default function HomeScreen({navigation}: RootTabScreenProps<'Home'>) {
                                   marginBottom: 10,
                                   color: 'grey'
                               }}>{item.text}</Text>
-                              <FlatList data={item.data} renderItem={({item, index}) => (
+                              <FlatList data={item.data}
+                                        keyExtractor={(item: any) => item.id}
+                                        renderItem={({item, index}) => (
                                   // {
                                   (index <= 1 || items[0])
                                       ?
-                                      parentIndex ==0 ? <ProductItem item={item} index={index}/> : <AstuceItem item={item} index={index} />
+                                      parentIndex == 0 ? <ProductItem item={item} index={index}/> :
+                                          <AstuceItem item={item} index={index}/>
                                       :
                                       <TouchableOpacity style={{alignItems: 'center'}}
                                                         onPress={() => parentIndex == 0 ? setItems([true, items[1]]) : setItems([items[0], true])}>

@@ -31,9 +31,17 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
 
 export type RootTabParamList = {
   Home: undefined;
-  Messages: undefined;
-  Notifications: undefined;
+  Message: undefined;
+  Notification: undefined;
   Profil: undefined;
+};
+export type ChatParamList = {
+  Messages: undefined,
+  Chat: {
+    clickedChat: {
+      id: 'EKLK?DL?DK'
+    }
+  }
 };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<
