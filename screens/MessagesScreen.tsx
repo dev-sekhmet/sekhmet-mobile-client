@@ -1,10 +1,9 @@
 import {FlatList, StyleSheet, Alert, Dimensions} from 'react-native';
-import { FloatingAction } from "react-native-floating-action";
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import {Badge} from "react-native-paper";
-import ChatItem from "./ChatItem";
+import ChatItem from "../components/ChatItem";
 import {FontAwesome} from "@expo/vector-icons";
 import * as React from "react";
 const height = Dimensions.get('screen').height;

@@ -1,5 +1,5 @@
 import {Pressable, StyleSheet} from 'react-native';
-import {Text, View} from '../components/Themed';
+import {Text, View} from './Themed';
 import {Avatar} from "react-native-elements";
 import React from "react";
 import Colors from "../constants/Colors";
