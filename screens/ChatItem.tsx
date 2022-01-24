@@ -10,9 +10,6 @@ export default function ChatItem({item, navigation}) {
     const onPress = () => {
         navigation.navigate("Chat", {id: item.id});
     };
-
-    // @ts-ignore
-    // @ts-ignore
     return (
         <Pressable onPress={onPress} style={styles.container}>
             <Avatar

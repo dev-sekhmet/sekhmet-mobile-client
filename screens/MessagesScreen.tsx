@@ -1,4 +1,4 @@
-import {FlatList, StyleSheet, Alert} from 'react-native';
+import {FlatList, StyleSheet, Alert, Dimensions} from 'react-native';
 import { FloatingAction } from "react-native-floating-action";
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
@@ -7,6 +7,8 @@ import {Badge} from "react-native-paper";
 import ChatItem from "./ChatItem";
 import {FontAwesome} from "@expo/vector-icons";
 import * as React from "react";
+const height = Dimensions.get('screen').height;
+import { FAB } from 'react-native-paper';
 
 const DATA : any[] = [
     {
@@ -99,7 +101,7 @@ export default function MessagesScreen({navigation}) {
     );
 }
 const Discussion = ({navigation}) => {
-    return (<View>
+    return (<View  style={styles.container}>
         <FlatList
             data={DATA}
             renderItem={({item}) => (
@@ -107,16 +109,14 @@ const Discussion = ({navigation}) => {
             )}
             keyExtractor={item => item.id}
         />
-        <FloatingAction
-            floatingIcon={<FontAwesome
-                name="comments"
-                color={"white"}
-                size={25}
-            />}
-            color={Colors.light.sekhmetGreen}
-            onPressItem={name => {
-                console.log(`selected button: ${name}`);
-            }}
+
+        <FAB
+            style={styles.fab}
+            small
+            uppercase={false}
+            label={"Nouvelle discussion"}
+            icon="comment-text-outline"
+            onPress={() => console.log('Pressed')}
         />
     </View>)
 }
@@ -129,8 +129,7 @@ const Groupes = (navigation) => <View style={styles.container}>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        height: height
     },
     title: {
         fontSize: 20,
@@ -142,5 +141,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-evenly',
         width: 120,
         alignItems: 'center',
-    }
+    },
+    fab: {
+        backgroundColor: Colors.light.sekhmetOrange,
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
+    },
 });
