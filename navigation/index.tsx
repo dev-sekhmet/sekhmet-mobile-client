@@ -88,7 +88,7 @@ function MessageStackNavigation({doneOnBoarding, handleLogin}) {
             />
 
             <MsgStack.Screen name="Chat" component={ChatScreen}
-                             /*options={({ route } ) => ({ title: `${route.params.clickedUser.firstName} ${route.params.clickedUser.lastName}`})}*/
+                             options={({ route } ) => ({ title: route.params.clickedChat.name})}
             />
         </MsgStack.Navigator>
     );

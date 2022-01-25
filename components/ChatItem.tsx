@@ -8,7 +8,10 @@ import {Badge} from "react-native-paper";
 export default function ChatItem({item, navigation}) {
 
     const onPress = () => {
-        navigation.navigate("Chat", {id: item.id});
+        navigation.navigate("Chat", {    clickedChat: {
+                id: item.id,
+                name: `${item.user.firstName} ${item.user.lastName}`
+            } });
     };
     return (
         <Pressable onPress={onPress} style={styles.container}>
