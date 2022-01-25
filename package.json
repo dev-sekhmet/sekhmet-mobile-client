@@ -57,7 +57,6 @@
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
     "react-native-tab-view": "^3.1.1",
-    "react-native-timeago": "^0.5.0",
     "react-native-web": "0.17.1",
     "tweetnacl": "^1.0.3"
   },

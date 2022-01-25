@@ -7,11 +7,7 @@ import AudioPlayer from './AudioPlayer';
 import {IMessage as MessageModel} from '../model/message.model';
 import MessageReply from './MessageReply';
 import {Text, View} from "./Themed";
-/*let TimeAgo = require('react-native-timeago');
-
-let moment = require('moment'); //load moment module to set local language
-require('moment/locale/fr'); //for import moment local language file during the application build
-moment.locale('fr');//set moment local language to zh-cn*/
+import Moment from 'moment';
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
@@ -204,50 +200,62 @@ const Message = (props) => {
     return (
         <Pressable
             onLongPress={openActionMenu}
-            style={[
-                styles.container,
-                isMe ? styles.rightContainer : styles.leftContainer,
-                {width: soundURI ? "75%" : "auto"},
-            ]}
         >
-            {repliedTo && <MessageReply message={repliedTo}/>}
-            <View style={styles.row}>
-                {message.image && (
-                    <View style={{marginBottom: message.text ? 10 : 0}}>
-                        <Image
-                            source={{uri: message.image}}
-                            style={{width: width * 0.65, aspectRatio: 4 / 3}}/>
-                    </View>
-                )}
-                {soundURI && <AudioPlayer soundURI={soundURI}/>}
-                {!!message.text && (
-                    <View>
-                    <Text style={{backgroundColor: isMe ? blue : grey}}>
-                        {isDeleted ? "message deleted" : message.text}
-                    </Text>
-                     {/*   <TimeAgo time={message.createdAt} hideAgo={true} />*/}
-                    </View>
+            <View
+                style={[
+                    styles.container,
+                    isMe ? styles.rightContainer : styles.leftContainer,
+                    {width: soundURI ? "75%" : "auto"},
+                ]}>
+                {repliedTo && <MessageReply message={repliedTo}/>}
+                <View style={styles.row}>
+                    {message.image && (
+                        <View style={{marginBottom: message.text ? 10 : 0}}>
+                            <Image
+                                source={{uri: message.image}}
+                                style={{width: width * 0.65, aspectRatio: 4 / 3}}/>
+                        </View>
+                    )}
+                    {soundURI && <AudioPlayer soundURI={soundURI}/>}
+                    {!!message.text && (
+                        <View>
+                            <Text style={{backgroundColor: isMe ? blue : grey}}>
+                                {isDeleted ? "message deleted" : message.text}
+                            </Text>
+                        </View>
 
                     )
-                }
+                    }
 
-                {isMe && !!message.sent && (
-                    <Ionicons
-                        name={
-                            message.received ? "checkmark" : "checkmark-done"
-                        }
-                        size={16}
-                        color="gray"
-                        style={{marginHorizontal: 5}}
-                    />
-                )}
+                    {isMe && !!message.sent && (
+                        <Ionicons
+                            name={
+                                message.received ? "checkmark" : "checkmark-done"
+                            }
+                            size={16}
+                            color="gray"
+                            style={{marginHorizontal: 5}}
+                        />
+                    )}
+                </View>
             </View>
+            <Text  style={[
+                isMe ? styles.rightHour : styles.leftHour,
+                {width: soundURI ? "75%" : "auto"},
+            ]}>{Moment(message.createdAt).format('HH:mm')}</Text>
         </Pressable>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
+        padding: 10,
+        marginTop: 10,
+        marginLeft: 10,
+        marginRight: 10,
+        borderRadius: 20,
+        maxWidth: "75%",
+    },containerHour: {
         padding: 10,
         margin: 10,
         borderRadius: 10,
@@ -267,10 +275,21 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         marginRight: "auto",
     },
+    leftHour: {
+        marginLeft: 10,
+        color:'#8C8C8C',
+        marginRight: "auto",
+    },
     rightContainer: {
         backgroundColor: blue,
         marginLeft: "auto",
         marginRight: 10,
+        alignItems: "flex-end",
+    },
+    rightHour: {
+        marginLeft: "auto",
+        marginRight: 10,
+        color:'#8C8C8C',
         alignItems: "flex-end",
     },
 });

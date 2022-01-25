@@ -4,7 +4,7 @@ import {ChatType} from "../model/enumerations/chat-type.model";
 export const messages: IMessage[] = [{
     "id": "03489c4f-930e-4f1b-b338-9b30a3f4c021",
     "text": "Bonjour chef",
-    "createdAt": "2022-01-09T12:31:25.07637",
+    "createdAt": "2022-01-25T21:14:19.133872",
     "image": null,
     "video": null,
     "file": null,
@@ -79,7 +79,7 @@ export const messages: IMessage[] = [{
 }, {
     "id": "4c90d08f-0a18-4f23-9f5d-8c46a9bd2753",
     "text": "Bonjour comment ut vas",
-    "createdAt": "2022-01-07T21:14:19.133872",
+    "createdAt": "2022-01-19T21:14:19.133872",
     "video": null,
     "file": null,
     "audio": null,

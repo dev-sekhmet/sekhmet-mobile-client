@@ -27,8 +27,10 @@ import RegisterScreen from "../screens/registration/RegisterScreen";
 import {createStackNavigator} from "@react-navigation/stack";
 import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
+import Moment from 'moment';
 
 export default function Navigation({colorScheme, doneOnBoarding, handleLogin, handleLogout}) {
+
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
