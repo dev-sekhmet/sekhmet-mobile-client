@@ -14,7 +14,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, RootTabParamList, RootTabScreenProps} from '../types';
+import {ChatParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -29,6 +29,7 @@ import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
 
 export default function Navigation({colorScheme, doneOnBoarding, handleLogin, handleLogout}) {
+
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
@@ -44,7 +45,7 @@ export default function Navigation({colorScheme, doneOnBoarding, handleLogin, ha
  */
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
-
+const MsgStack = createStackNavigator<ChatParamList>();
 function RootNavigator({doneOnBoarding, handleLogin}) {
     const context = useContext(AppContext);
     return (
@@ -56,6 +57,12 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
+                    <MsgStack.Screen name="Chat" component={ChatScreen}
+                                     options={({route}) => ({
+                                         title: route.params.clickedChat.name,
+                                         headerBackTitle: 'Messages'
+                                     })}
+                    />
                 </Stack.Navigator> : <Stack.Navigator screenOptions={{}}>
                     <Stack.Screen options={{headerShown: false}} name="Terms" component={TermsConditionsScreen}/>
                     <Stack.Screen
@@ -72,23 +79,6 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                         )
                     }}/>
                 </Stack.Navigator> : <OnBoardingScreen done={doneOnBoarding}/>
-    );
-}
-
-
-const MsgStack = createStackNavigator<ChatParamList>();
-function MessageStackNavigation({doneOnBoarding, handleLogin}) {
-    const context = useContext(AppContext);
-    return (
-        <MsgStack.Navigator initialRouteName="Messages">
-            <MsgStack.Screen name="Messages" component={MessagesScreen}
-                             options={{headerShown: false}}
-            />
-
-            <MsgStack.Screen name="Chat" component={ChatScreen}
-                             /*options={({ route } ) => ({ title: `${route.params.clickedUser.firstName} ${route.params.clickedUser.lastName}`})}*/
-            />
-        </MsgStack.Navigator>
     );
 }
 
@@ -128,7 +118,7 @@ function getRightView() {
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
  * https://reactnavigation.org/docs/bottom-tab-navigator
  */
-const BottomTab = createBottomTabNavigator<RootTabParamList>();
+const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator() {
     const colorScheme = useColorScheme();
@@ -156,7 +146,7 @@ function BottomTabNavigator() {
                 name="Home"
 
                 component={HomeScreen}
-                options={({navigation}: RootTabScreenProps<'Home'>) => ({
+                options={({navigation}) => ({
                     title: 'Home',
                     headerShadowVisible: false,
 
@@ -167,14 +157,14 @@ function BottomTabNavigator() {
             />
             <BottomTab.Screen
                 name="Message"
-                component={MessageStackNavigation}
-                options={{
+                component={MessagesScreen}
+                options={({route}) => ({
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
                     headerRight: () => getRightView(),
-                    tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>,
-                }}
+                    tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
+                })}
             />
 
             <BottomTab.Screen
