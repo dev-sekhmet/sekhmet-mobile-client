@@ -262,7 +262,7 @@ const MessageInput = ({chatRoom, messageReplyTo, removeMessageReplyTo}) => {
         <KeyboardAvoidingView
             style={[styles.root, {height: isEmojiPickerOpen ? "50%" : "auto"}]}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={150}
+            keyboardVerticalOffset={100}
         >
             {messageReplyTo && (
                 <View

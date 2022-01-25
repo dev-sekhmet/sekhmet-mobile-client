@@ -8,10 +8,12 @@ import {Badge} from "react-native-paper";
 export default function ChatItem({item, navigation}) {
 
     const onPress = () => {
-        navigation.navigate("Chat", {    clickedChat: {
+        navigation.navigate("Chat", {
+            clickedChat: {
                 id: item.id,
                 name: `${item.user.firstName} ${item.user.lastName}`
-            } });
+            }
+        });
     };
     return (
         <Pressable onPress={onPress} style={styles.container}>
@@ -35,7 +37,7 @@ export default function ChatItem({item, navigation}) {
                         <Text style={styles.name}>{`${item.user.firstName} ${item.user.lastName}`}</Text>
                         <Badge
                             size={8}
-                            style={{backgroundColor: Colors.light.online, marginBottom:8, marginLeft:6}}>
+                            style={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}>
                         </Badge>
                     </View>
                     {item.nbUnReadMsgs > 0 &&
