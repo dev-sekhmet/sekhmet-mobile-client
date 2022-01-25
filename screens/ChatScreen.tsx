@@ -1,7 +1,7 @@
 import {FlatList, SafeAreaView, StyleSheet} from 'react-native';
 import React, {useEffect, useState} from "react";
 import {useNavigation, useRoute} from "@react-navigation/core";
-import {IMessage as MessageModel} from "../model/message.model";
+import {IMessage, IMessage as MessageModel} from "../model/message.model";
 import {IChat} from "../model/chat.model";
 import Message from "../components/Message";
 import MessageInput from "../components/MessageInput";
@@ -48,6 +48,7 @@ export default function ChatScreen() {
                 });
 
                 return () => subscription.unsubscribe();*/
+        messagesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         setMessages(messagesData)
     }, []);
 
@@ -90,21 +91,32 @@ export default function ChatScreen() {
     const getDate = (date: string): string => {
         return Moment(date).calendar();
     }
+
+    const canAddDaySeparator = (createdAt: string, index: number, messages: IMessage[]): boolean => {
+        const predIndex = index + 1;
+        if (predIndex < messages.length-1) {
+            const createdAtPred = messages[predIndex].createdAt;
+            return !Moment(createdAt).isSame(createdAtPred, 'day');
+        }
+        return true;
+    }
+
     return (
         <SafeAreaView style={styles.page}>
             <FlatList
                 data={messages}
-                renderItem={({item}) => (
+                renderItem={({item, index}) => (
                     <View>
-                        <Text
+                        {canAddDaySeparator(item.createdAt, index, messages) && <Text
                             style={styles.day}
-                        >{getDate(item.createdAt)}</Text>
+                        >{getDate(item.createdAt)}</Text>}
                         <Message
                             message={item}
                             setAsMessageReply={() => setMessageReplyTo(item)}
                         />
                     </View>
                 )}
+                keyExtractor={item => item.id}
                 inverted
             />
             <MessageInput
@@ -123,7 +135,7 @@ const styles = StyleSheet.create({
     },
     day: {
         margin: 10,
-        alignSelf:"center",
+        alignSelf: "center",
         color: '#8C8C8C',
     }
 });
