@@ -1,9 +1,8 @@
 import {Pressable, StyleSheet} from 'react-native';
 import {Text, View} from './Themed';
-import {Avatar} from "react-native-elements";
+import {Avatar, Badge} from "react-native-elements";
 import React from "react";
 import Colors from "../constants/Colors";
-import {Badge} from "react-native-paper";
 
 export default function ChatItem({item, navigation}) {
 
@@ -27,23 +26,26 @@ export default function ChatItem({item, navigation}) {
                     borderWidth: 1,
                 }}/>
 
-            {item.user.isCoach && <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>C</Text>
-            </View>}
+            {item.user.isCoach &&
+            <Badge
+                value={"C"}
+                textStyle={styles.badgeText}
+                badgeStyle={styles.badgeContainer}
+            />}
 
             <View style={styles.rightContainer}>
                 <View style={styles.row}>
                     <View style={styles.row}>
                         <Text style={styles.name}>{`${item.user.firstName} ${item.user.lastName}`}</Text>
+
                         <Badge
-                            size={8}
-                            style={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}>
-                        </Badge>
+                               badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
+                        />
                     </View>
                     {item.nbUnReadMsgs > 0 &&
                     <Badge
-                        style={{backgroundColor: Colors.light.sekhmetGreen}}>
-                        {item.nbUnReadMsgs}
+                        value={item.nbUnReadMsgs}
+                        badgeStyle={{backgroundColor: Colors.light.sekhmetGreen}}>
                     </Badge>}
                 </View>
                 <View style={styles.row}>
@@ -72,16 +74,12 @@ const styles = StyleSheet.create({
     },
     badgeContainer: {
         backgroundColor: Colors.light.sekhmetOrange,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
+
         borderWidth: 1,
         borderColor: 'white',
-        justifyContent: 'center',
-        alignItems: 'center',
         position: 'absolute',
-        left: 40,
-        top: 50,
+        left: -20,
+        top: 40,
     },
     badgeText: {
         color: 'white',

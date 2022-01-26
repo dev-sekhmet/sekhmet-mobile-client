@@ -15,7 +15,6 @@ import Modal, {
     BottomModal,
     ModalPortal,
 } from 'react-native-modals';
-import {grey50} from "react-native-paper/lib/typescript/styles/colors";
 import {useNavigation} from "@react-navigation/core";
 
 const width = Dimensions.get('screen').width
