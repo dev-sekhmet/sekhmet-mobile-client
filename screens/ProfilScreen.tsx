@@ -1,9 +1,23 @@
-import {ColorValue, Dimensions, FlatList, SafeAreaView, StyleSheet} from 'react-native';
+import {
+    ColorValue,
+    Dimensions,
+    FlatList,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    TextInput
+} from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useState} from "react";
 import Colors from "../constants/Colors";
-import {Menu} from "react-native-paper";
+import Modal, {ModalContent, ScaleAnimation,     ModalTitle,
+    ModalFooter,
+    ModalButton,
+    SlideAnimation,
+    BottomModal,
+    ModalPortal,} from 'react-native-modals';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -12,8 +26,10 @@ type MenuItem = {
     icon: string;
     color?: ColorValue | number | undefined;
     notif?: boolean
-    type? : 'account' | 'notif' | 'plus'
+    type?: 'account' | 'notif' | 'plus',
+    action?: Function
 };
+
 export default function ProfilScreen() {
     // const navigation = useNavigation();
 
@@ -21,12 +37,15 @@ export default function ProfilScreen() {
     //     navigation.
     // }
 
-
+    const [openAccountModal, setOpenAccountModal] = useState(false);
     const [accountItems, setAccountItems] = useState<MenuItem[]>([
         {
             title: 'Mon compte',
             icon: 'person',
-            color: Colors.light.sekhmetGreen
+            color: Colors.light.sekhmetGreen,
+            action() {
+                setOpenAccountModal(open => !open);
+            }
         },
         {
             title: 'Mon Adresse',
@@ -35,7 +54,7 @@ export default function ProfilScreen() {
         }
     ]);
 
-    const [notificationItems, setNotificationItems]  = useState<MenuItem[]>( [
+    const [notificationItems, setNotificationItems] = useState<MenuItem[]>([
         {
             title: 'Push Notification',
             icon: 'notifications',
@@ -64,12 +83,16 @@ export default function ProfilScreen() {
             color: Colors.light.sekhmetGreen
         }
     ]);
-    const log = (item) => console.log('this is an example method', item);
+    const action = (item) => {
+        if (item.action) {
+            item.action();
+        }
+    };
 
     const setChecked = (id: string) => {
         const newList = notificationItems.map((item) => {
             if (item.title === id) {
-                const updatedItem : MenuItem= {
+                const updatedItem: MenuItem = {
                     ...item,
                     notif: !item.notif,
                 };
@@ -87,7 +110,7 @@ export default function ProfilScreen() {
         return (
             <ListItem
                 bottomDivider
-                onPress={(value)=>log(value)}
+                onPress={() => action(item)}
             >
                 <Icon color={item.color} name={item.icon}/>
                 <ListItem.Content>
@@ -98,6 +121,116 @@ export default function ProfilScreen() {
             </ListItem>
         );
     };
+
+    const onChangeAvatar = () => {
+
+    }
+    const onSave = () => {
+
+    }
+
+    const getAccountModal = () => {
+        return <Modal
+            onTouchOutside={() => {
+                setOpenAccountModal(false);
+            }}
+            width={0.97}
+            visible={openAccountModal}
+            onSwipeOut={() => setOpenAccountModal(false)}
+            modalAnimation={new ScaleAnimation()}
+            onHardwareBackPress={() => {
+                setOpenAccountModal(false);
+                return true;
+            }}>
+            <ModalContent>
+                <SafeAreaView>
+                    <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
+                                showsHorizontalScrollIndicator={false}>
+                        <View style={{paddingVertical: 10, alignItems: 'flex-start'}}>
+                            <View style={styles.row}>
+                                <Avatar
+                                    size={80}
+                                    rounded
+                                    source={require("../assets/images/photoprofil.png")}
+                                    containerStyle={{
+                                        borderColor: 'grey',
+                                        borderStyle: 'solid',
+                                        borderWidth: 1,
+                                    }}
+                                />
+
+                                    <Pressable onPress={onChangeAvatar}>
+                                        <Text>Change Avatar</Text>
+                                    </Pressable>
+
+                                    <Pressable onPress={onSave}>
+                                        <Text>Save</Text>
+                                    </Pressable>
+
+                            </View>
+                        </View>
+
+                        {/*For first name*/}
+                        <View style={{marginBottom: 10, marginTop: 5}}>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
+                                nom*</Text>
+                            <TextInput
+                                style={{
+                                    height: 40,
+                                    borderColor: 'grey',
+                                    borderWidth: 0.5,
+                                    borderRadius: 3,
+                                    paddingHorizontal: 8
+                                }}
+                                onChangeText={text => {
+                                }}
+                                placeholder="Nom"
+                                underlineColorAndroid="transparent"
+                            />
+                        </View>
+
+                        {/*    For lastname*/}
+                        <View style={{marginBottom: 10, marginTop: 5}}>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
+                                prenom</Text>
+                            <TextInput
+                                style={{
+                                    height: 40,
+                                    borderColor: 'grey',
+                                    borderWidth: 0.5,
+                                    borderRadius: 3,
+                                    paddingHorizontal: 8
+                                }}
+                                onChangeText={text => {
+                                }}
+                                placeholder="Prenom"
+                                underlineColorAndroid="transparent"
+                            />
+                        </View>
+                        {/*    For email*/}
+                        <View style={{marginBottom: 10, marginTop: 5}}>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Adresse
+                                email</Text>
+                            <TextInput
+                                style={{
+                                    height: 40,
+                                    borderColor: 'grey',
+                                    borderWidth: 0.5,
+                                    borderRadius: 3,
+                                    paddingHorizontal: 8
+                                }}
+                                onChangeText={text => {
+                                }}
+                                placeholder="Adresse Email"
+                                underlineColorAndroid="transparent"
+                            />
+                        </View>
+                    </ScrollView>
+                </SafeAreaView>
+            </ModalContent>
+        </Modal>;
+    }
+
     return (
         <View style={{backgroundColor: '#eaeaea', flex: 1}}>
 
@@ -143,14 +276,21 @@ export default function ProfilScreen() {
                     </View>
                 </View>
             </SafeAreaView>
+            {getAccountModal()}
         </View>
     )
 }
 
+
 const styles = StyleSheet.create({
-    titleMenu:{
+    titleMenu: {
         fontSize: 20,
         margin: 20,
         fontWeight: 'bold'
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems:"center"
     }
 });
