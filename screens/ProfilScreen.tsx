@@ -2,6 +2,7 @@ import {
     ColorValue,
     Dimensions,
     FlatList,
+    Keyboard,
     Pressable,
     SafeAreaView,
     ScrollView,
@@ -10,14 +11,10 @@ import {
 } from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Icon, ListItem, Switch} from "react-native-elements";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
-import Modal, {ModalContent, ScaleAnimation,     ModalTitle,
-    ModalFooter,
-    ModalButton,
-    SlideAnimation,
-    BottomModal,
-    ModalPortal,} from 'react-native-modals';
+import Modal, {ModalContent, ScaleAnimation,} from 'react-native-modals';
+import {IUser} from "../model/user.model";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -36,8 +33,18 @@ export default function ProfilScreen() {
     // const saveData = async () => {
     //     navigation.
     // }
+    useEffect(() => {
+        Keyboard.addListener('keyboardDidShow', keyboardDidShow)
+        Keyboard.addListener('keyboardDidHide', keyboardDidHide)
+    });
+
+    const keyboardDidShow = () => {
+    }
+    const keyboardDidHide = () => {
+    }
 
     const [openAccountModal, setOpenAccountModal] = useState(false);
+    const [user, setUser] = useState<IUser>({firstName: "Maboma", lastName: "Brenda", email: "brenda@maboma.fr"});
     const [accountItems, setAccountItems] = useState<MenuItem[]>([
         {
             title: 'Mon compte',
@@ -126,18 +133,21 @@ export default function ProfilScreen() {
 
     }
     const onSave = () => {
-
+        setOpenAccountModal(false);
     }
 
     const getAccountModal = () => {
+
         return <Modal
             onTouchOutside={() => {
                 setOpenAccountModal(false);
             }}
             width={0.97}
+            actionsBordered
             visible={openAccountModal}
             onSwipeOut={() => setOpenAccountModal(false)}
             modalAnimation={new ScaleAnimation()}
+            swipeDirection={['down', 'up']}
             onHardwareBackPress={() => {
                 setOpenAccountModal(false);
                 return true;
@@ -146,10 +156,10 @@ export default function ProfilScreen() {
                 <SafeAreaView>
                     <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
                                 showsHorizontalScrollIndicator={false}>
-                        <View style={{paddingVertical: 10, alignItems: 'flex-start'}}>
+                        <View style={{paddingVertical: 10}}>
                             <View style={styles.row}>
                                 <Avatar
-                                    size={80}
+                                    size={60}
                                     rounded
                                     source={require("../assets/images/photoprofil.png")}
                                     containerStyle={{
@@ -158,22 +168,16 @@ export default function ProfilScreen() {
                                         borderWidth: 1,
                                     }}
                                 />
-
-                                    <Pressable onPress={onChangeAvatar}>
-                                        <Text>Change Avatar</Text>
-                                    </Pressable>
-
-                                    <Pressable onPress={onSave}>
-                                        <Text>Save</Text>
-                                    </Pressable>
-
+                                <Pressable onPress={onSave}>
+                                    <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
+                                </Pressable>
                             </View>
                         </View>
 
                         {/*For first name*/}
                         <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
-                                nom*</Text>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
+                                Nom</Text>
                             <TextInput
                                 style={{
                                     height: 40,
@@ -182,8 +186,11 @@ export default function ProfilScreen() {
                                     borderRadius: 3,
                                     paddingHorizontal: 8
                                 }}
-                                onChangeText={text => {
+                                onChangeText={firstName => {
+                                    const neUser = {...user, firstName};
+                                    setUser(neUser);
                                 }}
+                                value={user.firstName}
                                 placeholder="Nom"
                                 underlineColorAndroid="transparent"
                             />
@@ -192,7 +199,7 @@ export default function ProfilScreen() {
                         {/*    For lastname*/}
                         <View style={{marginBottom: 10, marginTop: 5}}>
                             <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
-                                prenom</Text>
+                                Prénom</Text>
                             <TextInput
                                 style={{
                                     height: 40,
@@ -201,16 +208,19 @@ export default function ProfilScreen() {
                                     borderRadius: 3,
                                     paddingHorizontal: 8
                                 }}
-                                onChangeText={text => {
+                                onChangeText={lastName => {
+                                    const neUser = {...user, lastName};
+                                    setUser(neUser);
                                 }}
-                                placeholder="Prenom"
+                                value={user.lastName}
+                                placeholder="Prénom"
                                 underlineColorAndroid="transparent"
                             />
                         </View>
                         {/*    For email*/}
                         <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Adresse
-                                email</Text>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
+                                de telephone</Text>
                             <TextInput
                                 style={{
                                     height: 40,
@@ -219,8 +229,30 @@ export default function ProfilScreen() {
                                     borderRadius: 3,
                                     paddingHorizontal: 8
                                 }}
-                                onChangeText={text => {
+                                onChangeText={phoneNumber => {
+
                                 }}
+                                value={'+237 691 380 458'}
+                                placeholder="Adresse Email"
+                                underlineColorAndroid="transparent"
+                            />
+                        </View>{/*    For email*/}
+                        <View style={{marginBottom: 10, marginTop: 5}}>
+                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
+                                Email</Text>
+                            <TextInput
+                                style={{
+                                    height: 40,
+                                    borderColor: 'grey',
+                                    borderWidth: 0.5,
+                                    borderRadius: 3,
+                                    paddingHorizontal: 8
+                                }}
+                                onChangeText={email => {
+                                    const neUser = {...user, email};
+                                    setUser(neUser);
+                                }}
+                                value={user.email}
                                 placeholder="Adresse Email"
                                 underlineColorAndroid="transparent"
                             />
@@ -290,7 +322,8 @@ const styles = StyleSheet.create({
     },
     row: {
         flexDirection: 'row',
-        justifyContent: 'space-evenly',
-        alignItems:"center"
+        justifyContent: 'space-between',
+        alignItems: "center",
+        width: '100%'
     }
 });
