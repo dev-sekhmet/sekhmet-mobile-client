@@ -143,11 +143,11 @@ export default function ProfilScreen() {
                 setOpenAccountModal(false);
             }}
             width={0.97}
-            actionsBordered
             visible={openAccountModal}
             onSwipeOut={() => setOpenAccountModal(false)}
             modalAnimation={new ScaleAnimation()}
             swipeDirection={['down', 'up']}
+            modalStyle={{top:-height+800}}
             onHardwareBackPress={() => {
                 setOpenAccountModal(false);
                 return true;
