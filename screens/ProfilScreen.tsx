@@ -10,11 +10,12 @@ import {
     TextInput
 } from 'react-native';
 import {Text, View} from '../components/Themed';
-import {Avatar, Icon, ListItem, Switch} from "react-native-elements";
+import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
 import Modal, {ModalContent, ScaleAnimation,} from 'react-native-modals';
 import {IUser} from "../model/user.model";
+import {FontAwesome} from "@expo/vector-icons";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -147,7 +148,7 @@ export default function ProfilScreen() {
             onSwipeOut={() => setOpenAccountModal(false)}
             modalAnimation={new ScaleAnimation()}
             swipeDirection={['down', 'up']}
-            modalStyle={{top:-height+800}}
+            modalStyle={{top: -height + 800}}
             onHardwareBackPress={() => {
                 setOpenAccountModal(false);
                 return true;
@@ -278,6 +279,11 @@ export default function ProfilScreen() {
                             borderWidth: 1,
                         }}
                     />
+                    <Badge
+                        value={<FontAwesome style={{color: 'white', }} size={10} name="pencil"/>}
+                        badgeStyle={styles.pencilContainer}
+                    />
+
                     <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 18}}>Brenda
                         Maboma</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
@@ -325,5 +331,15 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: "center",
         width: '100%'
+    },
+    pencilContainer: {
+        backgroundColor: Colors.light.sekhmetOrange,
+        width:20,
+        height:20,
+        borderRadius:10,
+        borderColor: 'white',
+        position: 'absolute',
+        left: 18,
+        top: -23,
     }
 });
