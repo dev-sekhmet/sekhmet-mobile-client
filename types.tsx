@@ -43,6 +43,12 @@ export type ChatParamList = {
         }
     }
 };
+export type ProductParamList = {
+    ProductDetail: {
+        name: "",
+        backScreenName: ""
+    }
+};
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,
     NativeStackScreenProps<RootStackParamList>>;
