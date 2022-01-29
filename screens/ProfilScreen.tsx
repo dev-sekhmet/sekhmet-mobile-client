@@ -13,7 +13,7 @@ import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
-import Modal, {ModalContent, ScaleAnimation,} from 'react-native-modals';
+import Modal  from 'react-native-modal';
 import {IUser} from "../model/user.model";
 import {FontAwesome} from "@expo/vector-icons";
 
@@ -140,22 +140,15 @@ export default function ProfilScreen() {
     const getAccountModal = () => {
 
         return <Modal
-            onTouchOutside={() => {
-                setOpenAccountModal(false);
-            }}
-            width={0.97}
-            visible={openAccountModal}
-            onSwipeOut={() => setOpenAccountModal(false)}
-            modalAnimation={new ScaleAnimation()}
+            avoidKeyboard
+            onBackdropPress={()=>setOpenAccountModal(false)}
+            animationIn={"slideInUp"}
+            isVisible={openAccountModal}
             swipeDirection={['down', 'up']}
-            modalStyle={{top: -height + 800}}
-            onHardwareBackPress={() => {
-                setOpenAccountModal(false);
-                return true;
-            }}>
-            <ModalContent>
+            onSwipeComplete={() => setOpenAccountModal(false)}>
+
                 <SafeAreaView>
-                    <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
+                    <ScrollView style={{padding: 20, backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
                                 showsHorizontalScrollIndicator={false}>
                         <View style={{paddingVertical: 10}}>
                             <View style={styles.row}>
@@ -260,7 +253,6 @@ export default function ProfilScreen() {
                         </View>
                     </ScrollView>
                 </SafeAreaView>
-            </ModalContent>
         </Modal>;
     }
 

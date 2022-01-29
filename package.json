@@ -48,7 +48,7 @@
     "react-native-elements": "^3.4.2",
     "react-native-emoji-selector": "^0.2.0",
     "react-native-gesture-handler": "~2.1.0",
-    "react-native-modals": "^0.22.3",
+    "react-native-modal": "^13.0.0",
     "react-native-onboarding-swiper": "^1.1.4",
     "react-native-pager-view": "5.4.9",
     "react-native-paper": "^4.11.2",
