@@ -2,14 +2,13 @@ import {FlatList, StyleSheet, Alert, Dimensions} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
-import {Badge} from "react-native-paper";
 import ChatItem from "../components/ChatItem";
-import {FontAwesome} from "@expo/vector-icons";
 import * as React from "react";
-const height = Dimensions.get('screen').height;
-import { FAB } from 'react-native-paper';
 
-const DATA : any[] = [
+const height = Dimensions.get('screen').height;
+import {Badge, FAB} from "react-native-elements";
+
+const DATA: any[] = [
     {
         id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
         title: 'First Item',
@@ -17,10 +16,10 @@ const DATA : any[] = [
         nbUnReadMsgs: 1,
         user: {
             firstName: 'TEMATE',
-            isCoach: false,
+            isCoach: true,
             lastName: 'Gaetan'
         }
-    },   {
+    }, {
         id: 'bd7acbea-c1b1-46c2-aeh5-3ad53abb28b1',
         title: 'First Item',
         createdAt: '08:45',
@@ -81,9 +80,9 @@ export default function MessagesScreen({navigation}) {
                                 style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
                                 <Badge
-                                    style={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}>
-                                    {DATA.filter(v=>v.nbUnReadMsgs).reduce((a, {nbUnReadMsgs}) => a + nbUnReadMsgs, 0)}
-                                </Badge>
+                                    value={DATA.filter(v => v.nbUnReadMsgs).reduce((a, {nbUnReadMsgs}) => a + nbUnReadMsgs, 0)}
+                                    badgeStyle={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}
+                                />
                             </View>
                         }}
                         children={() => <Discussion navigation={navigation}/>}/>
@@ -100,7 +99,7 @@ export default function MessagesScreen({navigation}) {
     );
 }
 const Discussion = ({navigation}) => {
-    return (<View  style={styles.container}>
+    return (<View style={styles.container}>
         <FlatList
             data={DATA}
             renderItem={({item}) => (
@@ -111,10 +110,10 @@ const Discussion = ({navigation}) => {
 
         <FAB
             style={styles.fab}
-            small
-            uppercase={false}
-            label={"Nouvelle discussion"}
-            icon="comment-text-outline"
+            size="small"
+            color={Colors.light.sekhmetOrange}
+            title={"Nouvelle discussion"}
+            icon={{name: "comment", color: "white"}}
             onPress={() => console.log('Pressed')}
         />
     </View>)
@@ -142,7 +141,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     fab: {
-        backgroundColor: Colors.light.sekhmetOrange,
         position: 'absolute',
         margin: 16,
         right: 0,

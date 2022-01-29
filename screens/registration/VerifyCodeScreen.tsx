@@ -2,7 +2,6 @@ import React from "react";
 import {Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useNavigation} from "@react-navigation/core";
 import OTPInputView from "@twotalltotems/react-native-otp-input/dist";
-import {Button} from "react-native-paper";
 import {MaterialIcons} from '@expo/vector-icons';
 
 

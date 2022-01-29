@@ -48,7 +48,7 @@
     "react-native-elements": "^3.4.2",
     "react-native-emoji-selector": "^0.2.0",
     "react-native-gesture-handler": "~2.1.0",
-    "react-native-modals": "^0.22.3",
+    "react-native-modal": "^13.0.0",
     "react-native-onboarding-swiper": "^1.1.4",
     "react-native-pager-view": "5.4.9",
     "react-native-paper": "^4.11.2",
@@ -57,6 +57,7 @@
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.10.1",
     "react-native-tab-view": "^3.1.1",
+    "react-native-toast-message": "^2.1.1",
     "react-native-web": "0.17.1",
     "tweetnacl": "^1.0.3"
   },
