@@ -9,6 +9,7 @@ import {useState} from "react";
 import {Alert} from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
+import Toast from 'react-native-toast-message';
 export default function App() {
   const isLoadingComplete = useCachedResources();
   const colorScheme = useColorScheme();
@@ -57,6 +58,7 @@ export default function App() {
         <Navigation colorScheme={colorScheme} doneOnBoarding={onDoneOnBoarding} handleLogin={handleLogin} handleLogout={handleLogout} />
         </ActionSheetProvider>
         <StatusBar />
+        <Toast />
       </SafeAreaProvider>
       </AppContext.Provider>
     );

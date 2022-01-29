@@ -2,7 +2,6 @@ import {
     ColorValue,
     Dimensions,
     FlatList,
-    Keyboard,
     Pressable,
     SafeAreaView,
     ScrollView,
@@ -11,11 +10,13 @@ import {
 } from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import Colors from "../constants/Colors";
-import Modal  from 'react-native-modal';
+import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
 import {FontAwesome} from "@expo/vector-icons";
+import Toast from 'react-native-toast-message';
+import {useActionSheet} from "@expo/react-native-action-sheet";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -34,14 +35,18 @@ export default function ProfilScreen() {
     // const saveData = async () => {
     //     navigation.
     // }
-    useEffect(() => {
-        Keyboard.addListener('keyboardDidShow', keyboardDidShow)
-        Keyboard.addListener('keyboardDidHide', keyboardDidHide)
-    });
-
-    const keyboardDidShow = () => {
+    const {showActionSheetWithOptions} = useActionSheet();
+    const showToast = (type: string, title: string, message: string) => {
+        Toast.show({
+            type: type,
+            text1: title,
+            position: 'bottom',
+            text2: message
+        });
     }
-    const keyboardDidHide = () => {
+    const languguageOptions = ["Francais", "Anglais", "Annuler"];
+    const successToast = (succuessTitle: string, successMessage: string) => {
+        showToast('success', succuessTitle, successMessage);
     }
 
     const [openAccountModal, setOpenAccountModal] = useState(false);
@@ -83,7 +88,10 @@ export default function ProfilScreen() {
         {
             title: 'Langue',
             icon: 'language',
-            color: Colors.light.sekhmetGreen
+            color: Colors.light.sekhmetGreen,
+            action() {
+                openLanguageActionMenu();
+            }
         },
         {
             title: 'A propos de sekhmet',
@@ -104,10 +112,8 @@ export default function ProfilScreen() {
                     ...item,
                     notif: !item.notif,
                 };
-
                 return updatedItem;
             }
-
             return item;
         });
 
@@ -135,127 +141,171 @@ export default function ProfilScreen() {
     }
     const onSave = () => {
         setOpenAccountModal(false);
+        successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
     }
 
     const getAccountModal = () => {
 
         return <Modal
             avoidKeyboard
-            onBackdropPress={()=>setOpenAccountModal(false)}
+            onBackdropPress={() => setOpenAccountModal(false)}
             animationIn={"slideInUp"}
             isVisible={openAccountModal}
-            swipeDirection={['down', 'up']}
+            swipeDirection={['down', 'up'
+            ]
+            }
             onSwipeComplete={() => setOpenAccountModal(false)}>
 
-                <SafeAreaView>
-                    <ScrollView style={{padding: 20, backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
-                                showsHorizontalScrollIndicator={false}>
-                        <View style={{paddingVertical: 10}}>
-                            <View style={styles.row}>
-                                <Avatar
-                                    size={60}
-                                    rounded
-                                    source={require("../assets/images/photoprofil.png")}
-                                    containerStyle={{
+            <
+                SafeAreaView>
+                < ScrollView
+                    style={
+                        {
+                            padding: 20, backgroundColor: 'white'
+                        }
+                    }
+                    showsVerticalScrollIndicator={false}
+                    showsHorizontalScrollIndicator={false}>
+                    < View
+                        style={
+                            {
+                                paddingVertical: 10
+                            }
+                        }>
+                        <
+                            View
+                            style={styles.row}>
+                            < Avatar
+                                size={60}
+                                rounded
+                                source={require("../assets/images/photoprofil.png"
+                                )
+                                }
+                                containerStyle={
+                                    {
                                         borderColor: 'grey',
                                         borderStyle: 'solid',
                                         borderWidth: 1,
-                                    }}
-                                />
-                                <Pressable onPress={onSave}>
-                                    <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
-                                </Pressable>
-                            </View>
+                                    }
+                                }
+                            />
+                            <Pressable onPress={onSave}>
+                                <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
+                            </Pressable>
                         </View>
+                    </View>
 
-                        {/*For first name*/}
-                        <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
-                                Nom</Text>
-                            <TextInput
-                                style={{
-                                    height: 40,
-                                    borderColor: 'grey',
-                                    borderWidth: 0.5,
-                                    borderRadius: 3,
-                                    paddingHorizontal: 8
-                                }}
-                                onChangeText={firstName => {
-                                    const neUser = {...user, firstName};
-                                    setUser(neUser);
-                                }}
-                                value={user.firstName}
-                                placeholder="Nom"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>
+                    {/*For first name*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
+                            Nom</Text>
+                        <TextInput
+                            style={{
+                                height: 40,
+                                borderColor: 'grey',
+                                borderWidth: 0.5,
+                                borderRadius: 3,
+                                paddingHorizontal: 8
+                            }}
+                            onChangeText={firstName => {
+                                const neUser = {...user, firstName};
+                                setUser(neUser);
+                            }}
+                            value={user.firstName}
+                            placeholder="Nom"
+                            underlineColorAndroid="transparent"
+                        />
+                    </View>
 
-                        {/*    For lastname*/}
-                        <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
-                                Prénom</Text>
-                            <TextInput
-                                style={{
-                                    height: 40,
-                                    borderColor: 'grey',
-                                    borderWidth: 0.5,
-                                    borderRadius: 3,
-                                    paddingHorizontal: 8
-                                }}
-                                onChangeText={lastName => {
-                                    const neUser = {...user, lastName};
-                                    setUser(neUser);
-                                }}
-                                value={user.lastName}
-                                placeholder="Prénom"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>
-                        {/*    For email*/}
-                        <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
-                                de telephone</Text>
-                            <TextInput
-                                style={{
-                                    height: 40,
-                                    borderColor: 'grey',
-                                    borderWidth: 0.5,
-                                    borderRadius: 3,
-                                    paddingHorizontal: 8
-                                }}
-                                onChangeText={phoneNumber => {
+                    {/*    For lastname*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
+                            Prénom</Text>
+                        <TextInput
+                            style={{
+                                height: 40,
+                                borderColor: 'grey',
+                                borderWidth: 0.5,
+                                borderRadius: 3,
+                                paddingHorizontal: 8
+                            }}
+                            onChangeText={lastName => {
+                                const neUser = {...user, lastName};
+                                setUser(neUser);
+                            }}
+                            value={user.lastName}
+                            placeholder="Prénom"
+                            underlineColorAndroid="transparent"
+                        />
+                    </View>
+                    {/*    For email*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
+                            de telephone</Text>
+                        <TextInput
+                            style={{
+                                height: 40,
+                                borderColor: 'grey',
+                                borderWidth: 0.5,
+                                borderRadius: 3,
+                                paddingHorizontal: 8
+                            }}
+                            onChangeText={phoneNumber => {
 
-                                }}
-                                value={'+237 691 380 458'}
-                                placeholder="Adresse Email"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>{/*    For email*/}
-                        <View style={{marginBottom: 10, marginTop: 5}}>
-                            <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
-                                Email</Text>
-                            <TextInput
-                                style={{
-                                    height: 40,
-                                    borderColor: 'grey',
-                                    borderWidth: 0.5,
-                                    borderRadius: 3,
-                                    paddingHorizontal: 8
-                                }}
-                                onChangeText={email => {
-                                    const neUser = {...user, email};
-                                    setUser(neUser);
-                                }}
-                                value={user.email}
-                                placeholder="Adresse Email"
-                                underlineColorAndroid="transparent"
-                            />
-                        </View>
-                    </ScrollView>
-                </SafeAreaView>
-        </Modal>;
+                            }}
+                            value={'+237 691 380 458'}
+                            placeholder="Adresse Email"
+                            underlineColorAndroid="transparent"
+                        />
+                    </View>
+                    {/*    For email*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
+                            Email</Text>
+                        <TextInput
+                            style={{
+                                height: 40,
+                                borderColor: 'grey',
+                                borderWidth: 0.5,
+                                borderRadius: 3,
+                                paddingHorizontal: 8
+                            }}
+                            onChangeText={email => {
+                                const neUser = {...user, email};
+                                setUser(neUser);
+                            }}
+                            value={user.email}
+                            placeholder="Adresse Email"
+                            underlineColorAndroid="transparent"
+                        />
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </Modal>
+            ;
     }
 
+    const openLanguageActionMenu = () => {
+        const cancelButtonIndex = 2;
+        showActionSheetWithOptions(
+            {
+                options: languguageOptions,
+                cancelButtonIndex
+            },
+            onLanguageActionPress
+        );
+    };
+
+
+    const onLanguageActionPress = (index) => {
+        if (index !== 2) {
+            successToast('Langue enregistré', `votre choix de langue ${languguageOptions[index]} a été pris en compte`);
+        }
+    };
     return (
         <View style={{backgroundColor: '#eaeaea', flex: 1}}>
 
@@ -272,7 +322,7 @@ export default function ProfilScreen() {
                         }}
                     />
                     <Badge
-                        value={<FontAwesome style={{color: 'white', }} size={10} name="pencil"/>}
+                        value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
                         badgeStyle={styles.pencilContainer}
                     />
 
@@ -326,9 +376,9 @@ const styles = StyleSheet.create({
     },
     pencilContainer: {
         backgroundColor: Colors.light.sekhmetOrange,
-        width:20,
-        height:20,
-        borderRadius:10,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
         borderColor: 'white',
         position: 'absolute',
         left: 18,
