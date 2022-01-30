@@ -14,7 +14,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList,} from '../types';
+import {ChatParamList, ProductParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -27,6 +27,7 @@ import RegisterScreen from "../screens/registration/RegisterScreen";
 import {createStackNavigator} from "@react-navigation/stack";
 import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
+import ProductDetail from "../screens/ProductDetail";
 
 export default function Navigation({colorScheme, doneOnBoarding, handleLogin, handleLogout}) {
 
@@ -46,6 +47,7 @@ export default function Navigation({colorScheme, doneOnBoarding, handleLogin, ha
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
+const ProductStack = createStackNavigator< ProductParamList>();
 function RootNavigator({doneOnBoarding, handleLogin}) {
     const context = useContext(AppContext);
     return (
@@ -61,6 +63,12 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                                      options={({route}) => ({
                                          title: route.params.clickedChat.name,
                                          headerBackTitle: 'Messages'
+                                     })}
+                    />
+                    <ProductStack.Screen name="ProductDetail" component={ProductDetail}
+                                     options={({route}) => ({
+                                         title: route.params.product.title,
+                                         headerBackTitle: route.params.backScreenName
                                      })}
                     />
                 </Stack.Navigator> : <Stack.Navigator screenOptions={{}}>

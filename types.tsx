@@ -29,10 +29,10 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> = Nati
     Screen>;
 
 export type RootTabParamList = {
-  Home: undefined;
-  Message: undefined;
-  Notification: undefined;
-  Profil: undefined;
+    Home: undefined;
+    Message: undefined;
+    Notification: undefined;
+    Profil: undefined;
 };
 export type ChatParamList = {
     Messages: undefined,
@@ -41,6 +41,17 @@ export type ChatParamList = {
             id: 'EKLK?DL?DK',
             name: "Gaetan TEMATE"
         }
+    }
+};
+export type ProductParamList = {
+    ProductDetail: {
+        product: {
+            id: 1,
+            title: 'Muesli Croustilles',
+            subtitle: 'By Coach Emy',
+            image: {}
+        },
+        backScreenName: ''
     }
 };
 
