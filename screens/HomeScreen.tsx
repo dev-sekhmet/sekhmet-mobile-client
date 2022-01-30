@@ -68,8 +68,8 @@ export default function HomeScreen({navigation}) {
             <Pressable
                 onPress={() => {
                     navigation.navigate("ProductDetail", {
-                        name: item.title,
-                        backScreenName: 'Home'
+                        product: item,
+                        backScreenName: "Home"
                     });
                 }}
                 style={({pressed}) => ({
@@ -231,89 +231,5 @@ export default function HomeScreen({navigation}) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    separator: {
-        marginVertical: 30,
-        height: 1,
-        width: '80%',
-    },
-    textCenter: {
-        textAlign: "center"
-    },
-    cardsWrapper: {
-        marginTop: 20,
-        width: '90%',
-        alignSelf: 'center',
-    },
-    button: {
-        marginLeft: 120,
-        backgroundColor: '#2A740B',
-        padding: 10,
-        borderRadius: 10,
-        width: 100,
-        height: 40
-    },
-    card: {
-        height: 150,
-        marginVertical: 10,
-        flexDirection: 'row',
-        shadowColor: '#999',
-        shadowOffset: {width: 0, height: 1},
-        shadowOpacity: 0.8,
-        shadowRadius: 2,
-        elevation: 5,
-    },
-    bgheader: {
-        marginTop: 35,
-        marginBottom: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 5,
-    },
-    cardsImgWrapper: {
-        flex: 1,
-    },
-
-    cardImg: {
-        height: '100%',
-        width: '100%',
-        alignSelf: 'center',
-        borderRadius: 8,
-        borderBottomRightRadius: 0,
-        borderTopRightRadius: 0,
-    },
-
-    cardInfo: {
-        flex: 2,
-        padding: 10,
-        borderColor: '#ccc',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderBottomRightRadius: 8,
-        borderTopRightRadius: 8,
-        backgroundColor: '#fff',
-    },
-
-    cardTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 5,
-
-    },
-
-    cardDetails: {
-        fontSize: 10,
-        color: '#444',
-        marginBottom: 10
-    },
-    gradient: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 5
     }
 });

@@ -156,9 +156,8 @@ export default function ProfilScreen() {
             }
             onSwipeComplete={() => setOpenAccountModal(false)}>
 
-            <
-                SafeAreaView>
-                < ScrollView
+            <SafeAreaView>
+                <ScrollView
                     style={
                         {
                             padding: 20, backgroundColor: 'white'
@@ -166,29 +165,25 @@ export default function ProfilScreen() {
                     }
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}>
-                    < View
+                    <View
                         style={
                             {
                                 paddingVertical: 10
                             }
                         }>
-                        <
-                            View
+                        <View
                             style={styles.row}>
-                            < Avatar
+                            <Avatar
                                 size={60}
                                 rounded
-                                source={require("../assets/images/photoprofil.png"
-                                )
-                                }
+                                source={require("../assets/images/photoprofil.png")}
                                 containerStyle={
                                     {
                                         borderColor: 'grey',
                                         borderStyle: 'solid',
                                         borderWidth: 1,
                                     }
-                                }
-                            />
+                                }/>
                             <Pressable onPress={onSave}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
                             </Pressable>

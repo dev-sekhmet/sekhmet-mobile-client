@@ -67,7 +67,7 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                     />
                     <ProductStack.Screen name="ProductDetail" component={ProductDetail}
                                      options={({route}) => ({
-                                         title: route.params.name,
+                                         title: route.params.product.title,
                                          headerBackTitle: route.params.backScreenName
                                      })}
                     />
