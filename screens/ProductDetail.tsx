@@ -1,10 +1,16 @@
-import {Dimensions, ImageBackground, StyleSheet} from 'react-native';
+import {Dimensions, FlatList, ImageBackground, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
+import {Icon, ListItem} from "react-native-elements";
+import {Button} from "react-native-paper";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
+type CharacteristcItem = {
+    text: string;
+    icon: string;
+};
 
 export default function ProductDetail({navigation, route}) {
     const [product, setProduct] = useState<any>({});
@@ -14,12 +20,41 @@ export default function ProductDetail({navigation, route}) {
             setProduct(route.params.product);
         }
     }, [route.params?.product]);
+
+    const characteristics: CharacteristcItem[] = [
+        {
+            icon: 'check',
+            text: 'Dégraisse Progressivement'
+        }, {
+            icon: 'check',
+            text: 'Baisse Le Taux De Glycémie'
+        }, {
+            icon: 'check',
+            text: 'Baisse La Tension'
+        }, {
+            icon: 'check',
+            text: 'Elimine Les Sensations De Faim'
+        }, {
+            icon: 'check',
+            text: 'Perte Assuré De Poids Sainement'
+        }
+    ];
+    const renderRow = ({item}: { item: CharacteristcItem }) => {
+        return (
+            <ListItem
+                bottomDivider>
+                <Icon color={Colors.light.sekhmetGreen} name={item.icon}/>
+                <ListItem.Content>
+                    <ListItem.Title>{item.text}</ListItem.Title>
+                </ListItem.Content>
+            </ListItem>
+        );
+    };
     return (
-        <View>
+        <View style={{backgroundColor: 'white'}}>
             <View style={styles.card}>
                 <View style={styles.textContainer}>
-                    <Text style={[{fontSize: 16}, styles.title]}>{product.title}</Text>
-                    <Text style={styles.title}>{product.subtitle}</Text>
+                    <Text style={[{fontSize: 16}, styles.title]}>{"Révélez La Meilleur Version De Vous Même"}</Text>
                 </View>
                 <View style={styles.imageContainer}>
                     <ImageBackground
@@ -59,13 +94,30 @@ export default function ProductDetail({navigation, route}) {
                     }]}>{'Muesli Croustilles'}</Text>
                     <Text style={{
                         color: Colors.light.sekhmetOrange,
-                        marginBottom:10
+                        marginBottom: 10
                     }}>{'By coach Emy'}
                     </Text>
 
                     <Text>{'Long established fact that a reader will be distracted by the readable content of a page when looking at its'}</Text>
                 </View>
+            </View>
 
+            <View>
+                <FlatList
+                    data={characteristics}
+                    renderItem={renderRow}
+                    keyExtractor={item => item.text}/>
+            </View>
+
+            <View style={{alignItems: 'center', marginTop: 30}}>
+                <Button mode="contained"
+                        style={{borderRadius: 20, width: width*0.9}}
+                        icon={'send'}
+                        uppercase={false}
+                        contentStyle={{flexDirection: 'row-reverse'}}
+                        color={Colors.light.sekhmetGreen}>
+                    Commander le produit
+                </Button>
             </View>
         </View>
     );

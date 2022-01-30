@@ -124,8 +124,7 @@ export default function ProfilScreen() {
         return (
             <ListItem
                 bottomDivider
-                onPress={() => action(item)}
-            >
+                onPress={() => action(item)}>
                 <Icon color={item.color} name={item.icon}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.title}</ListItem.Title>
