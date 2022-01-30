@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sekhmet.app"
+      "package": "com.sekhmet.smc"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
