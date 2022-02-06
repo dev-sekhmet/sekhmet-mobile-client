@@ -1,4 +1,4 @@
-import axios, {AxiosResponse} from 'axios';
+import {AxiosResponse} from 'axios';
 import {axiosInstance} from "../axios-config";
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {serializeAxiosError} from '../reducer.utils';
@@ -10,7 +10,7 @@ import qs from 'qs';
 import {ICheckPhoneVerificationRequest} from "../../model/login/check-phone-verification-request.model";
 
 export const AUTH_TOKEN_KEY = 'jhi-authenticationToken';
-
+const ON_BOARDING = '@onBoarding';
 export const setupAxiosInterceptors = (onUnauthenticated) => {
     const onRequestSuccess = async config => {
         const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
@@ -27,8 +27,8 @@ export const setupAxiosInterceptors = (onUnauthenticated) => {
         }
         return Promise.reject(err);
     };
-    axios.interceptors.request.use(onRequestSuccess);
-    axios.interceptors.response.use(onResponseSuccess, onResponseError);
+    axiosInstance.interceptors.request.use(onRequestSuccess);
+    axiosInstance.interceptors.response.use(onResponseSuccess, onResponseError);
 };
 
 export const initialState = {
@@ -39,6 +39,7 @@ export const initialState = {
     loginError: false, // Errors returned from server side
     startVerificationError: false, // Errors returned from server side
     showModalLogin: false,
+    onBoardingFinish: false,
     account: {} as any,
     errorMessage: null as unknown as string, // Errors returned from server side
     startVerificationMessage: null as unknown as string, // Errors returned from server side
@@ -61,7 +62,7 @@ export const getSession = (): AppThunk => async (dispatch, getState) => {
     }
 };
 
-export const getAccount = createAsyncThunk('authentication/get_account', async () => axiosInstance.get<any>('api/account'), {
+export const getAccount = createAsyncThunk('authentication/get_account', async () => axiosInstance.get<any>('/account'), {
     serializeError: serializeAxiosError,
 });
 
@@ -115,6 +116,21 @@ export const clearAuthentication = messageKey => dispatch => {
     dispatch(clearAuth());
 };
 
+export const onBoardFinished = () => async dispatch => {
+    await AsyncStorage.setItem(ON_BOARDING, 'true');
+    dispatch(onBoardSuccess());
+};
+
+export const getOnBoarding = () => async dispatch => {
+    const onBoarding = await AsyncStorage.getItem(ON_BOARDING);
+    console.log('onBoarding', onBoarding)
+    if(onBoarding) {
+        dispatch(onBoardSuccess());
+    } else {
+        dispatch(onBoardFailure());
+    }
+};
+
 export const AuthenticationSlice = createSlice({
     name: 'authentication',
     initialState: initialState as AuthenticationState,
@@ -140,6 +156,18 @@ export const AuthenticationSlice = createSlice({
                 isAuthenticated: false,
             };
         },
+        onBoardSuccess(state) {
+            return {
+                ...state,
+                onBoardingFinish: true
+            };
+        },
+        onBoardFailure(state) {
+            return {
+                ...state,
+                onBoardingFinish: false
+            };
+        },
     },
     extraReducers(builder) {
         builder
@@ -161,14 +189,18 @@ export const AuthenticationSlice = createSlice({
                 startVerificationSuccess: true,
                 startVerificationError: false,
             }))
-            .addCase(getAccount.rejected, (state, action) => ({
-                ...state,
-                loading: false,
-                isAuthenticated: false,
-                sessionHasBeenFetched: true,
-                showModalLogin: true,
-                errorMessage: action.error.message,
-            }))
+            .addCase(getAccount.rejected, (state, action) =>
+            {
+                console.log('action.error', action.error);
+                ({
+                    ...state,
+                    loading: false,
+                    isAuthenticated: false,
+                    sessionHasBeenFetched: true,
+                    showModalLogin: true,
+                    errorMessage: action.error.message,
+                })
+            })
             .addCase(startVerification.rejected, (state, action) => {
 
                   console.log('state', state);
@@ -182,6 +214,7 @@ export const AuthenticationSlice = createSlice({
             )
             .addCase(getAccount.fulfilled, (state, action) => {
                 const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
+                console.log('action.payload.data', action.payload.data)
                 return {
                     ...state,
                     isAuthenticated,
@@ -199,7 +232,7 @@ export const AuthenticationSlice = createSlice({
     },
 });
 
-export const {logoutSession, authError, clearAuth} = AuthenticationSlice.actions;
+export const {logoutSession, authError, clearAuth, onBoardSuccess, onBoardFailure} = AuthenticationSlice.actions;
 
 // Reducer
 export default AuthenticationSlice.reducer;

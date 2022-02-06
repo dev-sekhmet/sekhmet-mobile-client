@@ -8,7 +8,7 @@ import {getChannelComponent} from "./InputPhoneNumberScreen";
 import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
 import { useAppDispatch, useAppSelector } from '../../api/store';
 import {errorToast} from "../../components/toast";
-import {checkVerification} from "../../api/authentification/authentication.reducer";
+import {checkVerification, getSession} from "../../api/authentification/authentication.reducer";
 import {AxiosResponse} from "axios";
 
 

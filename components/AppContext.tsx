@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
 const AppContext = createContext({
-    onBoarding: false,
+    onBoardingFinish: false,
     user: {
         firstName: 'TEMATE',
         lastName: 'Gaetan'

@@ -2,9 +2,11 @@ import { AnyAction, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { loadingBarMiddleware } from 'react-redux-loading-bar';
 import authentification from './authentification/authentication.reducer';
+import settings from './settings/settings.reducer';
 export const store = configureStore({
     reducer: {
-        authentification
+        authentification,
+        settings
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({

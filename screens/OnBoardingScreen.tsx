@@ -1,17 +1,18 @@
-import { FontAwesome, FontAwesome5, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import {FontAwesome} from '@expo/vector-icons';
 import React, {useRef, useState} from 'react';
 import {
-    SafeAreaView,
-    Image,
-    StyleSheet,
-    FlatList,
-    View,
-    Text,
-    StatusBar,
-    TouchableOpacity,
     Dimensions,
+    FlatList,
+    Image,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import TermsConditionsScreen from "./registration/TermsConditionsScreen";
+import {useAppDispatch} from "../api/store";
+import {onBoardFinished} from "../api/authentification/authentication.reducer";
 
 const {width, height} = Dimensions.get('window');
 
@@ -47,15 +48,17 @@ const Slide = ({item}) => {
             </View>
             <View style={{width, alignItems: 'center'}}>
                 <Text style={styles.title}>{item?.title}</Text>
-                    <Text style={styles.subtitle}>{item?.subtitle}</Text>
+                <Text style={styles.subtitle}>{item?.subtitle}</Text>
             </View>
         </View>
     );
 };
 
-const OnBoardingScreen = ({done}) => {
+const OnBoardingScreen = () => {
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const ref = useRef();
+    const dispatch = useAppDispatch();
+
     const updateCurrentSlideIndex = e => {
         const contentOffsetX = e.nativeEvent.contentOffset.x;
         const currentIndex = Math.round(contentOffsetX / width);
@@ -79,6 +82,8 @@ const OnBoardingScreen = ({done}) => {
         ref?.current.scrollToOffset({offset});
         setCurrentSlideIndex(lastSlideIndex);
     };
+
+    const finish = () => dispatch(onBoardFinished());
 
     const Footer = () => {
         return (
@@ -115,18 +120,35 @@ const OnBoardingScreen = ({done}) => {
                 <View style={{marginTop: 0}}>
                     {
                         currentSlideIndex == slides.length - 1
-                        ?
+                            ?
                             <View style={{height: 40}}>
-                                <TouchableOpacity onPress={done} style={{display: 'flex', justifyContent: 'flex-end', flexDirection: 'row' }}>
-                                    <View style={{borderRadius: 12, backgroundColor: 'whitesmoke', paddingHorizontal: 10, paddingVertical: 5}}>
-                                        <Text style={{color: '#62A01A',}}>Commencer  <FontAwesome size={15} name="angle-double-right" /></Text>
+                                <TouchableOpacity onPress={finish} style={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                    flexDirection: 'row'
+                                }}>
+                                    <View style={{
+                                        borderRadius: 12,
+                                        backgroundColor: 'whitesmoke',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5
+                                    }}>
+                                        <Text style={{color: '#62A01A',}}>Commencer <FontAwesome size={15}
+                                                                                                 name="angle-double-right"/></Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
-                            :<View style={{height: 50}}>
-                                <TouchableOpacity onPress={skip} style={{display: 'flex', justifyContent: 'center', flexDirection: 'row' }}>
-                                    <View style={{borderRadius: 12, backgroundColor: 'whitesmoke', paddingHorizontal: 10, paddingVertical: 5}}>
-                                        <Text style={{color: '#62A01A',}}>Skip  <FontAwesome size={15} name="angle-double-right" /></Text>
+                            : <View style={{height: 50}}>
+                                <TouchableOpacity onPress={skip}
+                                                  style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}>
+                                    <View style={{
+                                        borderRadius: 12,
+                                        backgroundColor: 'whitesmoke',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5
+                                    }}>
+                                        <Text style={{color: '#62A01A',}}>Skip <FontAwesome size={15}
+                                                                                            name="angle-double-right"/></Text>
                                     </View>
                                 </TouchableOpacity>
                             </View>
@@ -139,17 +161,17 @@ const OnBoardingScreen = ({done}) => {
     return (
         <SafeAreaView style={{flex: 1}}>
             <StatusBar hidden={true}/>
-                    <FlatList
-                        ref={ref}
-                        onMomentumScrollEnd={updateCurrentSlideIndex}
-                        contentContainerStyle={{height: height * 0.8, justifyContent: 'center'}}
-                        showsHorizontalScrollIndicator={false}
-                        horizontal
-                        data={slides}
-                        pagingEnabled
-                        renderItem={({item}) => <Slide item={item} />}
-                    />
-                    <Footer />
+            <FlatList
+                ref={ref}
+                onMomentumScrollEnd={updateCurrentSlideIndex}
+                contentContainerStyle={{height: height * 0.8, justifyContent: 'center'}}
+                showsHorizontalScrollIndicator={false}
+                horizontal
+                data={slides}
+                pagingEnabled
+                renderItem={({item}) => <Slide item={item}/>}
+            />
+            <Footer/>
         </SafeAreaView>
     );
 };

@@ -7,7 +7,7 @@ import {FontAwesome, MaterialIcons} from '@expo/vector-icons';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
-import {useContext} from 'react';
+import {useContext, useEffect} from 'react';
 import {Pressable, View} from 'react-native';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
@@ -28,14 +28,16 @@ import {createStackNavigator} from "@react-navigation/stack";
 import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
 import ProductDetail from "../screens/ProductDetail";
+import {useAppDispatch, useAppSelector} from '../api/store';
+import {getOnBoarding, getSession} from "../api/authentification/authentication.reducer";
 
-export default function Navigation({colorScheme, doneOnBoarding, handleLogin, handleLogout}) {
+export default function Navigation({colorScheme}) {
 
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
             theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <RootNavigator doneOnBoarding={doneOnBoarding} handleLogin={handleLogin}/>
+            <RootNavigator/>
         </NavigationContainer>
     );
 }
@@ -49,11 +51,22 @@ const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
 const ProductStack = createStackNavigator<ProductParamList>();
 const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
-function RootNavigator({doneOnBoarding, handleLogin}) {
-    const context = useContext(AppContext);
+
+function RootNavigator() {
+    const account = useAppSelector(state => state.authentification.account);
+    const onBoardingFinish = useAppSelector(state => state.authentification.onBoardingFinish);
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        console.log('VerifyCodeScreen account', account);
+        dispatch(getSession());
+        dispatch(getOnBoarding());
+    }, []);
+
     return (
-        context.onBoarding ?
-            context.login ?
+        onBoardingFinish ?
+            account?.firstName && account?.lastName && account?.email ?
+                /* HOME ROOT*/
                 <Stack.Navigator>
                     <Stack.Screen name="Root" component={BottomTabNavigator} options={{headerShown: false}}/>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
@@ -67,27 +80,50 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                                      })}
                     />
                     <ProductStack.Screen name="ProductDetail" component={ProductDetail}
-                                     options={({route}) => ({
-                                         title: route.params.product.title,
-                                         headerBackTitle: route.params.backScreenName
-                                     })}
+                                         options={({route}) => ({
+                                             title: route.params.product.title,
+                                             headerBackTitle: route.params.backScreenName
+                                         })}
                     />
-                </Stack.Navigator> : <Stack.Navigator screenOptions={{}}>
-                    <Stack.Screen options={{headerShown: false}} name="Terms" component={TermsConditionsScreen}/>
-                    <Stack.Screen
-                        options={{headerShadowVisible: false, headerStyle: {backgroundColor: 'white'}, headerTitle: ''}}
-                        name="InputPhone" component={InputPhoneNumberScreen}/>
-                    <InputPhoneStack.Screen
-                        options={{headerShadowVisible: false, headerStyle: {backgroundColor: 'white'}, headerTitle: ''}}
-                        name="VerifyCode" component={VerifyCodeScreen}/>
-                    <Stack.Screen
-                        options={{headerShadowVisible: false, headerStyle: {backgroundColor: 'white'}, headerTitle: ''}}
-                        name="Register" children={() => {
-                        return (
-                            <RegisterScreen handleLogin={handleLogin}/>
-                        )
-                    }}/>
-                </Stack.Navigator> : <OnBoardingScreen done={doneOnBoarding}/>
+                </Stack.Navigator>
+                :
+                account?.login ?
+                    /* Register */
+                    <Stack.Navigator screenOptions={{}}>
+                        <Stack.Screen
+                            options={{
+                                headerShadowVisible: false,
+                                headerStyle: {backgroundColor: 'white'},
+                                headerTitle: ''
+                            }}
+                            name="Register" children={() => {
+                            return (
+                                <RegisterScreen/>
+                            )
+                        }}/>
+                    </Stack.Navigator>
+                    :
+                    /* InputPhone && VerifyCode */
+                    <Stack.Navigator screenOptions={{}}>
+                        <Stack.Screen options={{headerShown: false}} name="Terms" component={TermsConditionsScreen}/>
+                        <Stack.Screen
+                            options={{
+                                headerShadowVisible: false,
+                                headerStyle: {backgroundColor: 'white'},
+                                headerTitle: ''
+                            }}
+                            name="InputPhone" component={InputPhoneNumberScreen}/>
+                        <InputPhoneStack.Screen
+                            options={{
+                                headerShadowVisible: false,
+                                headerStyle: {backgroundColor: 'white'},
+                                headerTitle: ''
+                            }}
+                            name="VerifyCode" component={VerifyCodeScreen}/>
+
+                    </Stack.Navigator>
+
+            : <OnBoardingScreen/>
     );
 }
 
