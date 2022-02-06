@@ -1,13 +1,14 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Dimensions, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 
 import PhoneInput from "react-native-phone-number-input";
 import {useNavigation} from "@react-navigation/core";
 import {ListItem} from "react-native-elements";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
-import {phoneLogin} from "../../api/authentification.api";
+import { useAppDispatch, useAppSelector } from '../../api/store';
 import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
 import {errorToast} from "../../components/toast";
+import {startVerification} from "../../api/authentification/authentication.reducer";
 
 const width = Dimensions.get('screen').width
 const height = Dimensions.get('screen').height
@@ -66,27 +67,30 @@ const InputPhoneNumberScreen = ({ navigation }) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [disabled, setDisabled] = useState(false);
     const phoneInput = useRef<PhoneInput>(null);
+    const dispatch = useAppDispatch();
+
+    const startVerificationSuccess = useAppSelector(state => state.authentification.startVerificationSuccess);
+    const startVerificationError = useAppSelector(state => state.authentification.startVerificationError);
+
+    useEffect(() => {
+        if (startVerificationSuccess){
+            navigation.navigate('VerifyCode', {
+                phoneNumber
+            });
+        }
+
+        if (startVerificationError){
+            errorToast('Erreur code', 'Erreur lors de l\'envoi du code')
+        }
+    }, [startVerificationSuccess, startVerificationError]);
 
     const sendCode = (channel: VerificationChannel) => {
         if (phoneNumber && phoneNumber.length > 8) {
-            phoneLogin({
+            dispatch(startVerification({
                 phoneNumber,
                 channel,
                 locale: 'fr'
-            }).subscribe({
-                next(x) {
-                    console.log('got value ' + x);
-                    navigation.navigate('VerifyCode', {
-                            phoneNumber
-                    });
-                },
-                error(err) {
-                    console.error('something wrong occurred: ' + err);
-                },
-                complete() {
-                    console.log('done');
-                }
-            });
+            }));
         } else {
             errorToast('Numéro incorrect', 'Votre numero est incorrect')
         }

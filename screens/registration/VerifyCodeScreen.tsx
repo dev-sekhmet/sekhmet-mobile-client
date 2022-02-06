@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Dimensions, FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/core";
 import OTPInputView from "@twotalltotems/react-native-otp-input/dist";
@@ -6,8 +6,9 @@ import {Ionicons, MaterialIcons} from '@expo/vector-icons';
 import {ListItem} from "react-native-elements";
 import {getChannelComponent} from "./InputPhoneNumberScreen";
 import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
-import {phoneLogin, verifyLogin} from "../../api/authentification.api";
+import { useAppDispatch, useAppSelector } from '../../api/store';
 import {errorToast} from "../../components/toast";
+import {checkVerification} from "../../api/authentification/authentication.reducer";
 import {AxiosResponse} from "axios";
 
 
@@ -15,28 +16,28 @@ const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
 const VerifyCodeScreen = ({ route, navigation }) => {
+    const dispatch = useAppDispatch();
+    const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
+    const loginError = useAppSelector(state => state.authentification.loginError);
+
+    useEffect(() => {
+        if (loginSuccess){
+            navigation.navigate('Register');
+        }
+        if (loginError){
+            errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
+        }
+    }, [loginSuccess, loginError]);
 
     const checkVerificationCode = (token: string) => {
         const phoneNumber :string = route.params.phoneNumber;
         if (phoneNumber && phoneNumber.length >8) {
-            verifyLogin({
+            dispatch(checkVerification({
                 phoneNumber,
                 token,
                 locale: 'fr',
                 langKey: 'fr'
-            }).subscribe({
-                next(result) {
-                    console.log('got value ', result);
-                    navigation.navigate('Register');
-                },
-                error(err) {
-                    console.error('something wrong occurred: ' + err);
-                    errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
-                },
-                complete() {
-                    console.log('done');
-                }
-            });
+            }))
         } else {
             errorToast('Numéro incorrect', 'Votre numero est incorrect')
         }

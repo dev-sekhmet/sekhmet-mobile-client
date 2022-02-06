@@ -10,7 +10,9 @@ import {Alert} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import Toast from 'react-native-toast-message';
-import setupAxiosInterceptors from "./api/axios-config";
+import {setupAxiosInterceptors} from "./api/authentification/authentication.reducer";
+import { Provider } from 'react-redux';
+import {store} from "./api/store";
 
 setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 
@@ -58,11 +60,13 @@ export default function App() {
       }}>
 
       <SafeAreaProvider>
+        <Provider store={store}>
         <ActionSheetProvider>
         <Navigation colorScheme={colorScheme} doneOnBoarding={onDoneOnBoarding} handleLogin={handleLogin} handleLogout={handleLogout} />
         </ActionSheetProvider>
         <StatusBar />
         <Toast />
+        </Provider>
       </SafeAreaProvider>
       </AppContext.Provider>
     );
