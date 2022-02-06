@@ -30,9 +30,9 @@ const RegisterScreen = () => {
     const dispatch = useAppDispatch();
     const {control, handleSubmit, formState: {errors}} = useForm({
         defaultValues: {
-            firstName: '',
-            lastName: '',
-            email: ''
+            firstName: account?.firstName,
+            lastName: account?.lastName,
+            email: account?.email
         }
     });
 
