@@ -14,7 +14,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, ProductParamList,} from '../types';
+import {ChatParamList, InputPhoneParamList, ProductParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -47,7 +47,8 @@ export default function Navigation({colorScheme, doneOnBoarding, handleLogin, ha
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
-const ProductStack = createStackNavigator< ProductParamList>();
+const ProductStack = createStackNavigator<ProductParamList>();
+const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 function RootNavigator({doneOnBoarding, handleLogin}) {
     const context = useContext(AppContext);
     return (
@@ -76,7 +77,7 @@ function RootNavigator({doneOnBoarding, handleLogin}) {
                     <Stack.Screen
                         options={{headerShadowVisible: false, headerStyle: {backgroundColor: 'white'}, headerTitle: ''}}
                         name="InputPhone" component={InputPhoneNumberScreen}/>
-                    <Stack.Screen
+                    <InputPhoneStack.Screen
                         options={{headerShadowVisible: false, headerStyle: {backgroundColor: 'white'}, headerTitle: ''}}
                         name="VerifyCode" component={VerifyCodeScreen}/>
                     <Stack.Screen

@@ -54,6 +54,11 @@ export type ProductParamList = {
         backScreenName: ''
     }
 };
+export type InputPhoneParamList = {
+    VerifyCode: {
+        phoneNumber: string
+    }
+};
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,
     NativeStackScreenProps<RootStackParamList>>;

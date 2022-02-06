@@ -1,24 +1,51 @@
-import React from "react";
-import {Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {useNavigation} from "@react-navigation/core";
+import React, {useState} from "react";
+import {Dimensions, FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {useNavigation, useRoute} from "@react-navigation/core";
 import OTPInputView from "@twotalltotems/react-native-otp-input/dist";
-import {MaterialIcons} from '@expo/vector-icons';
+import {Ionicons, MaterialIcons} from '@expo/vector-icons';
+import {ListItem} from "react-native-elements";
+import {getChannelComponent} from "./InputPhoneNumberScreen";
+import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
+import {phoneLogin, verifyLogin} from "../../api/authentification.api";
+import {errorToast} from "../../components/toast";
+import {AxiosResponse} from "axios";
 
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-const VerifyCodeScreen = () => {
-    const navigation = useNavigation();
+const VerifyCodeScreen = ({ route, navigation }) => {
 
-    const checkCode = (code) => {
-        console.log("Here the code", code);
-        navigation.navigate('Register');
+    const checkVerificationCode = (token: string) => {
+        const phoneNumber :string = route.params.phoneNumber;
+        if (phoneNumber && phoneNumber.length >8) {
+            verifyLogin({
+                phoneNumber,
+                token,
+                locale: 'fr',
+                langKey: 'fr'
+            }).subscribe({
+                next(result) {
+                    console.log('got value ', result);
+                    navigation.navigate('Register');
+                },
+                error(err) {
+                    console.error('something wrong occurred: ' + err);
+                    errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
+                },
+                complete() {
+                    console.log('done');
+                }
+            });
+        } else {
+            errorToast('Numéro incorrect', 'Votre numero est incorrect')
+        }
     }
+
     return (
         <View style={{backgroundColor: 'white', flex: 1}}>
             <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <ScrollView style={{backgroundColor: 'white'}}>
+                <View style={{backgroundColor: 'white'}}>
                     <View style={{paddingVertical: 10, alignItems: 'center'}}>
                         <Text style={styles.title}>Enter your verification code</Text>
                     </View>
@@ -39,7 +66,7 @@ const VerifyCodeScreen = () => {
                             codeInputFieldStyle={styles.underlineStyleBase}
                             // codeInputHighlightStyle={styles.underlineStyleHighLighted}
                             onCodeFilled={(code) => {
-                                checkCode(code);
+                                checkVerificationCode(code);
                             }}
                         />
                         <View style={{height: 2.0, width: width * 0.8, backgroundColor: 'grey'}}/>
@@ -48,44 +75,14 @@ const VerifyCodeScreen = () => {
                                 code</Text>
                         </View>
                     </View>
-                    <View style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginTop: 20,
-                        paddingHorizontal: 10
-                    }}>
-                        <View>
-                            <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => {
-                            }}>
-                                <MaterialIcons name="message" color="grey" style={{marginRight: 5, fontWeight: 'bold'}} size={20}/>
-                                <Text style={{color: 'grey', fontWeight: 'bold'}}>Resend SMS</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={{color: 'grey'}}>
-                            0:59
-                        </Text>
-                    </View>
-
-                    <View style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginTop: 20,
-                        paddingHorizontal: 10
-                    }}>
-                        <View>
-                            <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => {
-                            }}>
-                                <MaterialIcons name="call" color="grey" style={{marginRight: 5, fontWeight: 'bold'}} size={20}/>
-                                <Text style={{color: 'grey', fontWeight: 'bold'}}>Call me</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={{color: 'grey'}}>
-                            0:59
-                        </Text>
-                    </View>
-                </ScrollView>
+                    <View><Text>Renvoyer le code par </Text></View>
+                    {getChannelComponent(
+                        [
+                            ()=>{console.log(" VerifyCodeScreen SSSSSSSSMMMMMMMMMMMMMSSSSSSSS")},
+                            ()=>{console.log(" VerifyCodeScreen CAALLLLLLLLLL")},
+                            ()=>{console.log("VerifyCodeScreen WWWWHHHHHATSSAAAAAAAAPPPP")}]
+                    )}
+                </View>
             </SafeAreaView>
         </View>
     )

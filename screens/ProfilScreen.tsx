@@ -15,8 +15,8 @@ import Colors from "../constants/Colors";
 import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
 import {FontAwesome} from "@expo/vector-icons";
-import Toast from 'react-native-toast-message';
 import {useActionSheet} from "@expo/react-native-action-sheet";
+import {successToast} from "../components/toast";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -36,18 +36,8 @@ export default function ProfilScreen() {
     //     navigation.
     // }
     const {showActionSheetWithOptions} = useActionSheet();
-    const showToast = (type: string, title: string, message: string) => {
-        Toast.show({
-            type: type,
-            text1: title,
-            position: 'bottom',
-            text2: message
-        });
-    }
-    const languguageOptions = ["Francais", "Anglais", "Annuler"];
-    const successToast = (succuessTitle: string, successMessage: string) => {
-        showToast('success', succuessTitle, successMessage);
-    }
+
+    const languageOptions = ["Francais", "Anglais", "Annuler"];
 
     const [openAccountModal, setOpenAccountModal] = useState(false);
     const [user, setUser] = useState<IUser>({firstName: "Maboma", lastName: "Brenda", email: "brenda@maboma.fr"});
@@ -287,7 +277,7 @@ export default function ProfilScreen() {
         const cancelButtonIndex = 2;
         showActionSheetWithOptions(
             {
-                options: languguageOptions,
+                options: languageOptions,
                 cancelButtonIndex
             },
             onLanguageActionPress
@@ -297,7 +287,7 @@ export default function ProfilScreen() {
 
     const onLanguageActionPress = (index) => {
         if (index !== 2) {
-            successToast('Langue enregistré', `votre choix de langue ${languguageOptions[index]} a été pris en compte`);
+            successToast('Langue enregistré', `votre choix de langue ${languageOptions[index]} a été pris en compte`);
         }
     };
     return (
