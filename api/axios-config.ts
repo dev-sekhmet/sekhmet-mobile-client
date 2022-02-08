@@ -4,6 +4,6 @@ import {AUTH_TOKEN_KEY} from "./authentification/authentication.reducer";
 
 const TIMEOUT = 60 * 1000;
 export const axiosInstance = axios.create({
-    baseURL: 'http://app-prod.eba-4xbbu6pb.eu-west-3.elasticbeanstalk.com/api',
+    baseURL: 'http://app-prod.eba-gidg9c2p.eu-west-3.elasticbeanstalk.com/api',
     timeout: TIMEOUT
 });

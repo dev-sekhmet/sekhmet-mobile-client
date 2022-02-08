@@ -1,5 +1,15 @@
 import React, {useEffect, useState} from "react";
-import {Dimensions, FlatList, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {
+    ActivityIndicator,
+    Dimensions,
+    FlatList,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
 import {useNavigation, useRoute} from "@react-navigation/core";
 import OTPInputView from "@twotalltotems/react-native-otp-input/dist";
 import {Ionicons, MaterialIcons} from '@expo/vector-icons';
@@ -15,6 +25,7 @@ import {
     resetStartVerification
 } from "../../api/authentification/authentication.reducer";
 import {AxiosResponse} from "axios";
+import Colors from "../../constants/Colors";
 
 
 const width = Dimensions.get('screen').width;
@@ -22,11 +33,13 @@ const height = Dimensions.get('screen').height;
 
 const VerifyCodeScreen = ({ route, navigation }) => {
     const dispatch = useAppDispatch();
+    const [sendCode, setSendCode] = useState(false);
     const loginError = useAppSelector(state => state.authentification.loginError);
     const phoneNumber :string = route.params.phoneNumber;
 
     useEffect(() => {
         if (loginError){
+            setSendCode(false);
             errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
             dispatch(resetAuthentication());
         }
@@ -34,13 +47,14 @@ const VerifyCodeScreen = ({ route, navigation }) => {
 
     useEffect(() => {
         return () => {
+            setSendCode(false);
             dispatch(resetAuthentication());
         };
     }, []);
 
     const checkVerificationCode = (token: string) => {
-
         if (phoneNumber && phoneNumber.length >8) {
+            setSendCode(true);
             dispatch(checkVerification({
                 phoneNumber,
                 token,
@@ -53,7 +67,9 @@ const VerifyCodeScreen = ({ route, navigation }) => {
     }
 
     return (
-        <View style={{backgroundColor: 'white', flex: 1}}>
+        sendCode? <ActivityIndicator style={styles.loading} size="large" color={Colors.light.sekhmetGreen} />
+            :
+            <View style={{backgroundColor: 'white', flex: 1}}>
             <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
                 <View style={{backgroundColor: 'white'}}>
                     <View style={{paddingVertical: 10, alignItems: 'center'}}>
@@ -74,7 +90,6 @@ const VerifyCodeScreen = ({ route, navigation }) => {
                             selectionColor="black"
                             placeholderTextColor="black"
                             codeInputFieldStyle={styles.underlineStyleBase}
-                            // codeInputHighlightStyle={styles.underlineStyleHighLighted}
                             onCodeFilled={(code) => {
                                 checkVerificationCode(code);
                             }}
@@ -128,9 +143,15 @@ const styles = StyleSheet.create({
         fontSize: 20,
     },
 
-    underlineStyleHighLighted: {
-        borderColor: "transparent",
-    },
+    loading: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 })
 
 export default VerifyCodeScreen;
