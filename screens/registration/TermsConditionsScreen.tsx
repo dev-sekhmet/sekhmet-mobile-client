@@ -47,7 +47,7 @@ const TermsConditionsScreen = () => {
             }}>
                 <Text style={styles.subtitle}>
                     Please read our <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/PrivatePolicy.html")} style={styles.link}>privacy policy</Text>.
-                    Press "accept and continue" to accept the <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/PrivatePolicy.html")}
+                    Press "accept and continue" to accept the <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/TermsConditions.html")}
                                                                     style={styles.link}>terms of use</Text>
                 </Text>
                 <Button mode="contained" onPress={checkAndGo} contentStyle={{paddingHorizontal: 30}}
