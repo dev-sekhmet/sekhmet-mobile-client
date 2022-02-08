@@ -38,7 +38,6 @@ export const initialState = {
     startVerificationSuccess: false,
     loginError: false, // Errors returned from server side
     startVerificationError: false, // Errors returned from server side
-    showModalLogin: false,
     onBoardingFinish: false,
     account: {} as any,
     errorMessage: null as unknown as string, // Errors returned from server side
@@ -124,7 +123,7 @@ export const onBoardFinished = () => async dispatch => {
 export const getOnBoarding = () => async dispatch => {
     const onBoarding = await AsyncStorage.getItem(ON_BOARDING);
     console.log('onBoarding', onBoarding)
-    if(onBoarding) {
+    if (onBoarding) {
         dispatch(onBoardSuccess());
     } else {
         dispatch(onBoardFailure());
@@ -135,16 +134,29 @@ export const AuthenticationSlice = createSlice({
     name: 'authentication',
     initialState: initialState as AuthenticationState,
     reducers: {
+        resetStartVerification(state) {
+            return {
+                ...state,
+                startVerificationSuccess: false,
+                startVerificationError: false
+            };
+        },
+        resetAuthentication(state) {
+            return {
+                ...state,
+                loginError: false,
+                startVerificationSuccess: false,
+                startVerificationError: false
+            };
+        },
         logoutSession() {
             return {
                 ...initialState,
-                showModalLogin: true,
             };
         },
         authError(state, action) {
             return {
                 ...state,
-                showModalLogin: true,
                 redirectMessage: action.payload,
             };
         },
@@ -152,7 +164,6 @@ export const AuthenticationSlice = createSlice({
             return {
                 ...state,
                 loading: false,
-                showModalLogin: true,
                 isAuthenticated: false,
             };
         },
@@ -171,45 +182,32 @@ export const AuthenticationSlice = createSlice({
     },
     extraReducers(builder) {
         builder
-            .addCase(authenticate.rejected, (state, action) => ({
-                ...initialState,
-                errorMessage: action.error.message,
-                showModalLogin: true,
-                loginError: true,
-            }))
+            .addCase(authenticate.rejected, (state, action) => {
+                state.errorMessage = action.error.message;
+                state.loginError = true;
+            })
             .addCase(authenticate.fulfilled, state => ({
                 ...state,
                 loading: false,
                 loginError: false,
-                showModalLogin: false,
                 loginSuccess: true,
             }))
-            .addCase(startVerification.fulfilled, state => ({
-                ...state,
-                startVerificationSuccess: true,
-                startVerificationError: false,
-            }))
-            .addCase(getAccount.rejected, (state, action) =>
-            {
-                console.log('action.error', action.error);
+            .addCase(startVerification.fulfilled, state => {
+                state.startVerificationSuccess = true;
+                state.startVerificationError = false;
+            })
+            .addCase(getAccount.rejected, (state, action) => {
                 ({
                     ...state,
                     loading: false,
                     isAuthenticated: false,
                     sessionHasBeenFetched: true,
-                    showModalLogin: true,
                     errorMessage: action.error.message,
                 })
             })
-            .addCase(startVerification.rejected, (state, action) => {
-
-                  console.log('state', state);
-                  console.log('action', action);
-                    ({
-                        ...state,
-                        startVerificationSuccess: false,
-                        startVerificationError: true
-                    })
+            .addCase(startVerification.rejected, state => {
+                    state.startVerificationSuccess = false;
+                    state.startVerificationError = true;
                 }
             )
             .addCase(getAccount.fulfilled, (state, action) => {
@@ -232,7 +230,7 @@ export const AuthenticationSlice = createSlice({
     },
 });
 
-export const {logoutSession, authError, clearAuth, onBoardSuccess, onBoardFailure} = AuthenticationSlice.actions;
+export const {logoutSession, authError, clearAuth, onBoardSuccess, onBoardFailure, resetAuthentication, resetStartVerification} = AuthenticationSlice.actions;
 
 // Reducer
 export default AuthenticationSlice.reducer;

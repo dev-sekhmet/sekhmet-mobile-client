@@ -58,7 +58,6 @@ function RootNavigator() {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        console.log('VerifyCodeScreen account', account);
         dispatch(getSession());
         dispatch(getOnBoarding());
     }, []);

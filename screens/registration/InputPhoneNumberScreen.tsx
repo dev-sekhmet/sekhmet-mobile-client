@@ -2,13 +2,12 @@ import React, {useEffect, useRef, useState} from "react";
 import {Dimensions, FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 
 import PhoneInput from "react-native-phone-number-input";
-import {useNavigation} from "@react-navigation/core";
 import {ListItem} from "react-native-elements";
 import {Ionicons, MaterialIcons} from "@expo/vector-icons";
-import { useAppDispatch, useAppSelector } from '../../api/store';
+import {useAppDispatch, useAppSelector} from '../../api/store';
 import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
 import {errorToast} from "../../components/toast";
-import {startVerification} from "../../api/authentification/authentication.reducer";
+import {resetStartVerification, startVerification} from "../../api/authentification/authentication.reducer";
 
 const width = Dimensions.get('screen').width
 const height = Dimensions.get('screen').height
@@ -63,7 +62,7 @@ export const getChannelComponent = (actions: (() => void)[]) => {
         keyExtractor={item => item.id}/>;
 }
 
-const InputPhoneNumberScreen = ({ navigation }) => {
+const InputPhoneNumberScreen = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [disabled, setDisabled] = useState(false);
     const phoneInput = useRef<PhoneInput>(null);
@@ -73,16 +72,27 @@ const InputPhoneNumberScreen = ({ navigation }) => {
     const startVerificationError = useAppSelector(state => state.authentification.startVerificationError);
 
     useEffect(() => {
-        if (startVerificationSuccess){
+        if (startVerificationError) {
+            errorToast('Erreur code', 'Erreur lors de l\'envoi du code, vérifier votre numéro de téléphone')
+            dispatch(resetStartVerification());
+        }
+    }, [startVerificationError]);
+
+
+    useEffect(() => {
+        if (startVerificationSuccess) {
             navigation.navigate('VerifyCode', {
                 phoneNumber
             });
-        }
 
-        if (startVerificationError){
-            errorToast('Erreur code', 'Erreur lors de l\'envoi du code')
         }
-    }, [startVerificationSuccess, startVerificationError]);
+    }, [startVerificationSuccess]);
+
+    useEffect(() => {
+        return () => {
+            dispatch(resetStartVerification());
+        };
+    }, []);
 
     const sendCode = (channel: VerificationChannel) => {
         if (phoneNumber && phoneNumber.length > 8) {
@@ -104,9 +114,8 @@ const InputPhoneNumberScreen = ({ navigation }) => {
                         <Text style={styles.title}>Connectez vous avec votre Numero de Téléphone</Text>
                     </View>
                     <View style={{paddingVertical: 10, alignItems: 'center'}}>
-                        <Text style={styles.subtitle}>Lorem Ipsum has been the industry's standard dummy text ever since
-                            the 1500s,
-                            when an unknown printer took a galley of type scrambled</Text>
+                        <Text style={styles.subtitle}>Un code va vous etre envoyer par un de moyen que vous aurez choisie (SMS, Appel ou Whatsapp){'\n'}
+                            entrez ce code dans l'écran suivant pour vous connecter </Text>
                     </View>
                     <View style={{paddingVertical: 20, alignItems: 'center'}}>
                         <PhoneInput
@@ -117,7 +126,6 @@ const InputPhoneNumberScreen = ({ navigation }) => {
                             textInputStyle={{backgroundColor: 'transparent'}}
                             layout="first"
                             onChangeFormattedText={(phoneNumber) => {
-                                console.log("onChangeFormattedText ", phoneNumber);
                                 setPhoneNumber(phoneNumber);
                             }}
                             countryPickerProps={{withAlphaFilter: true}}

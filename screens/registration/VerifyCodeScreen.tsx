@@ -8,7 +8,12 @@ import {getChannelComponent} from "./InputPhoneNumberScreen";
 import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
 import { useAppDispatch, useAppSelector } from '../../api/store';
 import {errorToast} from "../../components/toast";
-import {checkVerification, getSession} from "../../api/authentification/authentication.reducer";
+import {
+    checkVerification,
+    getSession,
+    resetAuthentication,
+    resetStartVerification
+} from "../../api/authentification/authentication.reducer";
 import {AxiosResponse} from "axios";
 
 
@@ -17,20 +22,24 @@ const height = Dimensions.get('screen').height;
 
 const VerifyCodeScreen = ({ route, navigation }) => {
     const dispatch = useAppDispatch();
-    const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
     const loginError = useAppSelector(state => state.authentification.loginError);
+    const phoneNumber :string = route.params.phoneNumber;
 
     useEffect(() => {
-        if (loginSuccess){
-            navigation.navigate('Register');
-        }
         if (loginError){
             errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
+            dispatch(resetAuthentication());
         }
-    }, [loginSuccess, loginError]);
+    }, [loginError]);
+
+    useEffect(() => {
+        return () => {
+            dispatch(resetAuthentication());
+        };
+    }, []);
 
     const checkVerificationCode = (token: string) => {
-        const phoneNumber :string = route.params.phoneNumber;
+
         if (phoneNumber && phoneNumber.length >8) {
             dispatch(checkVerification({
                 phoneNumber,
@@ -52,7 +61,7 @@ const VerifyCodeScreen = ({ route, navigation }) => {
                     </View>
                     <View style={{paddingBottom: 10, alignItems: 'center'}}>
                         <Text style={styles.subtitle}>
-                            +(237) 697 856 482 . <Text onPress={() => navigation.goBack()} style={styles.link}>Wrong
+                            {phoneNumber} <Text onPress={() => navigation.goBack()} style={styles.link}>Wrong
                             number ?</Text>
                         </Text>
                     </View>
