@@ -1,30 +1,83 @@
-import React from "react";
-import {Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {useNavigation} from "@react-navigation/core";
+import React, {useEffect, useState} from "react";
+import {
+    ActivityIndicator,
+    Dimensions,
+    FlatList,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from "react-native";
+import {useNavigation, useRoute} from "@react-navigation/core";
 import OTPInputView from "@twotalltotems/react-native-otp-input/dist";
-import {MaterialIcons} from '@expo/vector-icons';
+import {Ionicons, MaterialIcons} from '@expo/vector-icons';
+import {ListItem} from "react-native-elements";
+import {getChannelComponent} from "./InputPhoneNumberScreen";
+import {VerificationChannel} from "../../model/enumerations/verification-channel.model";
+import { useAppDispatch, useAppSelector } from '../../api/store';
+import {errorToast} from "../../components/toast";
+import {
+    checkVerification,
+    getSession,
+    resetAuthentication,
+    resetStartVerification
+} from "../../api/authentification/authentication.reducer";
+import {AxiosResponse} from "axios";
+import Colors from "../../constants/Colors";
 
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-const VerifyCodeScreen = () => {
-    const navigation = useNavigation();
+const VerifyCodeScreen = ({ route, navigation }) => {
+    const dispatch = useAppDispatch();
+    const [sendCode, setSendCode] = useState(false);
+    const loginError = useAppSelector(state => state.authentification.loginError);
+    const phoneNumber :string = route.params.phoneNumber;
 
-    const checkCode = (code) => {
-        console.log("Here the code", code);
-        navigation.navigate('Register');
+    useEffect(() => {
+        if (loginError){
+            setSendCode(false);
+            errorToast('Erreur de Verification', 'Votre numero n\'a pas pu etre verifié')
+            dispatch(resetAuthentication());
+        }
+    }, [loginError]);
+
+    useEffect(() => {
+        return () => {
+            setSendCode(false);
+            dispatch(resetAuthentication());
+        };
+    }, []);
+
+    const checkVerificationCode = (token: string) => {
+        if (phoneNumber && phoneNumber.length >8) {
+            setSendCode(true);
+            dispatch(checkVerification({
+                phoneNumber,
+                token,
+                locale: 'fr',
+                langKey: 'fr'
+            }))
+        } else {
+            errorToast('Numéro incorrect', 'Votre numero est incorrect')
+        }
     }
+
     return (
-        <View style={{backgroundColor: 'white', flex: 1}}>
+        sendCode? <ActivityIndicator style={styles.loading} size="large" color={Colors.light.sekhmetGreen} />
+            :
+            <View style={{backgroundColor: 'white', flex: 1}}>
             <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <ScrollView style={{backgroundColor: 'white'}}>
+                <View style={{backgroundColor: 'white'}}>
                     <View style={{paddingVertical: 10, alignItems: 'center'}}>
                         <Text style={styles.title}>Enter your verification code</Text>
                     </View>
                     <View style={{paddingBottom: 10, alignItems: 'center'}}>
                         <Text style={styles.subtitle}>
-                            +(237) 697 856 482 . <Text onPress={() => navigation.goBack()} style={styles.link}>Wrong
+                            {phoneNumber} <Text onPress={() => navigation.goBack()} style={styles.link}>Wrong
                             number ?</Text>
                         </Text>
                     </View>
@@ -37,9 +90,8 @@ const VerifyCodeScreen = () => {
                             selectionColor="black"
                             placeholderTextColor="black"
                             codeInputFieldStyle={styles.underlineStyleBase}
-                            // codeInputHighlightStyle={styles.underlineStyleHighLighted}
                             onCodeFilled={(code) => {
-                                checkCode(code);
+                                checkVerificationCode(code);
                             }}
                         />
                         <View style={{height: 2.0, width: width * 0.8, backgroundColor: 'grey'}}/>
@@ -48,44 +100,14 @@ const VerifyCodeScreen = () => {
                                 code</Text>
                         </View>
                     </View>
-                    <View style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginTop: 20,
-                        paddingHorizontal: 10
-                    }}>
-                        <View>
-                            <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => {
-                            }}>
-                                <MaterialIcons name="message" color="grey" style={{marginRight: 5, fontWeight: 'bold'}} size={20}/>
-                                <Text style={{color: 'grey', fontWeight: 'bold'}}>Resend SMS</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={{color: 'grey'}}>
-                            0:59
-                        </Text>
-                    </View>
-
-                    <View style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginTop: 20,
-                        paddingHorizontal: 10
-                    }}>
-                        <View>
-                            <TouchableOpacity style={{flexDirection: 'row'}} onPress={() => {
-                            }}>
-                                <MaterialIcons name="call" color="grey" style={{marginRight: 5, fontWeight: 'bold'}} size={20}/>
-                                <Text style={{color: 'grey', fontWeight: 'bold'}}>Call me</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={{color: 'grey'}}>
-                            0:59
-                        </Text>
-                    </View>
-                </ScrollView>
+                    <View><Text>Renvoyer le code par </Text></View>
+                    {getChannelComponent(
+                        [
+                            ()=>{console.log(" VerifyCodeScreen SSSSSSSSMMMMMMMMMMMMMSSSSSSSS")},
+                            ()=>{console.log(" VerifyCodeScreen CAALLLLLLLLLL")},
+                            ()=>{console.log("VerifyCodeScreen WWWWHHHHHATSSAAAAAAAAPPPP")}]
+                    )}
+                </View>
             </SafeAreaView>
         </View>
     )
@@ -121,9 +143,15 @@ const styles = StyleSheet.create({
         fontSize: 20,
     },
 
-    underlineStyleHighLighted: {
-        borderColor: "transparent",
-    },
+    loading: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 })
 
 export default VerifyCodeScreen;

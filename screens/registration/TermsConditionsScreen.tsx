@@ -1,12 +1,14 @@
 import React, {useEffect} from "react";
-import {Alert, Image, StyleSheet, Text, View} from "react-native";
+import {Alert, Image, StyleSheet, Text, View, ActivityIndicator, Linking} from "react-native";
 import {Button} from "react-native-paper";
 import LAYOUT from '../../constants/Layout';
 import {useNavigation} from "@react-navigation/core";
+import {useAppSelector} from "../../api/store";
+import Colors from "../../constants/Colors";
 
 const TermsConditionsScreen = () => {
     const navigation = useNavigation();
-
+    const account = useAppSelector(state => state.authentification.account);
     // const navigation = createNavigationContainerRef();
     useEffect(() => {
         console.log("Here the navigation", navigation);
@@ -18,7 +20,8 @@ const TermsConditionsScreen = () => {
         navigation.navigate('InputPhone')
     }
     return (
-        <View style={{
+        account?.login? <ActivityIndicator size="large" color={Colors.light.sekhmetGreen} />:
+            <View style={{
             height: LAYOUT.window.height,
             alignItems: 'center',
             display: 'flex',
@@ -43,8 +46,8 @@ const TermsConditionsScreen = () => {
                 paddingHorizontal: 20
             }}>
                 <Text style={styles.subtitle}>
-                    Please read our <Text onPress={() => Alert.alert("heyyy")} style={styles.link}>privacy policy</Text>.
-                    Press "accept and continue" to accept the <Text onPress={() => Alert.alert("yooo")}
+                    Please read our <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/PrivatePolicy.html")} style={styles.link}>privacy policy</Text>.
+                    Press "accept and continue" to accept the <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/TermsConditions.html")}
                                                                     style={styles.link}>terms of use</Text>
                 </Text>
                 <Button mode="contained" onPress={checkAndGo} contentStyle={{paddingHorizontal: 30}}

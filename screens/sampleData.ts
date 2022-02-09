@@ -2,7 +2,7 @@ import {IMessage} from "../model/message.model";
 import {ChatType} from "../model/enumerations/chat-type.model";
 
 export const messages: IMessage[] = [{
-    "id": "03489c4f-930e-4f1b-b338-9b30a3f4c021",
+    "id": "23489c4f-930e-4f1b-b338-9b30a3d4c021",
     "text": "Bonjour chef",
     "createdAt": "2022-01-25T21:14:19.133872",
     "image": null,
@@ -27,7 +27,7 @@ export const messages: IMessage[] = [{
         "resetDate": null
     }
 },{
-    "id": "03489c4f-930e-4f1b-b338-9b30a3f4c099",
+    "id": "03489c4f-930e-4f1b-b338-9b30a3f4c991",
     "text": "Tu as vu le way la ?",
     "createdAt": "2022-01-24T21:14:19.133872",
     "image": null,
@@ -52,7 +52,7 @@ export const messages: IMessage[] = [{
         "resetDate": null
     }
 },{
-    "id": "03489c4f-930e-4f1b-b338-9b30a3f4c766",
+    "id": "03489c4f-930e-4f1b-b338-9b30a3f4c021",
     "text": "Tu ne reponds pas ?",
     "createdAt": "2022-01-25T21:15:19.133872",
     "image": null,

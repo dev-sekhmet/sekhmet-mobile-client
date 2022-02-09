@@ -1,23 +1,70 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {Dimensions, SafeAreaView, ScrollView, Text, TextInput, View} from "react-native";
 import {Avatar} from "react-native-elements";
 import {Button} from "react-native-paper";
-import {useNavigation} from "@react-navigation/core";
+import {useAppDispatch, useAppSelector} from "../../api/store";
+import {successToast} from "../../components/toast";
+import {reset, saveAccountSettings} from '../../api/settings/settings.reducer';
+import {Controller, useForm} from "react-hook-form";
+import {color} from "react-native-elements/dist/helpers";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
+/*
+const Input = ({name, control, style}) => {
+    const {field} = useController({
+        control,
+        defaultValue: '',
+        name
+    })
+    return (<TextInput
+        value={field.value}
+        style={style}
+        placeholder={name}
+        underlineColorAndroid="transparent"
+        onChangeText={field.onChange}/>)
+}*/
+const RegisterScreen = () => {
+    const account = useAppSelector(state => state.authentification.account);
+    const successMessage = useAppSelector(state => state.settings.successMessage);
+    const dispatch = useAppDispatch();
+    const {control, handleSubmit, formState: {errors}} = useForm({
+        defaultValues: {
+            firstName: account?.firstName,
+            lastName: account?.lastName,
+            email: account?.email
+        }
+    });
 
-const RegisterScreen = ({handleLogin}) => {
-    // const navigation = useNavigation();
 
-    // const saveData = async () => {
-    //     navigation.
-    // }
+    const onSubmit = data => console.log(data);
+
+    useEffect(() => {
+        return () => {
+            dispatch(reset());
+        };
+    }, []);
+
+    useEffect(() => {
+        if (successMessage) {
+            successToast("Success", "Success save ")
+        }
+    }, [successMessage]);
+
+    const handleValidSubmit = values => {
+        dispatch(
+            saveAccountSettings({
+                ...account,
+                ...values,
+            })
+        );
+    };
 
     return (
         <View style={{backgroundColor: 'white', flex: 1}}>
             <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+                <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
+                            showsHorizontalScrollIndicator={false}>
                     <View style={{paddingVertical: 10, alignItems: 'center'}}>
                         <Avatar
                             size={80}
@@ -42,60 +89,91 @@ const RegisterScreen = ({handleLogin}) => {
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
                             nom*</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                required: true,
                             }}
-                            onChangeText={text => {
-                            }}
-                            placeholder="Nom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="firstName"
                         />
+                        {errors.firstName && <Text style={{color: 'red'}}>This is required.</Text>}
                     </View>
 
                     {/*    For lastname*/}
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
                             prenom</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={text => {
-                            }}
-                            placeholder="Prenom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="lastName"
                         />
+                        {errors.lastName && <Text style={{color: 'red'}}>This is required.</Text>}
                     </View>
+
                     {/*    For email*/}
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Adresse
                             email</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={text => {
-                            }}
-                            placeholder="Adresse Email"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="email"
                         />
+                        {errors.email && <Text style={{color: 'red'}}>This is required.</Text>}
                     </View>
 
                     <View style={{paddingVertical: 10, marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
-                        <Button mode="contained" onPress={handleLogin} contentStyle={{paddingHorizontal: 50}}
+                        <Button mode="contained" onPress={handleSubmit(handleValidSubmit)}
+                                contentStyle={{paddingHorizontal: 50}}
                                 style={{borderRadius: 20, marginBottom: 10}} color="#62A01A">
                             Terminer
                         </Button>
