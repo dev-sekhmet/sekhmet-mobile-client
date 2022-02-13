@@ -1,12 +1,16 @@
-import {FlatList, StyleSheet, Alert, Dimensions} from 'react-native';
+import {Dimensions, FlatList, StyleSheet} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import ChatItem from "../components/ChatItem";
 import * as React from "react";
+import {useEffect, useState} from "react";
+import {Badge, FAB} from "react-native-elements";
+import {useAppDispatch, useAppSelector} from "../api/store";
+import {Client, Conversation} from "@twilio/conversations";
+import {TwilioProps} from "../types";
 
 const height = Dimensions.get('screen').height;
-import {Badge, FAB} from "react-native-elements";
 
 const DATA: any[] = [
     {
@@ -64,7 +68,56 @@ const DATA: any[] = [
     },
 ];
 
-export default function MessagesScreen({navigation}) {
+
+export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
+
+    const dispatch = useAppDispatch();
+    const chatList = useAppSelector(state => state.chat.entities);
+    const searchQuery = useAppSelector(state => state.search.searchQuery);
+    const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
+
+    const [paginationState, setPaginationState] = useState({
+        itemsPerPage: 10,
+        sort: 'lastModifiedDate',
+        order: 'DESC',
+        activePage: 1
+    });
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+
+    useEffect(() => {
+        if (searchQuery) {
+
+        } else {
+
+        }
+        if (twilioClient) {
+            twilioClient.getSubscribedConversations().then(value => {
+                value.items.forEach(c => console.log("MessagesScreen ", c.friendlyName))
+                setConversations(value.items);
+            });
+
+            twilioClient.on("conversationAdded", async (conversation: Conversation) => {
+                conversation.on("typingStarted", (participant) => {
+                    // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
+                });
+
+                conversation.on("typingEnded", (participant) => {
+                    // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
+                });
+                console.log("New conversation", conversation.friendlyName);
+                setConversations(oldConversations => [...oldConversations, conversation]);
+            });
+
+            twilioClient.on("conversationRemoved", (conversation: Conversation) => {
+
+            });
+        }
+        return () => {
+            twilioClient?.removeAllListeners();
+        }
+    }, [searchQuery])
+
+
     const Tab = createMaterialTopTabNavigator();
     return (
         <Tab.Navigator initialRouteName={"Discussion"}
@@ -85,27 +138,27 @@ export default function MessagesScreen({navigation}) {
                                 />
                             </View>
                         }}
-                        children={() => <Discussion navigation={navigation}/>}/>
+                        children={() => <Discussion navigation={navigation} conversations={conversations}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
                             </View>
                         }}
-                        children={() => <Groupes navigation={navigation}/>}/>
+                        children={() => <Groupes navigation={navigation} conversations={conversations}/>}/>
 
         </Tab.Navigator>
 
     );
 }
-const Discussion = ({navigation}) => {
+const Discussion = ({navigation, conversations}) => {
     return (<View style={styles.container}>
         <FlatList
-            data={DATA}
+            data={conversations}
             renderItem={({item}) => (
                 <ChatItem item={item} navigation={navigation}/>
             )}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.sid}
         />
 
         <FAB
@@ -119,9 +172,11 @@ const Discussion = ({navigation}) => {
     </View>)
 }
 
-const Groupes = (navigation) => <View style={styles.container}>
-    <Text style={styles.title}>GROUPE Tab</Text>
-</View>
+const Groupes = ({navigation, conversations}) => {
+    return <View style={styles.container}>
+        <Text style={styles.title}>{navigation.state}</Text>
+    </View>
+}
 
 
 const styles = StyleSheet.create({

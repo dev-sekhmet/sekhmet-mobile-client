@@ -22,6 +22,16 @@ export type PendingAction = ReturnType<GenericAsyncThunk['pending']>;
 export type RejectedAction = ReturnType<GenericAsyncThunk['rejected']>;
 export type FulfilledAction = ReturnType<GenericAsyncThunk['fulfilled']>;
 
+
+
+export interface IPaginationBaseState {
+  itemsPerPage: number;
+  sort: string;
+  order: string;
+  activePage: number;
+}
+
+
 /**
  * Check if the async action type is rejected
  */
@@ -116,6 +126,7 @@ export const createEntitySlice = <T, Reducers extends SliceCaseReducers<EntitySt
        * */
       if (!skipRejectionHandling) {
         builder.addMatcher(isRejectedAction, (state, action) => {
+          console.log('Error action', action);
           state.loading = false;
           state.updating = false;
           state.updateSuccess = false;
@@ -124,4 +135,19 @@ export const createEntitySlice = <T, Reducers extends SliceCaseReducers<EntitySt
       }
     },
   });
+};
+
+
+
+export const overridePaginationStateWithQueryParams = (paginationBaseState: IPaginationBaseState, locationSearch: string) => {
+  const params = new URLSearchParams(locationSearch);
+  const page = params.get('page');
+  const sort = params.get('sort');
+  if (page && sort) {
+    const sortSplit = sort.split(',');
+    paginationBaseState.activePage = +page;
+    paginationBaseState.sort = sortSplit[0];
+    paginationBaseState.order = sortSplit[1];
+  }
+  return paginationBaseState;
 };

@@ -1,19 +1,45 @@
 import {Pressable, StyleSheet} from 'react-native';
 import {Text, View} from './Themed';
 import {Avatar, Badge} from "react-native-elements";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
+import {Conversation, LastMessage, Message} from "@twilio/conversations";
+import Moment from "moment";
+import {TwilioProps} from "../types";
 
-export default function ChatItem({item, navigation}) {
+
+export default function ChatItem({item, navigation}: TwilioProps) {
+    const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(null);
+    const [lastMessage, setLastMessage] = useState<string>(null);
+
+    useEffect(() => {
+        item.getUnreadMessagesCount().then(nb => {
+            console.log("nb", nb);
+            setUnreadMessagesCount(nb);
+        });
+        // get last message
+        item.getMessages(1).then(res=> {
+            if (res.items && res.items.length>0) {
+                setLastMessage(res.items[0].body);
+            }
+        })
+        item.on("messageAdded", (event: Message) => {
+            setLastMessage(event.body);
+        });
+        return () => {
+            item?.removeAllListeners();
+        }
+    }, [item]);
 
     const onPress = () => {
         navigation.navigate("Chat", {
-            clickedChat: {
-                id: item.id,
-                name: `${item.user.firstName} ${item.user.lastName}`
+            clickedConversation: {
+                sid: item.sid,
+                name: `${item.friendlyName}`
             }
         });
     };
+
     return (
         <Pressable onPress={onPress} style={styles.container}>
             <Avatar
@@ -26,33 +52,33 @@ export default function ChatItem({item, navigation}) {
                     borderWidth: 1,
                 }}/>
 
-            {item.user.isCoach &&
+            {/*{item?.user?.isCoach &&*/}
             <Badge
                 value={"C"}
                 textStyle={styles.badgeText}
                 badgeStyle={styles.badgeContainer}
-            />}
+            />
 
             <View style={styles.rightContainer}>
                 <View style={styles.row}>
                     <View style={styles.row}>
-                        <Text style={styles.name}>{`${item.user.firstName} ${item.user.lastName}`}</Text>
+                        <Text style={styles.name}>{item.friendlyName}</Text>
 
                         <Badge
-                               badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
+                            badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
                         />
                     </View>
-                    {item.nbUnReadMsgs > 0 &&
+                    {unreadMessagesCount > 0 &&
                     <Badge
-                        value={item.nbUnReadMsgs}
+                        value={unreadMessagesCount}
                         badgeStyle={{backgroundColor: Colors.light.sekhmetGreen}}>
                     </Badge>}
                 </View>
                 <View style={styles.row}>
                     <Text numberOfLines={1} style={styles.text}>
-                        {'dernier message ffff'}
+                        {lastMessage}
                     </Text>
-                    <Text style={styles.text}>{item.createdAt}</Text>
+                    <Text style={styles.text}>{Moment(item.dateUpdated).format('HH:mm')}</Text>
                 </View>
 
             </View>

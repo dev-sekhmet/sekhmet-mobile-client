@@ -5,12 +5,12 @@ import EmojiSelector from 'react-native-emoji-selector';
 import * as ImagePicker from 'expo-image-picker';
 import {Audio} from 'expo-av';
 import AudioPlayer from './AudioPlayer';
-import MessageComponent from './Message';
+import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
 
 
-const MessageInput = ({chatRoom, messageReplyTo, removeMessageReplyTo}) => {
+const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}) => {
     const [message, setMessage] = useState("");
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -276,7 +276,7 @@ const MessageInput = ({chatRoom, messageReplyTo, removeMessageReplyTo}) => {
                 >
                     <View style={{flex: 1}}>
                         <Text>Reply to:</Text>
-                        <MessageComponent message={messageReplyTo}/>
+                        <MessageBox  message={messageReplyTo}/>
                     </View>
                     <Pressable onPress={() => removeMessageReplyTo()}>
                         <AntDesign

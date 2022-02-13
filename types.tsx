@@ -6,6 +6,9 @@
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {Client, Conversation, Message} from "@twilio/conversations";
+import {MessageParam} from "./api/message/message.reducer";
+import {UnreadCountParam} from "./api/unreadmessage/unreadmessage.reducer";
 
 declare global {
     namespace ReactNavigation {
@@ -13,6 +16,14 @@ declare global {
         }
     }
 }
+
+
+
+export type SetConvosType = (convos: Conversation[]) => void;
+export type AddMessagesType = (mp: MessageParam) => void;
+export type SetSidType = (sid: string) => void;
+export type SetUreadMessagesType = (um: UnreadCountParam) => void;
+
 
 export type RootStackParamList = {
     Root: NavigatorScreenParams<RootTabParamList> | undefined;
@@ -37,8 +48,8 @@ export type RootTabParamList = {
 export type ChatParamList = {
     Messages: undefined,
     Chat: {
-        clickedChat: {
-            id: 'EKLK?DL?DK',
+        clickedConversation: {
+            sid: 'aaaaaaaaaaa',
             name: "Gaetan TEMATE"
         }
     }
@@ -58,6 +69,14 @@ export type InputPhoneParamList = {
     VerifyCode: {
         phoneNumber: string
     }
+};
+
+
+export type TwilioProps = {
+    twilioClient?: Client;
+    item?: Conversation;
+    route?: any;
+    navigation?: any;
 };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,

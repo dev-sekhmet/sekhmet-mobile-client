@@ -1,27 +1,28 @@
-import {FlatList, SafeAreaView, StyleSheet} from 'react-native';
+import {ActivityIndicator, FlatList, RefreshControl, SafeAreaView, StyleSheet} from 'react-native';
 import React, {useEffect, useState} from "react";
-import {useNavigation, useRoute} from "@react-navigation/core";
-import {IMessage, IMessage as MessageModel} from "../model/message.model";
-import {IChat} from "../model/chat.model";
-import Message from "../components/Message";
+import MessageBox from "../components/MessageBox";
 import MessageInput from "../components/MessageInput";
-import {messages as messagesData} from './sampleData';
 import Moment from 'moment';
 import 'moment/locale/fr'
 import {Text, View} from '../components/Themed';
+import {Conversation, Message, Paginator} from "@twilio/conversations";
+import {TwilioProps} from "../types";
 
-export default function ChatScreen() {
-    const [messages, setMessages] = useState<MessageModel[]>([]);
-    const [messageReplyTo, setMessageReplyTo] = useState<MessageModel | null>(
+const pageSize = 2;
+export default function ChatScreen({route, twilioClient}: TwilioProps) {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [messageReplyTo, setMessageReplyTo] = useState<Message | null>(
         null
     );
-    const [chatRoom, setChatRoom] = useState<IChat | null>(null);
-
-    const route = useRoute();
-    const navigation = useNavigation();
-
+    const [refreshing, setRefreshing] = useState(false);
+    const [conversation, setConversation] = useState<Conversation>(null);
+    const [paginator, setPaginator] = useState<Paginator<Message>>(null);
+    const [hasMore, setHasMore] = useState(
+        false
+    )
 
     useEffect(() => {
+        console.log("useEffect: ")
         Moment.updateLocale('fr', {
             calendar: {
                 sameDay: '[Aujourd\'hui]',
@@ -33,94 +34,110 @@ export default function ChatScreen() {
             }
         })
         fetchChatRoom();
+        return () => {
+            conversation?.removeAllListeners();
+        }
     }, []);
 
     useEffect(() => {
         fetchMessages();
-    }, [chatRoom]);
-
-    useEffect(() => {
-        /*        const subscription = DataStore.observe(MessageModel).subscribe((msg) => {
-                    // console.log(msg.model, msg.opType, msg.element);
-                    if (msg.model === MessageModel && msg.opType === "INSERT") {
-                        setMessages((existingMessage) => [msg.element, ...existingMessage]);
-                    }
-                });
-
-                return () => subscription.unsubscribe();*/
-        messagesData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        setMessages(messagesData)
-    }, []);
+    }, [conversation]);
 
     const fetchChatRoom = async () => {
-        /* if (!route.params?.id) {
-             console.warn("No chatroom id provided");
-             return;
-         }
-         const chatRoom = await DataStore.query(ChatRoom, route.params.id);
-         if (!chatRoom) {
-             console.error("Couldn't find a chat room with this id");
-         } else {
-             setChatRoom(chatRoom);
-         }*/
+        const sid = route.params.clickedConversation.sid;
+        if (twilioClient && sid) {
+            twilioClient.getConversationBySid(sid).then(conversation => {
+
+                conversation.on("messageAdded", (event: Message) => {
+
+                });
+                setConversation(conversation);
+            });
+        }
     };
 
     const fetchMessages = async () => {
-        /* if (!chatRoom) {
-             return;
-         }
-         const authUser = await Auth.currentAuthenticatedUser();
-         const myId = authUser.attributes.sub;
-
-         const fetchedMessages = await DataStore.query(
-             MessageModel,
-             (message) => message.chatroomID("eq", chatRoom?.id).forUserId("eq", myId),
-             {
-                 sort: (message) => message.createdAt(SortDirection.DESCENDING),
-             }
-         );*/
-        // console.log(fetchedMessages);
-        //setMessages(fetchedMessages);
-        setMessages(messagesData);
+        if (conversation) {
+            conversation.getMessages(pageSize).then(paginator => {
+                setHasMore(paginator.hasPrevPage);
+                setPaginator(paginator);
+                setMessages(paginator.items);
+            })
+        }
     };
 
-    if (!chatRoom) {
-        //return <ActivityIndicator />;
+    if (!conversation) {
+        <ActivityIndicator/>;
     }
 
-    const getDate = (date: string): string => {
+    const getDate = (date: Date): string => {
         return Moment(date).calendar();
     }
 
-    const canAddDaySeparator = (createdAt: string, index: number, messages: IMessage[]): boolean => {
-        const predIndex = index + 1;
-        if (predIndex < messages.length-1) {
-            const createdAtPred = messages[predIndex].createdAt;
-            return !Moment(createdAt).isSame(createdAtPred, 'day');
+    const canAddDaySeparator = (dateUpdated: Date, index: number, messages: Message[]): boolean => {
+        const nextIndex = index + 1;
+        if (index === 0) {
+            return true;
         }
-        return true;
+
+        if (nextIndex <= messages.length - 1) {
+            const dateUpdatedAtNext = messages[nextIndex].dateUpdated;
+            return !Moment(dateUpdated).isSame(dateUpdatedAtNext, 'day');
+        }
+        return false;
     }
+
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        if (!paginator) {
+            setRefreshing(false);
+            return;
+        }if (!hasMore) {
+            setRefreshing(false);
+            return;
+        }
+
+        const result = await paginator?.prevPage();
+        if (!result) {
+            return;
+        }
+        const moreMessages = result.items;
+        console.log("result.items ", result.items.length)
+        console.log("result.hasPrevPa ge ", result.hasPrevPage)
+        setPaginator(result);
+        setHasMore(result.hasPrevPage);
+        setMessages(prevMsgs => [ ...moreMessages, ...prevMsgs])
+        setRefreshing(false);
+    };
+
 
     return (
         <SafeAreaView style={styles.page}>
             <FlatList
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
                 data={messages}
                 renderItem={({item, index}) => (
                     <View>
-                        {canAddDaySeparator(item.createdAt, index, messages) && <Text
+                        {canAddDaySeparator(item.dateUpdated, index, messages) && <Text
                             style={styles.day}
-                        >{getDate(item.createdAt)}</Text>}
-                        <Message
+                        >{getDate(item.dateUpdated)}</Text>}
+                        <MessageBox
                             message={item}
+                            authUser={twilioClient.user}
                             setAsMessageReply={() => setMessageReplyTo(item)}
                         />
                     </View>
                 )}
-                keyExtractor={item => item.id}
-                inverted
+                keyExtractor={item => item.sid}
             />
             <MessageInput
-                chatRoom={chatRoom}
+                conversation={conversation}
                 messageReplyTo={messageReplyTo}
                 removeMessageReplyTo={() => setMessageReplyTo(null)}
             />

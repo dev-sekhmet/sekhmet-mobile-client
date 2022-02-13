@@ -20,9 +20,7 @@ const apiUrl = '/account';
 
 export const saveAccountSettings: (account: any) => AppThunk = account => async dispatch => {
     await dispatch(updateAccount(account));
-
     await AsyncStorage.removeItem('locale')
-
     dispatch(getSession());
 };
 

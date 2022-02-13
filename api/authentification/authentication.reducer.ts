@@ -10,6 +10,7 @@ import qs from 'qs';
 import {ICheckPhoneVerificationRequest} from "../../model/login/check-phone-verification-request.model";
 
 export const AUTH_TOKEN_KEY = 'jhi-authenticationToken';
+export const TWILIO_TOKEN_KEY = 'twilio_authorization';
 const ON_BOARDING = '@onBoarding';
 export const setupAxiosInterceptors = (onUnauthenticated) => {
     const onRequestSuccess = async config => {
@@ -45,6 +46,7 @@ export const initialState = {
     redirectMessage: null as unknown as string,
     sessionHasBeenFetched: false,
     logoutUrl: null as unknown as string,
+    twilioToken: null as unknown as string,
 };
 
 export type AuthenticationState = Readonly<typeof initialState>;
@@ -87,10 +89,14 @@ export const checkVerification: (request: ICheckPhoneVerificationRequest) => App
             const result = await dispatch(authenticate(request));
             const response = result.payload as AxiosResponse;
             const bearerToken = response?.headers?.authorization;
+            const twilioToken = response?.headers[TWILIO_TOKEN_KEY];
+            console.log("response?.headers ", response?.headers);
             if (bearerToken && bearerToken.slice(0, 7) === 'Bearer ') {
                 const jwt = bearerToken.slice(7, bearerToken.length);
                 console.log("jwt ", jwt);
+                console.log("TWILIO_TOKEN_KEY ", twilioToken);
                 AsyncStorage.setItem(AUTH_TOKEN_KEY, jwt);
+                AsyncStorage.setItem(TWILIO_TOKEN_KEY, twilioToken);
             }
             dispatch(getSession());
         };
@@ -122,11 +128,17 @@ export const onBoardFinished = () => async dispatch => {
 
 export const getOnBoarding = () => async dispatch => {
     const onBoarding = await AsyncStorage.getItem(ON_BOARDING);
-    console.log('onBoarding', onBoarding)
     if (onBoarding) {
         dispatch(onBoardSuccess());
     } else {
         dispatch(onBoardFailure());
+    }
+};
+
+export const getTwilioToken = () => async dispatch => {
+    const twilioToken = await AsyncStorage.getItem(TWILIO_TOKEN_KEY);
+    if (twilioToken) {
+        dispatch(onGetTwilioToken(twilioToken));
     }
 };
 
@@ -173,6 +185,12 @@ export const AuthenticationSlice = createSlice({
                 onBoardingFinish: true
             };
         },
+        onGetTwilioToken(state, action) {
+            return {
+                ...state,
+                twilioToken: action.payload
+            };
+        },
         onBoardFailure(state) {
             return {
                 ...state,
@@ -186,11 +204,12 @@ export const AuthenticationSlice = createSlice({
                 state.errorMessage = action.error.message;
                 state.loginError = true;
             })
-            .addCase(authenticate.fulfilled, state => ({
+            .addCase(authenticate.fulfilled, (state, action) => ({
                 ...state,
                 loading: false,
                 loginError: false,
                 loginSuccess: true,
+                twilioToken: action.payload.data.twilio_token
             }))
             .addCase(startVerification.fulfilled, state => {
                 state.startVerificationSuccess = true;
@@ -212,7 +231,6 @@ export const AuthenticationSlice = createSlice({
             )
             .addCase(getAccount.fulfilled, (state, action) => {
                 const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
-                console.log('action.payload.data', action.payload.data)
                 return {
                     ...state,
                     isAuthenticated,
@@ -230,7 +248,16 @@ export const AuthenticationSlice = createSlice({
     },
 });
 
-export const {logoutSession, authError, clearAuth, onBoardSuccess, onBoardFailure, resetAuthentication, resetStartVerification} = AuthenticationSlice.actions;
+export const {
+    logoutSession,
+    authError,
+    clearAuth,
+    onBoardSuccess,
+    onGetTwilioToken,
+    onBoardFailure,
+    resetAuthentication,
+    resetStartVerification
+} = AuthenticationSlice.actions;
 
 // Reducer
 export default AuthenticationSlice.reducer;

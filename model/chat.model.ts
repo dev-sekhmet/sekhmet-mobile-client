@@ -9,6 +9,10 @@ export interface IChat {
   members?: IChatMember[] | null;
   messsages?: IMessage[] | null;
   chatType?: ChatType | null;
+  createdBy?: string;
+  createdDate?: Date | null;
+  lastModifiedBy?: string;
+  lastModifiedDate?: Date | null;
 }
 
 export const defaultValue: Readonly<IChat> = {

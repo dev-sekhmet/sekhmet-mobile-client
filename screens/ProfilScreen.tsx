@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import Colors from "../constants/Colors";
 import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
@@ -19,7 +19,9 @@ import {useActionSheet} from "@expo/react-native-action-sheet";
 import {successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {logout} from "../api/authentification/authentication.reducer";
-import {useForm} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
+import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
+import PhoneInput from "react-native-phone-number-input";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -37,13 +39,32 @@ export default function ProfilScreen({navigation}) {
     const {showActionSheetWithOptions} = useActionSheet();
     const account = useAppSelector(state => state.authentification.account);
     const successMessage = useAppSelector(state => state.settings.successMessage);
+    const phoneInput = useRef<PhoneInput>(null);
     const {control, handleSubmit, formState: {errors}} = useForm({
         defaultValues: {
             firstName: account?.firstName,
             lastName: account?.lastName,
-            email: account?.email
+            email: account?.email,
+            phoneNumber: account?.phoneNumber
         }
     });
+
+
+    const onSubmit = data => console.log(data);
+
+    useEffect(() => {
+        return () => {
+            dispatch(reset());
+        };
+    }, []);
+
+    useEffect(() => {
+        if (successMessage) {
+            dispatch(reset());
+            successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
+        }
+    }, [successMessage]);
+
 
 
     const languageOptions = ["Francais", "Anglais", "Annuler"];
@@ -111,6 +132,19 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
+    const onChangeAvatar = () => {
+
+    }
+    const onSave = (values) => {
+        setOpenAccountModal(false);
+        dispatch(
+            saveAccountSettings({
+                ...account,
+                ...values,
+            })
+        );
+    }
+
     const setChecked = (id: string) => {
         const newList = notificationItems.map((item) => {
             if (item.title === id) {
@@ -141,13 +175,24 @@ export default function ProfilScreen({navigation}) {
         );
     };
 
-    const onChangeAvatar = () => {
 
-    }
-    const onSave = () => {
-        setOpenAccountModal(false);
-        successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
-    }
+    const openLanguageActionMenu = () => {
+        const cancelButtonIndex = 2;
+        showActionSheetWithOptions(
+            {
+                options: languageOptions,
+                cancelButtonIndex
+            },
+            onLanguageActionPress
+        );
+    };
+
+    const onLanguageActionPress = (index) => {
+        if (index !== 2) {
+            successToast('Langue enregistré', `votre choix de langue ${languageOptions[index]} a été pris en compte`);
+        }
+    };
+
 
     const getAccountModal = () => {
 
@@ -189,7 +234,7 @@ export default function ProfilScreen({navigation}) {
                                         borderWidth: 1,
                                     }
                                 }/>
-                            <Pressable onPress={onSave}>
+                            <Pressable onPress={handleSubmit(onSave)}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
                             </Pressable>
                         </View>
@@ -200,22 +245,31 @@ export default function ProfilScreen({navigation}) {
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
                             Nom</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                required: true,
                             }}
-                            onChangeText={firstName => {
-                                const neUser = {...user, firstName};
-                                setUser(neUser);
-                            }}
-                            value={user.firstName}
-                            placeholder="Nom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Nom"
+                                    underlineColorAndroid="transparent"
+                                />
+                            )}
+                            name="firstName"
                         />
+                        {errors.firstName && <Text style={{color: 'red'}}>This is required.</Text>}
+
                     </View>
 
                     {/*    For lastname*/
@@ -223,89 +277,105 @@ export default function ProfilScreen({navigation}) {
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
                             Prénom</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={lastName => {
-                                const neUser = {...user, lastName};
-                                setUser(neUser);
-                            }}
-                            value={user.lastName}
-                            placeholder="Prénom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="lastName"
                         />
-                    </View>
-                    {/*    For email*/
-                    }
-                    <View style={{marginBottom: 10, marginTop: 5}}>
-                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
-                            de telephone</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
-                            }}
-                            onChangeText={phoneNumber => {
+                        {errors.lastName && <Text style={{color: 'red'}}>This is required.</Text>}
 
-                            }}
-                            value={'+237 691 380 458'}
-                            placeholder="Adresse Email"
-                            underlineColorAndroid="transparent"
-                        />
                     </View>
+
                     {/*    For email*/
                     }
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
                             Email</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={email => {
-                                const neUser = {...user, email};
-                                setUser(neUser);
-                            }}
-                            value={user.email}
-                            placeholder="Adresse Email"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <TextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Adresse Email"
+                                    underlineColorAndroid="transparent"
+                                />
+                            )}
+                            name="email"
                         />
+                        {errors.email && <Text style={{color: 'red'}}>This is required.</Text>}
+
+                    </View>
+
+                    {/*    For Telephone*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
+                            de telephone</Text>
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
+                            }}
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <PhoneInput
+                                    defaultCode="CM"
+                                    placeholder="N° de téléphone"
+                                    textContainerStyle={{backgroundColor: 'transparent'}}
+                                    textInputStyle={{backgroundColor: 'transparent', fontSize:14}}
+                                    layout="first"
+                                    ref={phoneInput}
+                                    defaultValue={value}
+                                    onChangeFormattedText={onChange}
+                                    containerStyle={{
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    countryPickerProps={{withAlphaFilter: true}}
+                                />
+                            )}
+                            name="phoneNumber"
+                        />
+                        {errors.phoneNumber && <Text style={{color: 'red'}}>This is required.</Text>}
+
                     </View>
                 </ScrollView>
             </SafeAreaView>
         </Modal>
             ;
     }
-
-    const openLanguageActionMenu = () => {
-        const cancelButtonIndex = 2;
-        showActionSheetWithOptions(
-            {
-                options: languageOptions,
-                cancelButtonIndex
-            },
-            onLanguageActionPress
-        );
-    };
-
-
-    const onLanguageActionPress = (index) => {
-        if (index !== 2) {
-            successToast('Langue enregistré', `votre choix de langue ${languageOptions[index]} a été pris en compte`);
-        }
-    };
     return (
         <View style={{backgroundColor: '#eaeaea', flex: 1}}>
 
@@ -326,8 +396,7 @@ export default function ProfilScreen({navigation}) {
                         badgeStyle={styles.pencilContainer}
                     />
 
-                    <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 18}}>Brenda
-                        Maboma</Text>
+                    <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 18}}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
                 <View style={{backgroundColor: 'white', borderTopLeftRadius: 33, borderTopRightRadius: 33}}>

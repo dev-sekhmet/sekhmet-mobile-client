@@ -1,12 +1,16 @@
-import { AnyAction, configureStore, ThunkAction } from '@reduxjs/toolkit';
-import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { loadingBarMiddleware } from 'react-redux-loading-bar';
+import {AnyAction, configureStore, ThunkAction} from '@reduxjs/toolkit';
+import {TypedUseSelectorHook, useDispatch, useSelector} from 'react-redux';
 import authentification from './authentification/authentication.reducer';
 import settings from './settings/settings.reducer';
+import search from './search/search.reducer';
+import chat from './chat/chat.reducer';
+
 export const store = configureStore({
     reducer: {
         authentification,
-        settings
+        settings,
+        chat,
+        search
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
