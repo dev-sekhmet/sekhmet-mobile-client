@@ -7,9 +7,12 @@ import 'moment/locale/fr'
 import {Text, View} from '../components/Themed';
 import {Conversation, Message, Paginator} from "@twilio/conversations";
 import {TwilioProps} from "../types";
+import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
+import {useAppDispatch} from "../api/store";
 
-const pageSize = 2;
+const pageSize = 10;
 export default function ChatScreen({route, twilioClient}: TwilioProps) {
+    const dispatch = useAppDispatch();
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageReplyTo, setMessageReplyTo] = useState<Message | null>(
         null
@@ -49,7 +52,14 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
             twilioClient.getConversationBySid(sid).then(conversation => {
 
                 conversation.on("messageAdded", (event: Message) => {
-
+                    setMessages(prevMsgs => {
+                        if (prevMsgs.some(msg=>msg.sid === event.sid)){
+                            return  [...prevMsgs]
+                        }else {
+                            return [...prevMsgs, event]
+                        }
+                    })
+                    conversation.updateLastReadMessageIndex(event.index);
                 });
                 setConversation(conversation);
             });
@@ -62,13 +72,11 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
                 setHasMore(paginator.hasPrevPage);
                 setPaginator(paginator);
                 setMessages(paginator.items);
+                dispatch(updateUnreadMessages({channelSid: conversation.sid, unreadCount: 0}))
             })
         }
     };
 
-    if (!conversation) {
-        <ActivityIndicator/>;
-    }
 
     const getDate = (date: Date): string => {
         return Moment(date).calendar();
@@ -112,6 +120,9 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
     };
 
 
+    if (!conversation) {
+        return <ActivityIndicator/>;
+    }
     return (
         <SafeAreaView style={styles.page}>
             <FlatList

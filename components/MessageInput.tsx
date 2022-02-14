@@ -8,9 +8,10 @@ import AudioPlayer from './AudioPlayer';
 import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
+import {Conversation, Message} from "@twilio/conversations";
 
 
-const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}) => {
+const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {conversation: Conversation, messageReplyTo:Message, removeMessageReplyTo:() =>void}) => {
     const [message, setMessage] = useState("");
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -78,21 +79,9 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}) => {
     };
 
     const sendMessage = async () => {
-        // get all the users of this chatroom
-        /*  const authUser = await Auth.currentAuthenticatedUser();
-
-          const users = (await DataStore.query(ChatRoomUser))
-              .filter((cru) => cru.chatroom.id === chatRoom.id)
-              .map((cru) => cru.user);
-
-          console.log("users", users);
-
-          // for each user, encrypt the `content` with his public key, and save it as a new message
-          await Promise.all(
-              users.map((user) => sendMessageToUser(user, authUser.attributes.sub))
-          );
-
-          resetFields();*/
+       const index =  await conversation.sendMessage(message);
+       setMessage("");
+       conversation.updateLastReadMessageIndex(index);
     };
 
     const updateLastMessage = async (newMessage) => {

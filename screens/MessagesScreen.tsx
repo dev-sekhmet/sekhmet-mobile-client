@@ -9,6 +9,7 @@ import {Badge, FAB} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {Client, Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
+import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
 
 const height = Dimensions.get('screen').height;
 
@@ -72,7 +73,6 @@ const DATA: any[] = [
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
 
     const dispatch = useAppDispatch();
-    const chatList = useAppSelector(state => state.chat.entities);
     const searchQuery = useAppSelector(state => state.search.searchQuery);
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
 
@@ -85,11 +85,6 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     const [conversations, setConversations] = useState<Conversation[]>([]);
 
     useEffect(() => {
-        if (searchQuery) {
-
-        } else {
-
-        }
         if (twilioClient) {
             twilioClient.getSubscribedConversations().then(value => {
                 value.items.forEach(c => console.log("MessagesScreen ", c.friendlyName))

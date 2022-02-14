@@ -3,20 +3,27 @@ import {Text, View} from './Themed';
 import {Avatar, Badge} from "react-native-elements";
 import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
-import {Conversation, LastMessage, Message} from "@twilio/conversations";
+import {Conversation, ConversationUpdateReason, LastMessage, Message} from "@twilio/conversations";
 import Moment from "moment";
 import {TwilioProps} from "../types";
+import {createSingleArgumentStateOperator} from "@reduxjs/toolkit/dist/entities/state_adapter";
+import {useAppSelector} from "../api/store";
 
 
 export default function ChatItem({item, navigation}: TwilioProps) {
     const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(null);
     const [lastMessage, setLastMessage] = useState<string>(null);
+    const unreadmessageCount = useAppSelector(state => state.unreadmessage);
 
-    useEffect(() => {
+    function getNbUnReadMessages() {
         item.getUnreadMessagesCount().then(nb => {
             console.log("nb", nb);
             setUnreadMessagesCount(nb);
         });
+    }
+
+    useEffect(() => {
+        getNbUnReadMessages();
         // get last message
         item.getMessages(1).then(res=> {
             if (res.items && res.items.length>0) {
@@ -25,6 +32,13 @@ export default function ChatItem({item, navigation}: TwilioProps) {
         })
         item.on("messageAdded", (event: Message) => {
             setLastMessage(event.body);
+            getNbUnReadMessages();
+        });
+        item.on("updated", (data: {conversation: Conversation, updateReasons: ConversationUpdateReason[]}) => {
+           console.log("data.updateReasons.", data.updateReasons);
+            if (data.updateReasons.some(reason =>reason === 'lastMessage')){
+
+            }
         });
         return () => {
             item?.removeAllListeners();

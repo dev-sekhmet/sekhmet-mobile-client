@@ -3,14 +3,14 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from 'react-redux';
 import authentification from './authentification/authentication.reducer';
 import settings from './settings/settings.reducer';
 import search from './search/search.reducer';
-import chat from './chat/chat.reducer';
+import unreadmessage from './unreadmessage/unreadmessage.reducer';
 
 export const store = configureStore({
     reducer: {
         authentification,
         settings,
-        chat,
-        search
+        search,
+        unreadmessage
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({
