@@ -7,9 +7,10 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import {Badge, FAB} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {Client, Conversation} from "@twilio/conversations";
+import {Conversation, Message, Paginator} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
+import {from} from "rxjs";
 
 const height = Dimensions.get('screen').height;
 
@@ -71,46 +72,45 @@ const DATA: any[] = [
 
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
-
-    const dispatch = useAppDispatch();
     const searchQuery = useAppSelector(state => state.search.searchQuery);
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
-
-    const [paginationState, setPaginationState] = useState({
-        itemsPerPage: 10,
-        sort: 'lastModifiedDate',
-        order: 'DESC',
-        activePage: 1
-    });
+    const unreadmessageCount = useAppSelector(state => state.unreadmessage);
     const [conversations, setConversations] = useState<Conversation[]>([]);
 
     useEffect(() => {
         if (twilioClient) {
-            twilioClient.getSubscribedConversations().then(value => {
-                value.items.forEach(c => console.log("MessagesScreen ", c.friendlyName))
-                setConversations(value.items);
-            });
+            const initConversations = async () => {
+                const cons = await twilioClient.getSubscribedConversations();
+                setConversations(cons.items);
 
-            twilioClient.on("conversationAdded", async (conversation: Conversation) => {
-                conversation.on("typingStarted", (participant) => {
-                    // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
+                twilioClient.on("conversationAdded", async (conversation: Conversation) => {
+                    conversation.on("typingStarted", (participant) => {
+                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
+                    });
+
+                    conversation.on("typingEnded", (participant) => {
+                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
+                    });
+                    console.log("New conversation", conversation.friendlyName);
+                    setConversations(oldConversations => [...oldConversations, conversation]);
+                    conversation.setAllMessagesUnread();
                 });
+                twilioClient.on("conversationRemoved", (conversation: Conversation) => {
 
-                conversation.on("typingEnded", (participant) => {
-                    // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
                 });
-                console.log("New conversation", conversation.friendlyName);
-                setConversations(oldConversations => [...oldConversations, conversation]);
-            });
+            }
 
-            twilioClient.on("conversationRemoved", (conversation: Conversation) => {
 
-            });
+            initConversations();
         }
+
+    }, [searchQuery])
+
+    useEffect(() => {
         return () => {
             twilioClient?.removeAllListeners();
         }
-    }, [searchQuery])
+    }, [])
 
 
     const Tab = createMaterialTopTabNavigator();
@@ -124,14 +124,16 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
         >
             <Tab.Screen name="Discussion"
                         options={{
-                            tabBarLabel: () => <View
+                            tabBarLabel: () => {
+                                const count = Object.values<number>(unreadmessageCount).reduce((prev, curr) => prev + curr);
+                                return <View
                                 style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
-                                <Badge
-                                    value={DATA.filter(v => v.nbUnReadMsgs).reduce((a, {nbUnReadMsgs}) => a + nbUnReadMsgs, 0)}
-                                    badgeStyle={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}
-                                />
-                            </View>
+                                    {count>0 && <Badge
+                                        value={count}
+                                        badgeStyle={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}
+                                    />}
+                            </View>;}
                         }}
                         children={() => <Discussion navigation={navigation} conversations={conversations}/>}/>
             <Tab.Screen name="Groupes"

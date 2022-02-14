@@ -38,6 +38,7 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
         })
         fetchChatRoom();
         return () => {
+            console.log("removeAllListeners ChatScreen")
             conversation?.removeAllListeners();
         }
     }, []);
@@ -59,7 +60,6 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
                             return [...prevMsgs, event]
                         }
                     })
-                    conversation.updateLastReadMessageIndex(event.index);
                 });
                 setConversation(conversation);
             });
@@ -72,7 +72,8 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
                 setHasMore(paginator.hasPrevPage);
                 setPaginator(paginator);
                 setMessages(paginator.items);
-                dispatch(updateUnreadMessages({channelSid: conversation.sid, unreadCount: 0}))
+                const lastIndex = paginator.items[paginator.items.length-1].index;
+                conversation.updateLastReadMessageIndex(lastIndex);
             })
         }
     };
