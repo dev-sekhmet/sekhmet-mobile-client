@@ -1,28 +1,18 @@
-import {
-    ColorValue,
-    Dimensions,
-    FlatList,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    TextInput
-} from 'react-native';
+import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Colors from "../constants/Colors";
-import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
 import {FontAwesome} from "@expo/vector-icons";
 import {useActionSheet} from "@expo/react-native-action-sheet";
-import {successToast} from "../components/toast";
+import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
 import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
-import {BottomSheetModal} from '@gorhom/bottom-sheet';
+import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -40,6 +30,7 @@ export default function ProfilScreen({navigation}) {
     const {showActionSheetWithOptions} = useActionSheet();
     const account = useAppSelector(state => state.authentification.account);
     const successMessage = useAppSelector(state => state.settings.successMessage);
+    const errorMessage = useAppSelector(state => state.settings.errorMessage);
     const phoneInput = useRef<PhoneInput>(null);
     const {control, handleSubmit, formState: {errors}} = useForm({
         defaultValues: {
@@ -70,10 +61,14 @@ export default function ProfilScreen({navigation}) {
 
     useEffect(() => {
         if (successMessage) {
+            bottomSheetModalRef.current.close();
             dispatch(reset());
             successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
         }
-    }, [successMessage]);
+        if (errorMessage) {
+            errorToast('Erreur', errorMessage);
+        }
+    }, [successMessage, errorMessage]);
 
 
     const languageOptions = ["Francais", "Anglais", "Annuler"];
@@ -144,7 +139,6 @@ export default function ProfilScreen({navigation}) {
 
     }
     const onSave = (values) => {
-        bottomSheetModalRef.current.close();
         dispatch(
             saveAccountSettings({
                 ...account,
@@ -183,7 +177,6 @@ export default function ProfilScreen({navigation}) {
         );
     };
 
-
     const openLanguageActionMenu = () => {
         const cancelButtonIndex = 2;
         showActionSheetWithOptions(
@@ -203,11 +196,11 @@ export default function ProfilScreen({navigation}) {
 
 
     const getAccountModal = () => {
-
         return <BottomSheetModal
             ref={bottomSheetModalRef}
             index={1}
-            style={{shadowColor: "#000",
+            style={{
+                shadowColor: "#000",
                 shadowOffset: {
                     width: 0,
                     height: 11,
@@ -215,13 +208,14 @@ export default function ProfilScreen({navigation}) {
                 shadowOpacity: 0.57,
                 shadowRadius: 15.19,
 
-                elevation: 23}}
+                elevation: 23
+            }}
             snapPoints={snapPoints}
             onChange={handleSheetChanges}
         >
             <SafeAreaView>
                 <ScrollView
-                    style={{ padding: 20, backgroundColor: 'white',borderRadius: 10,borderColor: 'black'}}
+                    style={{padding: 20, backgroundColor: 'white', borderRadius: 10, borderColor: 'black'}}
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}>
                     <View
@@ -260,7 +254,7 @@ export default function ProfilScreen({navigation}) {
                                 required: true,
                             }}
                             render={({field: {onChange, onBlur, value}}) => (
-                                <TextInput
+                                <BottomSheetTextInput
                                     style={{
                                         height: 40,
                                         borderColor: 'grey',
@@ -293,7 +287,7 @@ export default function ProfilScreen({navigation}) {
                                 required: true,
                             }}
                             render={({field: {onChange, onBlur, value}}) => (
-                                <TextInput
+                                <BottomSheetTextInput
                                     style={{
                                         height: 40,
                                         borderColor: 'grey',
@@ -324,7 +318,7 @@ export default function ProfilScreen({navigation}) {
                                 required: true,
                             }}
                             render={({field: {onChange, onBlur, value}}) => (
-                                <TextInput
+                                <BottomSheetTextInput
                                     style={{
                                         height: 40,
                                         borderColor: 'grey',
@@ -357,21 +351,17 @@ export default function ProfilScreen({navigation}) {
                                 required: true,
                             }}
                             render={({field: {onChange, onBlur, value}}) => (
-                                <PhoneInput
-                                    defaultCode="CM"
-                                    placeholder="N° de téléphone"
-                                    textContainerStyle={{backgroundColor: 'transparent'}}
-                                    textInputStyle={{backgroundColor: 'transparent', fontSize: 14}}
-                                    layout="first"
-                                    ref={phoneInput}
-                                    defaultValue={value}
-                                    onChangeFormattedText={onChange}
-                                    containerStyle={{
+                                <BottomSheetTextInput
+                                    style={{
+                                        height: 40,
                                         borderColor: 'grey',
                                         borderWidth: 0.5,
-                                        borderRadius: 3
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
                                     }}
-                                    countryPickerProps={{withAlphaFilter: true}}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
                                 />
                             )}
                             name="phoneNumber"

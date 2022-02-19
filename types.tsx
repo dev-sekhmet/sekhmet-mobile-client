@@ -6,9 +6,7 @@
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Client, Conversation, Message} from "@twilio/conversations";
-import {MessageParam} from "./api/message/message.reducer";
-import {UnreadCountParam} from "./api/unreadmessage/unreadmessage.reducer";
+import {Client, Conversation} from "@twilio/conversations";
 
 declare global {
     namespace ReactNavigation {
@@ -16,13 +14,6 @@ declare global {
         }
     }
 }
-
-
-
-export type SetConvosType = (convos: Conversation[]) => void;
-export type AddMessagesType = (mp: MessageParam) => void;
-export type SetSidType = (sid: string) => void;
-export type SetUreadMessagesType = (um: UnreadCountParam) => void;
 
 
 export type RootStackParamList = {

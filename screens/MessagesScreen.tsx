@@ -1,75 +1,22 @@
-import {Dimensions, FlatList, StyleSheet} from 'react-native';
+import {Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import ChatItem from "../components/ChatItem";
 import * as React from "react";
-import {useEffect, useState} from "react";
-import {Badge, FAB} from "react-native-elements";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {Avatar, Badge, FAB} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {Conversation, Message, Paginator} from "@twilio/conversations";
+import {Client, Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
-import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
-import {from} from "rxjs";
+import {getUsers} from "../api/user-management/user-management.reducer";
+import {IUser} from "../model/user.model";
+import {BottomSheetModal, BottomSheetTextInput} from "@gorhom/bottom-sheet";
+import {Controller} from "react-hook-form";
+import UserItem from "../components/UserItem";
+
 
 const height = Dimensions.get('screen').height;
-
-const DATA: any[] = [
-    {
-        id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-        title: 'First Item',
-        createdAt: '08:45',
-        nbUnReadMsgs: 1,
-        user: {
-            firstName: 'TEMATE',
-            isCoach: true,
-            lastName: 'Gaetan'
-        }
-    }, {
-        id: 'bd7acbea-c1b1-46c2-aeh5-3ad53abb28b1',
-        title: 'First Item',
-        createdAt: '08:45',
-        user: {
-            firstName: 'Wilson',
-            isCoach: false,
-            lastName: 'Fisc'
-        }
-    },
-    {
-        id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-        title: 'Second Item',
-        createdAt: 'Avr 25 2021',
-        nbUnReadMsgs: 3,
-        user: {
-            firstName: 'Piere',
-            isCoach: true,
-            lastName: 'Felix'
-        }
-    },
-    {
-        id: '3ac68asc-c605-48d3-a4f8-fbd91aa97f6Z',
-        title: 'Second Item',
-        createdAt: 'Avr 25 2021',
-        nbUnReadMsgs: 3,
-        user: {
-            firstName: 'Samuel',
-            isCoach: false,
-            lastName: 'pitou'
-        }
-    },
-    {
-        id: '58694a0f-3da1-471f-bd96-145571e29d72',
-        title: 'Third Item',
-        createdAt: '11:45',
-        nbUnReadMsgs: 0,
-        user: {
-            firstName: 'Rigobert',
-            isCoach: false,
-            lastName: 'Jean'
-        }
-    },
-];
-
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
     const searchQuery = useAppSelector(state => state.search.searchQuery);
@@ -128,15 +75,17 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                                 const count = Object.values<number>(unreadmessageCount)
                                     .reduce((prev, curr) => prev + curr, 0);
                                 return <View
-                                style={styles.tabItem}>
-                                <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
-                                    {count>0 && <Badge
+                                    style={styles.tabItem}>
+                                    <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
+                                    {count > 0 && <Badge
                                         value={count}
                                         badgeStyle={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}
                                     />}
-                            </View>;}
+                                </View>;
+                            }
                         }}
-                        children={() => <Discussion navigation={navigation} conversations={conversations}/>}/>
+                        children={() => <Discussion navigation={navigation} conversations={conversations}
+                                                    twilioClient={twilioClient}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
@@ -149,7 +98,70 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
 
     );
 }
-const Discussion = ({navigation, conversations}) => {
+const Discussion = ({navigation, conversations, twilioClient}: {
+    twilioClient?: Client;
+    conversations?: Conversation[];
+    navigation?: any;
+}) => {
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
+    const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
+    const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
+        activePage: 0,
+        sort: 'id',
+        order: 'DESC'
+    });
+    // callbacks
+    const handleSheetChanges = useCallback((index: number) => {
+        console.log('handleSheetChanges', index);
+    }, []);
+    const snapPoints = useMemo(() => ['100%', '80%'], []);
+
+
+    const dispatch = useAppDispatch();
+    const openUsers = () => {
+        dispatch(
+            getUsers({
+                page: pagination.activePage,
+                size: 10,
+                sort: `${pagination.sort},${pagination.order}`,
+            }));
+        bottomSheetModalRef.current.present();
+    }
+
+    const onValueChange = (val:any)=> {
+        console.log("val ", val);
+    }
+
+    const getAccountModal = () => {
+        return <BottomSheetModal
+            ref={bottomSheetModalRef}
+            index={1}
+            style={{
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 11,
+                },
+                shadowOpacity: 0.57,
+                shadowRadius: 15.19,
+
+                elevation: 23
+            }}
+            snapPoints={snapPoints}
+            onChange={handleSheetChanges}
+        >
+            <FlatList
+                data={users}
+                renderItem={({item}) => (
+                    <UserItem item={item} onValueChange={onValueChange}/>
+                )}
+                keyExtractor={item => item.id}
+            />
+        </BottomSheetModal>
+    }
+
+
     return (<View style={styles.container}>
         <FlatList
             data={conversations}
@@ -165,8 +177,9 @@ const Discussion = ({navigation, conversations}) => {
             color={Colors.light.sekhmetOrange}
             title={"Nouvelle discussion"}
             icon={{name: "comment", color: "white"}}
-            onPress={() => console.log('Pressed')}
+            onPress={() => openUsers()}
         />
+        {getAccountModal()}
     </View>)
 }
 
@@ -175,8 +188,6 @@ const Groupes = ({navigation, conversations}) => {
         <Text style={styles.title}>{navigation.state}</Text>
     </View>
 }
-
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

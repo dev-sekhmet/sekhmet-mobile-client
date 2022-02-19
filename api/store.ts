@@ -4,13 +4,15 @@ import authentification from './authentification/authentication.reducer';
 import settings from './settings/settings.reducer';
 import search from './search/search.reducer';
 import unreadmessage from './unreadmessage/unreadmessage.reducer';
+import userManagement from './user-management/user-management.reducer';
 
 export const store = configureStore({
     reducer: {
         authentification,
         settings,
         search,
-        unreadmessage
+        unreadmessage,
+        userManagement
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({

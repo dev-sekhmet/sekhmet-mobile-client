@@ -54,7 +54,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
     };
 
     return (
-        <Pressable onPress={onPress} style={styles.container}>
+        <View style={styles.container}>
             <Avatar
                 size={60}
                 rounded
@@ -93,9 +93,8 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                     </Text>
                     <Text style={styles.text}>{Moment(item.dateUpdated).format('HH:mm')}</Text>
                 </View>
-
             </View>
-        </Pressable>
+        </View>
     );
 }
 
