@@ -129,13 +129,15 @@ const Discussion = ({navigation, conversations, twilioClient}: {
         bottomSheetModalRef.current.present();
     }
 
-    const onValueChange = (val:any)=> {
-        console.log("val ", val);
+    const selectedUser = (user:IUser)=> {
+        bottomSheetModalRef.current.close();
+        console.log("val ", user);
     }
 
     const getAccountModal = () => {
         return <BottomSheetModal
             ref={bottomSheetModalRef}
+
             index={1}
             style={{
                 shadowColor: "#000",
@@ -154,7 +156,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             <FlatList
                 data={users}
                 renderItem={({item}) => (
-                    <UserItem item={item} onValueChange={onValueChange}/>
+                    <UserItem item={item} selectedUser={selectedUser}/>
                 )}
                 keyExtractor={item => item.id}
             />

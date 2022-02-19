@@ -6,24 +6,16 @@ import Colors from "../constants/Colors";
 import {IUser} from "../model/user.model";
 
 
-export default function UserItem({item, onValueChange}: { item: IUser, onValueChange: (val: boolean) => void }) {
+export default function UserItem({item, selectedUser}: { item: IUser, selectedUser: (user: IUser) => void }) {
     const [isSelected, setSelection] = useState(false);
     const onPress = () => {
         console.log("Press")
     };
 
-    function selectUser() {
-        return prev => {
-            const val = !prev;
-            onValueChange(val);
-            return val;
-        };
-    }
-
     return (
             <ListItem
-                bottomDivider
-                onPress={selectUser()}>
+
+                onPress={()=>selectedUser(item)}>
                 <Avatar
                     size={30}
                     rounded
@@ -36,13 +28,6 @@ export default function UserItem({item, onValueChange}: { item: IUser, onValueCh
                 <ListItem.Content>
                     <ListItem.Title>{`${item?.firstName} ${item?.lastName}`}</ListItem.Title>
                 </ListItem.Content>
-                <CheckBox
-                    checked={isSelected}
-                    onPress={() => {
-                        setSelection(selectUser());
-
-                    }}
-                />
             </ListItem>
 
     );
