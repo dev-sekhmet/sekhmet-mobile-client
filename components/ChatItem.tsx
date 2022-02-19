@@ -10,6 +10,7 @@ import {createSingleArgumentStateOperator} from "@reduxjs/toolkit/dist/entities/
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {from} from "rxjs";
 import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
+import {getFriendlyName} from "../shared/conversation/conversation.util";
 
 
 export default function ChatItem({item, navigation}: TwilioProps) {
@@ -17,6 +18,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
     const dispatch = useAppDispatch();
     const [lastMessage, setLastMessage] = useState<string>(null);
     const unreadmessageCount = useAppSelector(state => state.unreadmessage);
+    const account = useAppSelector(state => state.authentification.account);
     function initUnreadMessagesCount() {
         from(item.getUnreadMessagesCount()).subscribe(nb => {
             dispatch(updateUnreadMessages({channelSid: item.sid, unreadCount: nb}))
@@ -48,13 +50,13 @@ export default function ChatItem({item, navigation}: TwilioProps) {
         navigation.navigate("Chat", {
             clickedConversation: {
                 sid: item.sid,
-                name: `${item.friendlyName}`
+                name: `${(getFriendlyName(item, account))}`
             }
         });
     };
 
     return (
-        <View style={styles.container}>
+        <Pressable onPress={onPress} style={styles.container}>
             <Avatar
                 size={60}
                 rounded
@@ -75,7 +77,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
             <View style={styles.rightContainer}>
                 <View style={styles.row}>
                     <View style={styles.row}>
-                        <Text style={styles.name}>{item.friendlyName}</Text>
+                        <Text style={styles.name}>{getFriendlyName(item, account)}</Text>
 
                         <Badge
                             badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
@@ -93,8 +95,9 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                     </Text>
                     <Text style={styles.text}>{Moment(item.dateUpdated).format('HH:mm')}</Text>
                 </View>
+
             </View>
-        </View>
+        </Pressable>
     );
 }
 

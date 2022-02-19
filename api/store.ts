@@ -5,6 +5,7 @@ import settings from './settings/settings.reducer';
 import search from './search/search.reducer';
 import unreadmessage from './unreadmessage/unreadmessage.reducer';
 import userManagement from './user-management/user-management.reducer';
+import conversationWrite from './conversation-write/conversation-write.reducer';
 
 export const store = configureStore({
     reducer: {
@@ -12,7 +13,8 @@ export const store = configureStore({
         settings,
         search,
         unreadmessage,
-        userManagement
+        userManagement,
+        conversationWrite
     },
     middleware: getDefaultMiddleware =>
         getDefaultMiddleware({

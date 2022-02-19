@@ -1,19 +1,21 @@
-import {Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
+import {Dimensions, FlatList, StyleSheet} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import ChatItem from "../components/ChatItem";
 import * as React from "react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Avatar, Badge, FAB} from "react-native-elements";
+import {Badge, FAB} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {Client, Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {getUsers} from "../api/user-management/user-management.reducer";
 import {IUser} from "../model/user.model";
-import {BottomSheetModal, BottomSheetTextInput} from "@gorhom/bottom-sheet";
-import {Controller} from "react-hook-form";
+import {BottomSheetModal} from "@gorhom/bottom-sheet";
 import UserItem from "../components/UserItem";
+import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
+import {reset} from "../api/settings/settings.reducer";
+import {getFriendlyName} from "../shared/conversation/conversation.util";
 
 
 const height = Dimensions.get('screen').height;
@@ -39,8 +41,12 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                         // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
                     });
                     console.log("New conversation", conversation.friendlyName);
-                    setConversations(oldConversations => [...oldConversations, conversation]);
+                    setConversations(oldConversations => [conversation, ...oldConversations]);
                     conversation.setAllMessagesUnread();
+                    if (conversation.uniqueName.includes("GROUPE")){
+                        console.log("GROUPE", conversation.uniqueName);
+
+                    }
                 });
                 twilioClient.on("conversationRemoved", (conversation: Conversation) => {
 
@@ -103,9 +109,14 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     conversations?: Conversation[];
     navigation?: any;
 }) => {
+    const dispatch = useAppDispatch();
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
+    const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
+    const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
+    const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
+    const account = useAppSelector(state => state.authentification.account);
     const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
         activePage: 0,
         sort: 'id',
@@ -117,24 +128,54 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }, []);
     const snapPoints = useMemo(() => ['100%', '80%'], []);
 
+    useEffect(()=>{
+        if (updateSuccess){
+            console.log('OK');
+        }
+        if (updateFailure){
+            console.log('KO');
+        }
+        dispatch(reset());
 
-    const dispatch = useAppDispatch();
-    const openUsers = () => {
+    }, [updateSuccess, updateFailure]);
+
+    useEffect(()=>{
+        if (selectedConversation){
+            console.log("selectedConversation",selectedConversation.attributes);
+            navigation.navigate("Chat", {
+                clickedConversation: {
+                    sid: selectedConversation.sid,
+                    name: getFriendlyName(selectedConversation, account)
+                }
+            });
+        }
+
+    }, [selectedConversation]);
+
+    useEffect(() => {
         dispatch(
             getUsers({
                 page: pagination.activePage,
                 size: 10,
                 sort: `${pagination.sort},${pagination.order}`,
             }));
+        return () => {
+            dispatch(reset());
+        };
+    }, []);
+
+    const openUsers = () => {
         bottomSheetModalRef.current.present();
     }
 
-    const selectedUser = (user:IUser)=> {
+    const selectedUser = (user: IUser) => {
         bottomSheetModalRef.current.close();
         console.log("val ", user);
+        dispatch(findOrCreateConversationDual(user.id));
+
     }
 
-    const getAccountModal = () => {
+    const getListUsersModal = () => {
         return <BottomSheetModal
             ref={bottomSheetModalRef}
 
@@ -181,7 +222,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             icon={{name: "comment", color: "white"}}
             onPress={() => openUsers()}
         />
-        {getAccountModal()}
+        {getListUsersModal()}
     </View>)
 }
 

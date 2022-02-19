@@ -69,12 +69,13 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
     const fetchMessages = async () => {
         if (conversation) {
             conversation.getMessages(pageSize).then(paginator => {
-                setHasMore(paginator.hasPrevPage);
-                setPaginator(paginator);
-                setMessages(paginator.items);
-                const lastIndex = paginator.items[paginator.items.length-1].index;
-                conversation.updateLastReadMessageIndex(lastIndex);
-            })
+                if (paginator && paginator.items && paginator.items.length>0) {
+                    setHasMore(paginator.hasPrevPage);
+                    setPaginator(paginator);
+                    setMessages(paginator.items);
+                    const lastIndex = paginator.items[paginator.items.length - 1].index;
+                    conversation.updateLastReadMessageIndex(lastIndex);
+                }})
         }
     };
 
