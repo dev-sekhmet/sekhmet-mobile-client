@@ -125,7 +125,8 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
             <Tab.Screen name="Discussion"
                         options={{
                             tabBarLabel: () => {
-                                const count = Object.values<number>(unreadmessageCount).reduce((prev, curr) => prev + curr);
+                                const count = Object.values<number>(unreadmessageCount)
+                                    .reduce((prev, curr) => prev + curr, 0);
                                 return <View
                                 style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>

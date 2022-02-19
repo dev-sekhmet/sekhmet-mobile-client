@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Colors from "../constants/Colors";
 import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
@@ -22,6 +22,7 @@ import {logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
 import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
+import {BottomSheetModal} from '@gorhom/bottom-sheet';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -48,15 +49,24 @@ export default function ProfilScreen({navigation}) {
             phoneNumber: account?.phoneNumber
         }
     });
+    // ref
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
+    // variables
+    const snapPoints = useMemo(() => ['100%', '80%'], []);
 
-    const onSubmit = data => console.log(data);
+    // callbacks
+    const handleSheetChanges = useCallback((index: number) => {
+        console.log('handleSheetChanges', index);
+    }, []);
+
 
     useEffect(() => {
         return () => {
             dispatch(reset());
         };
     }, []);
+
 
     useEffect(() => {
         if (successMessage) {
@@ -66,9 +76,7 @@ export default function ProfilScreen({navigation}) {
     }, [successMessage]);
 
 
-
     const languageOptions = ["Francais", "Anglais", "Annuler"];
-    const [openAccountModal, setOpenAccountModal] = useState(false);
     const [user, setUser] = useState<IUser>({firstName: "Maboma", lastName: "Brenda", email: "brenda@maboma.fr"});
     const [accountItems, setAccountItems] = useState<MenuItem[]>([
         {
@@ -76,7 +84,7 @@ export default function ProfilScreen({navigation}) {
             icon: 'person',
             color: Colors.light.sekhmetGreen,
             action() {
-                setOpenAccountModal(open => !open);
+                bottomSheetModalRef.current.present();
             }
         },
         {
@@ -136,7 +144,7 @@ export default function ProfilScreen({navigation}) {
 
     }
     const onSave = (values) => {
-        setOpenAccountModal(false);
+        bottomSheetModalRef.current.close();
         dispatch(
             saveAccountSettings({
                 ...account,
@@ -196,23 +204,24 @@ export default function ProfilScreen({navigation}) {
 
     const getAccountModal = () => {
 
-        return <Modal
-            avoidKeyboard
-            onBackdropPress={() => setOpenAccountModal(false)}
-            animationIn={"slideInUp"}
-            isVisible={openAccountModal}
-            swipeDirection={['down', 'up'
-            ]
-            }
-            onSwipeComplete={() => setOpenAccountModal(false)}>
+        return <BottomSheetModal
+            ref={bottomSheetModalRef}
+            index={1}
+            style={{shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 11,
+                },
+                shadowOpacity: 0.57,
+                shadowRadius: 15.19,
 
+                elevation: 23}}
+            snapPoints={snapPoints}
+            onChange={handleSheetChanges}
+        >
             <SafeAreaView>
                 <ScrollView
-                    style={
-                        {
-                            padding: 20, backgroundColor: 'white'
-                        }
-                    }
+                    style={{ padding: 20, backgroundColor: 'white',borderRadius: 10,borderColor: 'black'}}
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}>
                     <View
@@ -352,7 +361,7 @@ export default function ProfilScreen({navigation}) {
                                     defaultCode="CM"
                                     placeholder="N° de téléphone"
                                     textContainerStyle={{backgroundColor: 'transparent'}}
-                                    textInputStyle={{backgroundColor: 'transparent', fontSize:14}}
+                                    textInputStyle={{backgroundColor: 'transparent', fontSize: 14}}
                                     layout="first"
                                     ref={phoneInput}
                                     defaultValue={value}
@@ -360,8 +369,7 @@ export default function ProfilScreen({navigation}) {
                                     containerStyle={{
                                         borderColor: 'grey',
                                         borderWidth: 0.5,
-                                        borderRadius: 3,
-                                        paddingHorizontal: 8
+                                        borderRadius: 3
                                     }}
                                     countryPickerProps={{withAlphaFilter: true}}
                                 />
@@ -373,8 +381,7 @@ export default function ProfilScreen({navigation}) {
                     </View>
                 </ScrollView>
             </SafeAreaView>
-        </Modal>
-            ;
+        </BottomSheetModal>
     }
     return (
         <View style={{backgroundColor: '#eaeaea', flex: 1}}>
@@ -396,7 +403,12 @@ export default function ProfilScreen({navigation}) {
                         badgeStyle={styles.pencilContainer}
                     />
 
-                    <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 18}}>{`${account?.firstName} ${account?.lastName}`}</Text>
+                    <Text style={{
+                        textAlign: 'center',
+                        marginTop: 5,
+                        marginBottom: 4,
+                        fontSize: 18
+                    }}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
                 <View style={{backgroundColor: 'white', borderTopLeftRadius: 33, borderTopRightRadius: 33}}>
@@ -426,6 +438,7 @@ export default function ProfilScreen({navigation}) {
                 </View>
             </SafeAreaView>
             {getAccountModal()}
+
         </View>
     )
 }

@@ -88,6 +88,7 @@ function RootNavigator() {
         }
     }, [twilioToken]);
 
+
     useEffect(() => {
         dispatch(getSession());
         dispatch(getOnBoarding());

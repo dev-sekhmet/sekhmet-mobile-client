@@ -8,7 +8,8 @@ import {IMessage as MessageModel} from '../model/message.model';
 import MessageReply from './MessageReply';
 import {Text, View} from "./Themed";
 import Moment from 'moment';
-import {Message, User} from "@twilio/conversations";
+import {Media, Message, User} from "@twilio/conversations";
+import {forkJoin, from} from "rxjs";
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
@@ -26,7 +27,7 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
 
     const {width} = useWindowDimensions();
     const {showActionSheetWithOptions} = useActionSheet();
-
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
 
     useEffect(() => {
         setMessage(propMessage);
@@ -59,8 +60,9 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
 
     useEffect(() => {
         if (message.attachedMedia) {
-            /*Storage.get(message.audio).then(setSoundURI);*/
-           // setSoundURI(message.audio);
+           forkJoin(message.attachedMedia.map(value => from(value.getContentTemporaryUrl()))).subscribe(value => {
+              setImageUrls(value);
+           });
         }
         const checkIfMe = async () => {
             if (!message.author) {
@@ -91,6 +93,8 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
     const deleteMessage = async () => {
         // await DataStore.delete(message);
     };
+
+
 
     const confirmDelete = () => {
         Alert.alert(
@@ -134,10 +138,13 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
             onActionPress
         );
     };
-
+    const getFileUrl = async (media: Media): Promise<string> => {
+        return await media.getContentTemporaryUrl().then();
+    };
     if (!message.author) {
         return <ActivityIndicator/>;
     }
+
 
     return (
         <Pressable
@@ -153,21 +160,25 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
                 <View style={styles.row}>
                     {message.type === 'media' && message.attachedMedia && (
                         <FlatList
-                            data={message.attachedMedia}
+                            data={imageUrls}
                             renderItem={({item, index}) => (
                                 <View style={{marginBottom: message.body ? 10 : 0}}>
-                                    {/*<Image
-                                        source={{uri: message.image}}
-                                        style={{width: width * 0.65, aspectRatio: 4 / 3}}/>*/}
-                                    <Ionicons
+                                  <Image
+                                      blurRadius={10}
+                                        source={{uri: item}}
+                                        style={{
+                                            minHeight: 150,
+                                            minWidth: 150
+                                        }}/>
+                                   {/* <Ionicons
                                         name={"attach"}
                                         size={20}
                                         color="gray"
                                         style={{marginHorizontal: 5}}
-                                    />
+                                    />*/ }
                                 </View>
                             )}
-                            keyExtractor={item => item.sid}
+                            keyExtractor={item => item}
                             inverted
                         />
 
