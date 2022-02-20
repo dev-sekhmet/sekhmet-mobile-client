@@ -1,20 +1,20 @@
 import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
-import {IUser} from '../model/user.model'
 import {Ionicons} from '@expo/vector-icons';
 import {useActionSheet} from '@expo/react-native-action-sheet';
 import AudioPlayer from './AudioPlayer';
-import {IMessage as MessageModel} from '../model/message.model';
 import MessageReply from './MessageReply';
 import {Text, View} from "./Themed";
 import Moment from 'moment';
 import {Media, Message, User} from "@twilio/conversations";
-import {forkJoin, from} from "rxjs";
+import {forkJoin, from, map,} from "rxjs";
+import {transparent} from "react-native-paper/lib/typescript/styles/colors";
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
-
-const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?: ()=>void}) => {
+type MediaType = 'image' | 'video' | 'audio' | 'file';
+type MediaData = { sid: string, type: MediaType, url: string };
+const MessageBox = (props: { message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
     const {setAsMessageReply, message: propMessage, authUser} = props;
 
     const [message, setMessage] = useState<Message>(propMessage);
@@ -27,7 +27,7 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
 
     const {width} = useWindowDimensions();
     const {showActionSheetWithOptions} = useActionSheet();
-    const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const [mediaContents, setMediaContents] = useState<MediaData[]>([]);
 
     useEffect(() => {
         setMessage(propMessage);
@@ -60,9 +60,24 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
 
     useEffect(() => {
         if (message.attachedMedia) {
-           forkJoin(message.attachedMedia.map(value => from(value.getContentTemporaryUrl()))).subscribe(value => {
-              setImageUrls(value);
-           });
+            forkJoin(message.attachedMedia.map(value => {
+                return from<Promise<string | null>>(value.getContentTemporaryUrl())
+                    .pipe(map(url => {
+                        const res: MediaData = {sid:value.sid, type: 'file', url}
+                        if (value.contentType?.includes("image")) {
+                            res.type = 'image';
+                        }
+                        if (value.contentType?.includes("audio")) {
+                            res.type = 'audio';
+                        }
+                        if (value.contentType?.includes("video")) {
+                            res.type = 'video';
+                        }
+                        return res;
+                    }))
+            })).subscribe(medias => {
+                setMediaContents(medias);
+            });
         }
         const checkIfMe = async () => {
             if (!message.author) {
@@ -80,7 +95,7 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
 
     const setAsRead = async () => {
         if (isMe === false && message) {
-       // if (isMe === false && message.read) {
+            // if (isMe === false && message.read) {
 
             /*            await DataStore.save(
                             MessageModel.copyOf(message, (updated) => {
@@ -93,7 +108,6 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
     const deleteMessage = async () => {
         // await DataStore.delete(message);
     };
-
 
 
     const confirmDelete = () => {
@@ -154,36 +168,40 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
                 style={[
                     styles.container,
                     isMe ? styles.rightContainer : styles.leftContainer,
-                    {width: soundURI ? "75%" : "auto"},
+                    {width:  "auto"},
                 ]}>
                 {repliedTo && <MessageReply message={repliedTo}/>}
                 <View style={styles.row}>
                     {message.type === 'media' && message.attachedMedia && (
                         <FlatList
-                            data={imageUrls}
+                            data={mediaContents}
                             renderItem={({item, index}) => (
                                 <View style={{marginBottom: message.body ? 10 : 0}}>
-                                  <Image
-                                      blurRadius={10}
-                                        source={{uri: item}}
-                                        style={{
-                                            minHeight: 150,
-                                            minWidth: 150
-                                        }}/>
-                                   {/* <Ionicons
+                                    {item.type === 'image' ? <Image
+                                            source={{uri: item.url}}
+                                            style={{
+                                                minHeight: 150,
+                                                minWidth: 150
+                                            }}/> :
+                                        item.type === 'audio' ?
+                                            <AudioPlayer soundURI={item.url}/> :
+                                            item.type === 'video' ?
+                                                <Text>VIDEO</Text> :
+                                                <Text>FILE</Text>
+                                    }
+                                    {/* <Ionicons
                                         name={"attach"}
                                         size={20}
                                         color="gray"
                                         style={{marginHorizontal: 5}}
-                                    />*/ }
+                                    />*/}
                                 </View>
                             )}
-                            keyExtractor={item => item}
+                            keyExtractor={item => item.sid}
                             inverted
                         />
 
                     )}
-                    {soundURI && <AudioPlayer soundURI={soundURI}/>}
                     {!!message.body && (
                         <View>
                             <Text style={{backgroundColor: isMe ? blue : grey}}>
@@ -206,7 +224,7 @@ const MessageBox = (props: {message: Message, authUser?:User, setAsMessageReply?
                     )}
                 </View>
             </View>
-            <Text  style={[
+            <Text style={[
                 isMe ? styles.rightHour : styles.leftHour,
                 {width: soundURI ? "75%" : "auto"},
             ]}>{Moment(message.dateUpdated).format('HH:mm')}</Text>
@@ -221,8 +239,9 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         marginRight: 10,
         borderRadius: 20,
+
         maxWidth: "75%",
-    },containerHour: {
+    }, containerHour: {
         padding: 10,
         margin: 10,
         borderRadius: 10,
@@ -244,7 +263,7 @@ const styles = StyleSheet.create({
     },
     leftHour: {
         marginLeft: 10,
-        color:'#8C8C8C',
+        color: '#8C8C8C',
         marginRight: "auto",
     },
     rightContainer: {
@@ -256,7 +275,7 @@ const styles = StyleSheet.create({
     rightHour: {
         marginLeft: "auto",
         marginRight: 10,
-        color:'#8C8C8C',
+        color: '#8C8C8C',
         alignItems: "flex-end",
     },
 });
