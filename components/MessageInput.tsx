@@ -4,7 +4,7 @@ import {AntDesign, Feather, Ionicons, MaterialCommunityIcons, SimpleLineIcons,} 
 import EmojiSelector from 'react-native-emoji-selector';
 import * as ImagePicker from 'expo-image-picker';
 import {Audio} from 'expo-av';
-import AudioPlayer from './AudioPlayer';
+import AudioPlayer from './media/AudioPlayer';
 import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";

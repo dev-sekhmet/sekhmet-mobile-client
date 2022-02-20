@@ -11,7 +11,7 @@ import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
 import {useAppDispatch} from "../api/store";
 
 const pageSize = 10;
-export default function ChatScreen({route, twilioClient}: TwilioProps) {
+export default function ChatScreen({route, navigation, twilioClient}: TwilioProps) {
     const dispatch = useAppDispatch();
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageReplyTo, setMessageReplyTo] = useState<Message | null>(
@@ -142,6 +142,7 @@ export default function ChatScreen({route, twilioClient}: TwilioProps) {
                         >{getDate(item.dateUpdated)}</Text>}
                         <MessageBox
                             message={item}
+                            navigation={navigation}
                             authUser={twilioClient.user}
                             setAsMessageReply={() => setMessageReplyTo(item)}
                         />

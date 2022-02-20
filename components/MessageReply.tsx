@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {ActivityIndicator, Image, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import {IUser} from "../model/user.model";
 import {Ionicons} from "@expo/vector-icons";
-import AudioPlayer from "./AudioPlayer";
+import AudioPlayer from "./media/AudioPlayer";
 import {IMessage as MessageModel} from "../model/message.model";
 
 const blue = "#3777f0";

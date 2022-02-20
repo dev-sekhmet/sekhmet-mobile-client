@@ -2,19 +2,21 @@ import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useActionSheet} from '@expo/react-native-action-sheet';
-import AudioPlayer from './AudioPlayer';
+import AudioPlayer from './media/AudioPlayer';
 import MessageReply from './MessageReply';
 import {Text, View} from "./Themed";
 import Moment from 'moment';
 import {Media, Message, User} from "@twilio/conversations";
 import {forkJoin, from, map,} from "rxjs";
 import {transparent} from "react-native-paper/lib/typescript/styles/colors";
+import VideoPlayer from "./media/video/VideoPlayer";
+import ImageView from "./media/ImageView";
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
 type MediaType = 'image' | 'video' | 'audio' | 'file';
 type MediaData = { sid: string, type: MediaType, url: string };
-const MessageBox = (props: { message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
+const MessageBox = (props: { navigation?: any, message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
     const {setAsMessageReply, message: propMessage, authUser} = props;
 
     const [message, setMessage] = useState<Message>(propMessage);
@@ -177,8 +179,9 @@ const MessageBox = (props: { message: Message, authUser?: User, setAsMessageRepl
                             data={mediaContents}
                             renderItem={({item, index}) => (
                                 <View style={{marginBottom: message.body ? 10 : 0}}>
-                                    {item.type === 'image' ? <Image
-                                            source={{uri: item.url}}
+                                    {item.type === 'image' ? <ImageView
+                                            uri={item.url}
+                                            navigator={props.navigation}
                                             style={{
                                                 minHeight: 150,
                                                 minWidth: 150
@@ -186,7 +189,11 @@ const MessageBox = (props: { message: Message, authUser?: User, setAsMessageRepl
                                         item.type === 'audio' ?
                                             <AudioPlayer soundURI={item.url}/> :
                                             item.type === 'video' ?
-                                                <Text>VIDEO</Text> :
+                                                <VideoPlayer
+                                                    style={{
+                                                    minHeight: 150,
+                                                    minWidth: 150
+                                                }} uri={item.url}/> :
                                                 <Text>FILE</Text>
                                     }
                                     {/* <Ionicons
