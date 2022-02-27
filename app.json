@@ -2,7 +2,7 @@
   "expo": {
     "name": "sekhmet-mobile-client",
     "slug": "sekhmet-mobile-client",
-    "version": "2.0.3",
+    "version": "3.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sekhmet",
@@ -23,7 +23,7 @@
       "buildNumber": "1.0.1"
     },
     "android": {
-      "versionCode": 5,
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -45,10 +45,7 @@
     },
     "plugins": [
       [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app accesses your photos to let you share them with your friends and coach"
-        }
+        "./android-manifest.plugin"
       ]
     ]
   }

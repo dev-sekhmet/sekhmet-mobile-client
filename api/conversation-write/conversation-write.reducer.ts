@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getSession } from '../authentification/authentication.reducer';
 import { AppThunk } from '../store';
 import { serializeAxiosError } from '../reducer.utils';
+import {Conversation} from "@twilio/conversations";
 
 const initialState = {
     loading: false,
@@ -11,26 +12,21 @@ const initialState = {
     successMessage: null,
     updateSuccess: false,
     updateFailure: false,
+    selectedConversation: null,
 };
 
-export type SettingsState = Readonly<typeof initialState>;
+export type ConversationWriteState = Readonly<typeof initialState>;
 
 // Actions
-const apiUrl = '/account';
+const apiUrl = '/conversations';
 
-export const saveAccountSettings: (account: any) => AppThunk = account => async dispatch => {
-    await dispatch(updateAccount(account));
-    await AsyncStorage.removeItem('locale')
-    dispatch(getSession());
-};
-
-export const updateAccount = createAsyncThunk('settings/update_account', async (account: any) => axiosInstance.post<any>(apiUrl, account), {
+export const findOrCreateConversationDual = createAsyncThunk('conversations/findOrCreateConversationDual', async (id: string) => axiosInstance.get<any>(`${apiUrl}/${id}/user?`), {
     serializeError: serializeAxiosError,
 });
 
-export const SettingsSlice = createSlice({
-    name: 'settings',
-    initialState: initialState as SettingsState,
+export const ConversationWriteStateSlice = createSlice({
+    name: 'conversations',
+    initialState: initialState as ConversationWriteState,
     reducers: {
         reset() {
             return initialState;
@@ -38,26 +34,27 @@ export const SettingsSlice = createSlice({
     },
     extraReducers(builder) {
         builder
-            .addCase(updateAccount.pending, state => {
+            .addCase(findOrCreateConversationDual.pending, state => {
                 state.loading = true;
                 state.errorMessage = null;
                 state.updateSuccess = false;
             })
-            .addCase(updateAccount.rejected, state => {
+            .addCase(findOrCreateConversationDual.rejected, state => {
                 state.loading = false;
                 state.updateSuccess = false;
                 state.updateFailure = true;
             })
-            .addCase(updateAccount.fulfilled, state => {
+            .addCase(findOrCreateConversationDual.fulfilled, (state, action) => {
                 state.loading = false;
                 state.updateSuccess = true;
                 state.updateFailure = false;
+                state.selectedConversation = action.payload.data
                 state.successMessage = 'settings.messages.success';
             });
     },
 });
 
-export const { reset } = SettingsSlice.actions;
+export const { reset } = ConversationWriteStateSlice.actions;
 
 // Reducer
-export default SettingsSlice.reducer;
+export default ConversationWriteStateSlice.reducer;

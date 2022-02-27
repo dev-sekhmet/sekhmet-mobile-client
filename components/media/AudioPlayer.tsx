@@ -88,13 +88,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "lightgray",
         borderRadius: 10,
-        backgroundColor: "white",
+        backgroundColor: 'transparent',
     },
 
     audiProgressBG: {
         height: 3,
         flex: 1,
-        backgroundColor: "lightgray",
+        backgroundColor: 'transparent',
         borderRadius: 5,
         margin: 10,
     },

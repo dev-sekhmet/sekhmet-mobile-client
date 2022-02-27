@@ -9,11 +9,6 @@ import Colors from "../../constants/Colors";
 const TermsConditionsScreen = () => {
     const navigation = useNavigation();
     const account = useAppSelector(state => state.authentification.account);
-    // const navigation = createNavigationContainerRef();
-    useEffect(() => {
-        console.log("Here the navigation", navigation);
-
-    }, []);
 
     const checkAndGo = async () => {
         // console.log("Here the navigation", navigation);

@@ -1,25 +1,18 @@
-import {
-    ColorValue,
-    Dimensions,
-    FlatList,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    TextInput
-} from 'react-native';
+import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Colors from "../constants/Colors";
-import Modal from 'react-native-modal';
 import {IUser} from "../model/user.model";
 import {FontAwesome} from "@expo/vector-icons";
 import {useActionSheet} from "@expo/react-native-action-sheet";
-import {successToast} from "../components/toast";
+import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {logout} from "../api/authentification/authentication.reducer";
-import {useForm} from "react-hook-form";
+import {Controller, useForm} from "react-hook-form";
+import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
+import PhoneInput from "react-native-phone-number-input";
+import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -37,17 +30,48 @@ export default function ProfilScreen({navigation}) {
     const {showActionSheetWithOptions} = useActionSheet();
     const account = useAppSelector(state => state.authentification.account);
     const successMessage = useAppSelector(state => state.settings.successMessage);
+    const errorMessage = useAppSelector(state => state.settings.errorMessage);
+    const phoneInput = useRef<PhoneInput>(null);
     const {control, handleSubmit, formState: {errors}} = useForm({
         defaultValues: {
             firstName: account?.firstName,
             lastName: account?.lastName,
-            email: account?.email
+            email: account?.email,
+            phoneNumber: account?.phoneNumber
         }
     });
+    // ref
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+    // variables
+    const snapPoints = useMemo(() => ['100%', '80%'], []);
+
+    // callbacks
+    const handleSheetChanges = useCallback((index: number) => {
+        console.log('handleSheetChanges', index);
+    }, []);
+
+
+    useEffect(() => {
+        return () => {
+            dispatch(reset());
+        };
+    }, []);
+
+
+    useEffect(() => {
+        if (successMessage) {
+            bottomSheetModalRef.current.close();
+            dispatch(reset());
+            successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
+        }
+        if (errorMessage) {
+            errorToast('Erreur', errorMessage);
+        }
+    }, [successMessage, errorMessage]);
 
 
     const languageOptions = ["Francais", "Anglais", "Annuler"];
-    const [openAccountModal, setOpenAccountModal] = useState(false);
     const [user, setUser] = useState<IUser>({firstName: "Maboma", lastName: "Brenda", email: "brenda@maboma.fr"});
     const [accountItems, setAccountItems] = useState<MenuItem[]>([
         {
@@ -55,7 +79,7 @@ export default function ProfilScreen({navigation}) {
             icon: 'person',
             color: Colors.light.sekhmetGreen,
             action() {
-                setOpenAccountModal(open => !open);
+                bottomSheetModalRef.current.present();
             }
         },
         {
@@ -111,6 +135,18 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
+    const onChangeAvatar = () => {
+
+    }
+    const onSave = (values) => {
+        dispatch(
+            saveAccountSettings({
+                ...account,
+                ...values,
+            })
+        );
+    }
+
     const setChecked = (id: string) => {
         const newList = notificationItems.map((item) => {
             if (item.title === id) {
@@ -131,43 +167,60 @@ export default function ProfilScreen({navigation}) {
             <ListItem
                 bottomDivider
                 onPress={() => action(item)}>
-                <Icon color={item.color} name={item.icon}/>
+                <Icon tvParallaxProperties={false} color={item.color} name={item.icon}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.title}</ListItem.Title>
                 </ListItem.Content>
-                {!item.type && <ListItem.Chevron/>}
+                {!item.type && <ListItem.Chevron tvParallaxProperties={false}/>}
                 {item.type && <Switch value={item.notif} onValueChange={(value) => setChecked(item.title)}/>}
             </ListItem>
         );
     };
 
-    const onChangeAvatar = () => {
+    const openLanguageActionMenu = () => {
+        const cancelButtonIndex = 2;
+        showActionSheetWithOptions(
+            {
+                options: languageOptions,
+                cancelButtonIndex
+            },
+            onLanguageActionPress
+        );
+    };
 
-    }
-    const onSave = () => {
-        setOpenAccountModal(false);
-        successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
-    }
+    const onLanguageActionPress = (index) => {
+        if (index !== 2) {
+            successToast('Langue enregistré', `votre choix de langue ${languageOptions[index]} a été pris en compte`);
+        }
+    };
 
+
+    const menuData =[
+        {nameMenu: "Mon Compte", data: accountItems},
+        {nameMenu: "Notifications", data: notificationItems},
+        {nameMenu: "Plus", data: plusItems}
+    ];
     const getAccountModal = () => {
+        return <BottomSheetModal
+            ref={bottomSheetModalRef}
+            index={1}
+            style={{
+                shadowColor: "#000",
+                shadowOffset: {
+                    width: 0,
+                    height: 11,
+                },
+                shadowOpacity: 0.57,
+                shadowRadius: 15.19,
 
-        return <Modal
-            avoidKeyboard
-            onBackdropPress={() => setOpenAccountModal(false)}
-            animationIn={"slideInUp"}
-            isVisible={openAccountModal}
-            swipeDirection={['down', 'up'
-            ]
-            }
-            onSwipeComplete={() => setOpenAccountModal(false)}>
-
+                elevation: 23
+            }}
+            snapPoints={snapPoints}
+            onChange={handleSheetChanges}
+        >
             <SafeAreaView>
                 <ScrollView
-                    style={
-                        {
-                            padding: 20, backgroundColor: 'white'
-                        }
-                    }
+                    style={{padding: 20, backgroundColor: 'white', borderRadius: 10, borderColor: 'black'}}
                     showsVerticalScrollIndicator={false}
                     showsHorizontalScrollIndicator={false}>
                     <View
@@ -189,7 +242,7 @@ export default function ProfilScreen({navigation}) {
                                         borderWidth: 1,
                                     }
                                 }/>
-                            <Pressable onPress={onSave}>
+                            <Pressable onPress={handleSubmit(onSave)}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
                             </Pressable>
                         </View>
@@ -200,22 +253,31 @@ export default function ProfilScreen({navigation}) {
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
                             Nom</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                required: true,
                             }}
-                            onChangeText={firstName => {
-                                const neUser = {...user, firstName};
-                                setUser(neUser);
-                            }}
-                            value={user.firstName}
-                            placeholder="Nom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <BottomSheetTextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Nom"
+                                    underlineColorAndroid="transparent"
+                                />
+                            )}
+                            name="firstName"
                         />
+                        {errors.firstName && <Text style={{color: 'red'}}>This is required.</Text>}
+
                     </View>
 
                     {/*    For lastname*/
@@ -223,96 +285,107 @@ export default function ProfilScreen({navigation}) {
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
                             Prénom</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={lastName => {
-                                const neUser = {...user, lastName};
-                                setUser(neUser);
-                            }}
-                            value={user.lastName}
-                            placeholder="Prénom"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <BottomSheetTextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="lastName"
                         />
-                    </View>
-                    {/*    For email*/
-                    }
-                    <View style={{marginBottom: 10, marginTop: 5}}>
-                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
-                            de telephone</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
-                            }}
-                            onChangeText={phoneNumber => {
+                        {errors.lastName && <Text style={{color: 'red'}}>This is required.</Text>}
 
-                            }}
-                            value={'+237 691 380 458'}
-                            placeholder="Adresse Email"
-                            underlineColorAndroid="transparent"
-                        />
                     </View>
+
                     {/*    For email*/
                     }
                     <View style={{marginBottom: 10, marginTop: 5}}>
                         <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>
                             Email</Text>
-                        <TextInput
-                            style={{
-                                height: 40,
-                                borderColor: 'grey',
-                                borderWidth: 0.5,
-                                borderRadius: 3,
-                                paddingHorizontal: 8
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
                             }}
-                            onChangeText={email => {
-                                const neUser = {...user, email};
-                                setUser(neUser);
-                            }}
-                            value={user.email}
-                            placeholder="Adresse Email"
-                            underlineColorAndroid="transparent"
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <BottomSheetTextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    placeholder="Adresse Email"
+                                    underlineColorAndroid="transparent"
+                                />
+                            )}
+                            name="email"
                         />
+                        {errors.email && <Text style={{color: 'red'}}>This is required.</Text>}
+
+                    </View>
+
+                    {/*    For Telephone*/
+                    }
+                    <View style={{marginBottom: 10, marginTop: 5}}>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Numéro
+                            de telephone</Text>
+                        <Controller
+                            control={control}
+                            rules={{
+                                maxLength: 100,
+                                required: true,
+                            }}
+                            render={({field: {onChange, onBlur, value}}) => (
+                                <BottomSheetTextInput
+                                    style={{
+                                        height: 40,
+                                        borderColor: 'grey',
+                                        borderWidth: 0.5,
+                                        borderRadius: 3,
+                                        paddingHorizontal: 8
+                                    }}
+                                    onBlur={onBlur}
+                                    onChangeText={onChange}
+                                    value={value}
+                                />
+                            )}
+                            name="phoneNumber"
+                        />
+                        {errors.phoneNumber && <Text style={{color: 'red'}}>This is required.</Text>}
+
                     </View>
                 </ScrollView>
             </SafeAreaView>
-        </Modal>
-            ;
+        </BottomSheetModal>
     }
-
-    const openLanguageActionMenu = () => {
-        const cancelButtonIndex = 2;
-        showActionSheetWithOptions(
-            {
-                options: languageOptions,
-                cancelButtonIndex
-            },
-            onLanguageActionPress
-        );
-    };
-
-
-    const onLanguageActionPress = (index) => {
-        if (index !== 2) {
-            successToast('Langue enregistré', `votre choix de langue ${languageOptions[index]} a été pris en compte`);
-        }
-    };
+    const borderTopRadius = 33;
     return (
-        <View style={{backgroundColor: '#eaeaea', flex: 1}}>
+        <View style={{backgroundColor: '#eaeaea', flex: 1, height: height}}>
 
-            <SafeAreaView>
-                <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea',}}>
+            <SafeAreaView style={{flex: 1}}>
+                <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
                     <Avatar
-                        size={80}
+                        size={height<670? 45:80}
                         rounded
                         source={require("../assets/images/photoprofil.png")}
                         containerStyle={{
@@ -326,37 +399,35 @@ export default function ProfilScreen({navigation}) {
                         badgeStyle={styles.pencilContainer}
                     />
 
-                    <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 18}}>Brenda
-                        Maboma</Text>
+                    <Text style={{
+                        textAlign: 'center',
+                        marginTop: 5,
+                        marginBottom: 4,
+                        fontSize: 18
+                    }}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
-                <View style={{backgroundColor: 'white', borderTopLeftRadius: 33, borderTopRightRadius: 33}}>
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Mon Compte</Text>
-                        <FlatList
-                            data={accountItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
+                <View style={{backgroundColor: 'white',flex: 1,borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}>
 
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Notifications</Text>
-                        <FlatList
-                            data={notificationItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
+                    <FlatList
+                        data={menuData}
+                        style={{borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}
+                        renderItem={({ item }) => {
+                            return <View style={{backgroundColor: 'transparent'}}>
+                                <Text style={styles.titleMenu}>{item.nameMenu}</Text>
+                                <FlatList
+                                    scrollEnabled={false}
+                                    data={item.data}
+                                    renderItem={renderRow}
+                                    keyExtractor={i => i.title}/>
+                            </View>
+                        }}
+                        keyExtractor={item => item.nameMenu}/>
 
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Plus</Text>
-                        <FlatList
-                            data={plusItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
                 </View>
-            </SafeAreaView>
+
             {getAccountModal()}
+            </SafeAreaView>
         </View>
     )
 }

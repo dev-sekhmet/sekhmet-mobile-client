@@ -22,7 +22,7 @@ const DataProducts = [
     },
     {
         id: 2,
-        title: 'Thé Ventre Plat Et Détox',
+        title: 'Breuvage Ventre Plat Et Détox',
         subtitle: 'Dégonflage Ventre',
         image: require('../assets/images/prods/p2.png')
     },

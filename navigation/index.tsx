@@ -7,8 +7,8 @@ import {FontAwesome, MaterialIcons} from '@expo/vector-icons';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
-import {useContext, useEffect} from 'react';
-import {Pressable, View} from 'react-native';
+import {createContext, useEffect, useState} from 'react';
+import {Dimensions, Pressable, View} from 'react-native';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
@@ -19,7 +19,6 @@ import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
 import OnBoardingScreen from "../screens/OnBoardingScreen";
-import AppContext from "../components/AppContext";
 import TermsConditionsScreen from "../screens/registration/TermsConditionsScreen";
 import InputPhoneNumberScreen from "../screens/registration/InputPhoneNumberScreen";
 import VerifyCodeScreen from "../screens/registration/VerifyCodeScreen";
@@ -29,7 +28,15 @@ import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
 import ProductDetail from "../screens/ProductDetail";
 import {useAppDispatch, useAppSelector} from '../api/store';
-import {getOnBoarding, getSession} from "../api/authentification/authentication.reducer";
+import {getOnBoarding, getSession, getTwilioToken} from "../api/authentification/authentication.reducer";
+import {Searchbar} from 'react-native-paper';
+import {onPerformSearchQuery} from "../api/search/search.reducer";
+import {Client, Conversation} from "@twilio/conversations";
+
+const width = Dimensions.get('screen').width;
+const height = Dimensions.get('screen').height;
+
+export const ChatContext = createContext({});
 
 export default function Navigation({colorScheme}) {
 
@@ -55,29 +62,86 @@ const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 function RootNavigator() {
     const account = useAppSelector(state => state.authentification.account);
     const onBoardingFinish = useAppSelector(state => state.authentification.onBoardingFinish);
+    const twilioToken = useAppSelector(state => state.authentification.twilioToken);
     const dispatch = useAppDispatch();
+    const [twilioClient, setTwilioClient] = useState(null);
+
+    useEffect(() => {
+        dispatch(getTwilioToken());
+        if (twilioToken) {
+            // const client = new Client(twilioToken, {logLevel: "debug"}).on('stateChanged', (state) => {
+            const client = new Client(twilioToken).on('stateChanged', (state) => {
+                console.log("stateChanged", state);
+                if (state === 'initialized') {
+                    setTwilioClient(client);
+                    console.log("Init Good");
+                    client.addListener("tokenExpired", () => {
+                        console.log("Token expired");
+                    });
+
+                    //updateLoadingState(false);
+                }
+            });
+        }
+        return () => {
+            twilioClient?.removeAllListeners();
+        }
+    }, [twilioToken]);
+
 
     useEffect(() => {
         dispatch(getSession());
         dispatch(getOnBoarding());
     }, []);
 
+    async function updateConvoList(
+        client: Client,
+        conversation: Conversation,
+        setConvos,
+        addMessages,
+        updateUnreadMessages
+    ) {
+        if (conversation.status === "joined") {
+            const messages = await conversation.getMessages();
+            dispatch(addMessages({channelSid: conversation.sid, messages: messages.items}));
+        } else {
+            dispatch(addMessages({channelSid: conversation.sid, messages: []}));
+        }
+
+        loadUnreadMessagesCount(conversation, updateUnreadMessages);
+
+        const subscribedConversations = await client.getSubscribedConversations();
+        dispatch(setConvos(subscribedConversations.items));
+    }
+
+    async function loadUnreadMessagesCount(
+        convo: Conversation,
+        updateUnreadMessages
+    ) {
+        const count = await convo.getUnreadMessagesCount();
+        dispatch(updateUnreadMessages({channelSid: convo.sid, unreadCount: count ?? 0}));
+    }
+
     return (
         onBoardingFinish ?
             account?.firstName && account?.lastName && account?.email ?
                 /* HOME ROOT*/
                 <Stack.Navigator>
-                    <Stack.Screen name="Root" component={BottomTabNavigator} options={{headerShown: false}}/>
+                    <Stack.Screen name="Root" options={{headerShown: false}}>
+                        {props => <BottomTabNavigator twilioClient={twilioClient} {...props} />}
+                    </Stack.Screen>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
-                    <MsgStack.Screen name="Chat" component={ChatScreen}
+                    <MsgStack.Screen name="Chat"
                                      options={({route}) => ({
-                                         title: route.params.clickedChat.name,
+                                         title: route.params.clickedConversation.name,
                                          headerBackTitle: 'Messages'
                                      })}
-                    />
+                    >
+                        {props => <ChatScreen twilioClient={twilioClient} {...props} />}
+                    </MsgStack.Screen>
                     <ProductStack.Screen name="ProductDetail" component={ProductDetail}
                                          options={({route}) => ({
                                              title: route.params.product.title,
@@ -126,11 +190,32 @@ function RootNavigator() {
     );
 }
 
-function getRightView() {
+const getRightView = ({navigation}) => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showInputSearch, setShowInputSearch] = useState(false);
+    const dispatch = useAppDispatch();
+    const onChangeSearch = query => {
+        setSearchQuery(query);
+        dispatch(onPerformSearchQuery(query))
+    };
+
+    useEffect(() => {
+        return () => {
+            setShowInputSearch(false)
+        };
+    }, []);
+
     return <View style={{flexDirection: 'row'}}>
-        <Pressable
-            onPress={() => {
-            }}
+        {showInputSearch && <Searchbar
+            placeholder="Search"
+            onChangeText={onChangeSearch}
+            value={searchQuery}
+            autoFocus={true}
+            onBlur={() => setShowInputSearch(false)}
+            style={{width: width * 0.8, height: 40}}
+        />}
+        {!showInputSearch && <Pressable
+            onPress={() => setShowInputSearch(true)}
             style={({pressed}) => ({
                 opacity: pressed ? 0.5 : 1,
             })}>
@@ -140,7 +225,8 @@ function getRightView() {
                 color="grey"
                 style={{marginRight: 15, fontWeight: 'bold'}}
             />
-        </Pressable>
+        </Pressable>}
+
         <Pressable
             onPress={() => {
             }}
@@ -164,7 +250,7 @@ function getRightView() {
  */
 const BottomTab = createBottomTabNavigator();
 
-function BottomTabNavigator() {
+function BottomTabNavigator({twilioClient}) {
     const colorScheme = useColorScheme();
 
     return (
@@ -188,7 +274,6 @@ function BottomTabNavigator() {
             }}>
             <BottomTab.Screen
                 name="Home"
-
                 component={HomeScreen}
                 options={({navigation}) => ({
                     title: 'Home',
@@ -196,20 +281,21 @@ function BottomTabNavigator() {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () => getRightView()
+                    headerRight: () => getRightView({navigation})
                 })}
             />
             <BottomTab.Screen
                 name="Message"
-                component={MessagesScreen}
-                options={({route}) => ({
+                options={({route, navigation}) => ({
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
-                    headerRight: () => getRightView(),
+                    headerRight: () => getRightView({navigation}),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
-            />
+            >
+                {props => <MessagesScreen twilioClient={twilioClient} {...props} />}
+            </BottomTab.Screen>
 
             <BottomTab.Screen
                 name="Notification"
@@ -234,6 +320,7 @@ function BottomTabNavigator() {
         </BottomTab.Navigator>
     );
 }
+
 
 /**
  * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
