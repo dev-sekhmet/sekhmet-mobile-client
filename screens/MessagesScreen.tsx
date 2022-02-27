@@ -16,6 +16,7 @@ import UserItem from "../components/UserItem";
 import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
 import {reset} from "../api/settings/settings.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
+import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 
 
 const height = Dimensions.get('screen').height;
@@ -104,6 +105,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
 
     );
 }
+
 const Discussion = ({navigation, conversations, twilioClient}: {
     twilioClient?: Client;
     conversations?: Conversation[];
@@ -114,6 +116,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
+    const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
     const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
     const account = useAppSelector(state => state.authentification.account);
@@ -205,7 +208,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }
 
 
-    return (<View style={styles.container}>
+    return (loadingConversation?  <SekhmetActivityIndicator/> :<View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (

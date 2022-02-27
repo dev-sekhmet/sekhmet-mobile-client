@@ -11,11 +11,13 @@ import {forkJoin, from, map,} from "rxjs";
 import {transparent} from "react-native-paper/lib/typescript/styles/colors";
 import VideoPlayer from "./media/video/VideoPlayer";
 import ImageView from "./media/ImageView";
+import {APP_TIME_FORMAT} from "../constants/constants";
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
 type MediaType = 'image' | 'video' | 'audio' | 'file';
 type MediaData = { sid: string, type: MediaType, url: string };
+
 const MessageBox = (props: { navigation?: any, message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
     const {setAsMessageReply, message: propMessage, authUser} = props;
 
@@ -234,7 +236,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
             <Text style={[
                 isMe ? styles.rightHour : styles.leftHour,
                 {width: soundURI ? "75%" : "auto"},
-            ]}>{Moment(message.dateUpdated).format('HH:mm')}</Text>
+            ]}>{Moment(message.dateUpdated).format(APP_TIME_FORMAT)}</Text>
         </Pressable>
     );
 };

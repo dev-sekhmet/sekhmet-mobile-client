@@ -10,6 +10,7 @@ import {useAppDispatch, useAppSelector} from "../api/store";
 import {from} from "rxjs";
 import {updateLastMessage, updateUnreadMessagesCount} from "../api/messages/messages.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
+import {APP_TIME_FORMAT} from "../constants/constants";
 
 
 export default function ChatItem({item, navigation}: TwilioProps) {
@@ -107,7 +108,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                     <Text numberOfLines={1} style={styles.text}>
                         {lastMessages[item.sid] && lastMessages[item.sid].message}
                     </Text>
-                    <Text style={styles.text}>{lastMessages[item.sid] && Moment(lastMessages[item.sid].dateUpdated).format('HH:mm')}</Text>
+                    <Text style={styles.text}>{lastMessages[item.sid] && Moment(lastMessages[item.sid].dateUpdated).format(APP_TIME_FORMAT)}</Text>
                 </View>
 
             </View>

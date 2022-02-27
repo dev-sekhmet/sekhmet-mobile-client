@@ -3,6 +3,7 @@ const tintColorDark = '#fff';
 const sekhmetGreen = '#62A01A';
 const online = '#68D389';
 const sekhmetOrange = 'orangered';
+const colorTextGrey = 'c#8C8C8C';
 
 export default {
   light: {
@@ -13,7 +14,8 @@ export default {
     tabIconSelected: tintColorLight,
     sekhmetGreen,
     sekhmetOrange,
-    online
+    online,
+    colorTextGrey
   },
   dark: {
     text: '#fff',
@@ -22,6 +24,7 @@ export default {
     tabIconDefault: '#ccc',
     sekhmetGreen,
     sekhmetOrange,
-    online
+    online,
+    colorTextGrey
   }
 };

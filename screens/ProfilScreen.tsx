@@ -408,7 +408,6 @@ export default function ProfilScreen({navigation}) {
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
                 <View style={{backgroundColor: 'white',flex: 1,borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}>
-
                     <FlatList
                         data={menuData}
                         style={{borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}

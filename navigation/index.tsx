@@ -32,6 +32,8 @@ import {getOnBoarding, getSession, getTwilioToken} from "../api/authentification
 import {Searchbar} from 'react-native-paper';
 import {onPerformSearchQuery} from "../api/search/search.reducer";
 import {Client, Conversation} from "@twilio/conversations";
+import {hasAnyAuthority} from "../components/PrivateRoute";
+import {AUTHORITIES} from "../constants/constants";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -63,7 +65,7 @@ function RootNavigator() {
     const account = useAppSelector(state => state.authentification.account);
     const onBoardingFinish = useAppSelector(state => state.authentification.onBoardingFinish);
     const twilioToken = useAppSelector(state => state.authentification.twilioToken);
-    const dispatch = useAppDispatch();
+     const dispatch = useAppDispatch();
     const [twilioClient, setTwilioClient] = useState(null);
 
     useEffect(() => {
@@ -94,33 +96,6 @@ function RootNavigator() {
         dispatch(getOnBoarding());
     }, []);
 
-    async function updateConvoList(
-        client: Client,
-        conversation: Conversation,
-        setConvos,
-        addMessages,
-        updateUnreadMessages
-    ) {
-        if (conversation.status === "joined") {
-            const messages = await conversation.getMessages();
-            dispatch(addMessages({channelSid: conversation.sid, messages: messages.items}));
-        } else {
-            dispatch(addMessages({channelSid: conversation.sid, messages: []}));
-        }
-
-        loadUnreadMessagesCount(conversation, updateUnreadMessages);
-
-        const subscribedConversations = await client.getSubscribedConversations();
-        dispatch(setConvos(subscribedConversations.items));
-    }
-
-    async function loadUnreadMessagesCount(
-        convo: Conversation,
-        updateUnreadMessages
-    ) {
-        const count = await convo.getUnreadMessagesCount();
-        dispatch(updateUnreadMessages({channelSid: convo.sid, unreadCount: count ?? 0}));
-    }
 
     return (
         onBoardingFinish ?

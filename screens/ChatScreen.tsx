@@ -1,4 +1,4 @@
-import {ActivityIndicator, FlatList, RefreshControl, SafeAreaView, StyleSheet} from 'react-native';
+import {FlatList, RefreshControl, SafeAreaView, StyleSheet} from 'react-native';
 import React, {useEffect, useState} from "react";
 import MessageBox from "../components/MessageBox";
 import MessageInput from "../components/MessageInput";
@@ -8,6 +8,7 @@ import {Text, View} from '../components/Themed';
 import {Conversation, Message, Paginator} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {useAppDispatch} from "../api/store";
+import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 
 const pageSize = 10;
 export default function ChatScreen({route, navigation, twilioClient}: TwilioProps) {
@@ -121,7 +122,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
 
 
     if (!conversation) {
-        return <ActivityIndicator/>;
+        return <SekhmetActivityIndicator/>;
     }
     return (
         <SafeAreaView style={styles.page}>
