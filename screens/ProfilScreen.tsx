@@ -167,11 +167,11 @@ export default function ProfilScreen({navigation}) {
             <ListItem
                 bottomDivider
                 onPress={() => action(item)}>
-                <Icon color={item.color} name={item.icon}/>
+                <Icon tvParallaxProperties={false} color={item.color} name={item.icon}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.title}</ListItem.Title>
                 </ListItem.Content>
-                {!item.type && <ListItem.Chevron/>}
+                {!item.type && <ListItem.Chevron tvParallaxProperties={false}/>}
                 {item.type && <Switch value={item.notif} onValueChange={(value) => setChecked(item.title)}/>}
             </ListItem>
         );
@@ -195,6 +195,11 @@ export default function ProfilScreen({navigation}) {
     };
 
 
+    const menuData =[
+        {nameMenu: "Mon Compte", data: accountItems},
+        {nameMenu: "Notifications", data: notificationItems},
+        {nameMenu: "Plus", data: plusItems}
+    ];
     const getAccountModal = () => {
         return <BottomSheetModal
             ref={bottomSheetModalRef}
@@ -373,13 +378,14 @@ export default function ProfilScreen({navigation}) {
             </SafeAreaView>
         </BottomSheetModal>
     }
+    const borderTopRadius = 33;
     return (
-        <View style={{backgroundColor: '#eaeaea', flex: 1}}>
+        <View style={{backgroundColor: '#eaeaea', flex: 1, height: height}}>
 
-            <SafeAreaView>
-                <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea',}}>
+            <SafeAreaView style={{flex: 1}}>
+                <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
                     <Avatar
-                        size={80}
+                        size={height<670? 45:80}
                         rounded
                         source={require("../assets/images/photoprofil.png")}
                         containerStyle={{
@@ -401,34 +407,27 @@ export default function ProfilScreen({navigation}) {
                     }}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
-                <View style={{backgroundColor: 'white', borderTopLeftRadius: 33, borderTopRightRadius: 33}}>
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Mon Compte</Text>
-                        <FlatList
-                            data={accountItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
+                <View style={{backgroundColor: 'white',flex: 1,borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}>
 
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Notifications</Text>
-                        <FlatList
-                            data={notificationItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
+                    <FlatList
+                        data={menuData}
+                        style={{borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}
+                        renderItem={({ item }) => {
+                            return <View style={{backgroundColor: 'transparent'}}>
+                                <Text style={styles.titleMenu}>{item.nameMenu}</Text>
+                                <FlatList
+                                    scrollEnabled={false}
+                                    data={item.data}
+                                    renderItem={renderRow}
+                                    keyExtractor={i => i.title}/>
+                            </View>
+                        }}
+                        keyExtractor={item => item.nameMenu}/>
 
-                    <View style={{backgroundColor: 'transparent'}}>
-                        <Text style={styles.titleMenu}>Plus</Text>
-                        <FlatList
-                            data={plusItems}
-                            renderItem={renderRow}
-                            keyExtractor={item => item.title}/>
-                    </View>
                 </View>
-            </SafeAreaView>
-            {getAccountModal()}
 
+            {getAccountModal()}
+            </SafeAreaView>
         </View>
     )
 }
