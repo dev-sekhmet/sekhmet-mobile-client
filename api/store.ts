@@ -1,9 +1,9 @@
-import {AnyAction, configureStore, ThunkAction} from '@reduxjs/toolkit';
+import {AnyAction, configureStore, ThunkAction } from '@reduxjs/toolkit';
 import {TypedUseSelectorHook, useDispatch, useSelector} from 'react-redux';
 import authentification from './authentification/authentication.reducer';
 import settings from './settings/settings.reducer';
 import search from './search/search.reducer';
-import unreadmessage from './unreadmessage/unreadmessage.reducer';
+import messages from './messages/messages.reducer';
 import userManagement from './user-management/user-management.reducer';
 import conversationWrite from './conversation-write/conversation-write.reducer';
 
@@ -12,16 +12,13 @@ export const store = configureStore({
         authentification,
         settings,
         search,
-        unreadmessage,
+        messages,
         userManagement,
         conversationWrite
     },
-    middleware: getDefaultMiddleware =>
+    middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
-            serializableCheck: {
-                // Ignore these field paths in all actions
-                ignoredActionPaths: ['payload.config', 'payload.request', 'error', 'meta.arg'],
-            },
+            serializableCheck: false
         })
 });
 

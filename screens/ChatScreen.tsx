@@ -7,7 +7,6 @@ import 'moment/locale/fr'
 import {Text, View} from '../components/Themed';
 import {Conversation, Message, Paginator} from "@twilio/conversations";
 import {TwilioProps} from "../types";
-import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
 import {useAppDispatch} from "../api/store";
 
 const pageSize = 10;
@@ -25,7 +24,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     )
 
     useEffect(() => {
-        console.log("useEffect: ")
+        console.log("useEffect: ChatScreen")
         Moment.updateLocale('fr', {
             calendar: {
                 sameDay: '[Aujourd\'hui]',
@@ -73,8 +72,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
                     setHasMore(paginator.hasPrevPage);
                     setPaginator(paginator);
                     setMessages(paginator.items);
-                    const lastIndex = paginator.items[paginator.items.length - 1].index;
-                    conversation.updateLastReadMessageIndex(lastIndex);
+                    conversation.setAllMessagesRead();
                 }})
         }
     };

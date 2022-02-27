@@ -23,7 +23,7 @@ const height = Dimensions.get('screen').height;
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
     const searchQuery = useAppSelector(state => state.search.searchQuery);
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
-    const unreadmessageCount = useAppSelector(state => state.unreadmessage);
+    const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
     const [conversations, setConversations] = useState<Conversation[]>([]);
 
     useEffect(() => {

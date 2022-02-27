@@ -1,43 +1,57 @@
 import {Pressable, StyleSheet} from 'react-native';
 import {Text, View} from './Themed';
 import {Avatar, Badge} from "react-native-elements";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import Colors from "../constants/Colors";
-import {Conversation, ConversationUpdateReason, LastMessage, Message, Paginator} from "@twilio/conversations";
+import {Conversation, ConversationUpdateReason, Message} from "@twilio/conversations";
 import Moment from "moment";
 import {TwilioProps} from "../types";
-import {createSingleArgumentStateOperator} from "@reduxjs/toolkit/dist/entities/state_adapter";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {from} from "rxjs";
-import {updateUnreadMessages} from "../api/unreadmessage/unreadmessage.reducer";
+import {updateLastMessage, updateUnreadMessagesCount} from "../api/messages/messages.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 
 
 export default function ChatItem({item, navigation}: TwilioProps) {
 
     const dispatch = useAppDispatch();
-    const [lastMessage, setLastMessage] = useState<string>(null);
-    const unreadmessageCount = useAppSelector(state => state.unreadmessage);
+    const lastMessages = useAppSelector(state => state.messages.lastMessages);
+    const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
     const account = useAppSelector(state => state.authentification.account);
-    function initUnreadMessagesCount() {
+
+    const updateUnreadMessageCount = (item: Conversation) => {
         from(item.getUnreadMessagesCount()).subscribe(nb => {
-            dispatch(updateUnreadMessages({channelSid: item.sid, unreadCount: nb}))
+            dispatch(updateUnreadMessagesCount({channelSid: item.sid, unreadCount: nb}))
         })
     }
+
+    const updateMessage = (channelSid: string, message: string, dateUpdated: Date | null) => {
+        dispatch(updateLastMessage({
+            channelSid,
+            lastMessage: {
+                message,
+                dateUpdated
+            }
+        }));
+    }
+
     useEffect(() => {
-        initUnreadMessagesCount();
+        updateUnreadMessageCount(item);
         // get last message
-        item.getMessages(1).then(res=> {
-            if (res.items && res.items.length>0) {
-                setLastMessage(res.items[0].body);
+        item.getMessages(1).then(res => {
+            if (res.items && res.items.length > 0) {
+                const message = res.items[0];
+                updateMessage(item.sid, message.body, message.dateUpdated);
+                console.log("updateMessage ", item.sid, message.body, message.dateUpdated);
             }
         })
-        item.on("messageAdded", (event: Message) => {
-            setLastMessage(event.body);
+        item.on("messageAdded", (message: Message) => {
+            updateMessage(item.sid, message.body, message.dateUpdated);
         });
 
-        item.on("updated", (data: {conversation: Conversation, updateReasons: ConversationUpdateReason[]}) => {
-            initUnreadMessagesCount();
+        item.on("updated", (data: { conversation: Conversation, updateReasons: ConversationUpdateReason[] }) => {
+            console.log("updateReasons", data.updateReasons)
+            updateUnreadMessageCount(data.conversation);
         });
 
         return () => {
@@ -91,9 +105,9 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                 </View>
                 <View style={styles.row}>
                     <Text numberOfLines={1} style={styles.text}>
-                        {lastMessage}
+                        {lastMessages[item.sid] && lastMessages[item.sid].message}
                     </Text>
-                    <Text style={styles.text}>{Moment(item.dateUpdated).format('HH:mm')}</Text>
+                    <Text style={styles.text}>{lastMessages[item.sid] && Moment(lastMessages[item.sid].dateUpdated).format('HH:mm')}</Text>
                 </View>
 
             </View>

@@ -79,9 +79,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
     };
 
     const sendMessage = async () => {
-       const index =  await conversation.sendMessage(message);
-       setMessage("");
-       conversation.updateLastReadMessageIndex(index);
+       conversation.sendMessage(message);
     };
 
     const updateLastMessage = async (newMessage) => {
@@ -106,6 +104,8 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
         } else {
             onPlusClicked();
         }
+        setMessage("");
+        conversation.setAllMessagesRead();
     };
 
     const resetFields = () => {
