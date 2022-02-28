@@ -34,6 +34,7 @@ import {onPerformSearchQuery} from "../api/search/search.reducer";
 import {Client, Conversation} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
+import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -65,7 +66,9 @@ function RootNavigator() {
     const account = useAppSelector(state => state.authentification.account);
     const onBoardingFinish = useAppSelector(state => state.authentification.onBoardingFinish);
     const twilioToken = useAppSelector(state => state.authentification.twilioToken);
-     const dispatch = useAppDispatch();
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities, [AUTHORITIES.ADMIN]));
+
+    const dispatch = useAppDispatch();
     const [twilioClient, setTwilioClient] = useState(null);
 
     useEffect(() => {
@@ -123,6 +126,12 @@ function RootNavigator() {
                                              headerBackTitle: route.params.backScreenName
                                          })}
                     />
+                    {isAdmin && <ProductStack.Screen name="ProductEdit" component={AddOrModifyProductScreen}
+                                          options={({route}) => ({
+                                              title: route.params.product.title,
+                                              headerBackTitle: route.params.backScreenName
+                                          })}
+                    />}
                 </Stack.Navigator>
                 :
                 account?.login ?

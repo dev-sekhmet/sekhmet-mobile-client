@@ -8,11 +8,14 @@ import {AUTHORITIES} from "../constants/constants";
 import {AntDesign, FontAwesome5} from "@expo/vector-icons";
 import Colors from "../constants/Colors";
 import {createMaterialTopTabNavigator} from "@react-navigation/material-top-tabs";
+import AdminHomeScreen from "./admin/AdminHomeScreen";
+import ProductItem from "../components/ProductItem";
+import AstuceItem from "../components/AstuceItem";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-const DataProducts = [
+export const DataProducts = [
     {
         id: 1,
         title: 'Muesli Croustilles',
@@ -33,7 +36,7 @@ const DataProducts = [
     }
 
 ]
-const DataAstuces = [
+export const DataAstuces = [
     {
         id: 1,
         cat: 'Sekhmet',
@@ -42,7 +45,6 @@ const DataAstuces = [
         image: require('../assets/images/prods/p4.png')
     },
 ]
-
 
 export default function HomeScreen({navigation}) {
     const [items, setItems] = useState([false, false]);
@@ -66,7 +68,7 @@ export default function HomeScreen({navigation}) {
     ]
 
     return (
-        isAdmin ? <AdminHome navigation={navigation}/>
+        isAdmin ? <AdminHomeScreen navigation={navigation}/>
             :
             <View style={styles.container}>
                 <SafeAreaView/>
@@ -115,186 +117,7 @@ export default function HomeScreen({navigation}) {
     );
 }
 //For product listing
-const ProductItem = ({item, index, navigation}) => {
-    return (
-        <TouchableOpacity
-            onPress={() => {
-                navigation.navigate("ProductDetail", {
-                    product: item,
-                    backScreenName: "Home"
-                });
-            }}>
-            <View style={{
-                flex: 1,
-                height: 120,
-                backgroundColor: index == 0 ? 'orangered' : 'whitesmoke',
-                borderRadius: 15,
-                marginBottom: 10
-            }}>
-                <View style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'transparent',
-                }}>
-                    <View style={{
-                        flex: 1,
-                        backgroundColor: 'transparent',
-                        alignItems: 'flex-start',
-                        justifyContent: 'center',
-                        paddingHorizontal: 8
-                    }}>
-                        <Text style={{
-                            color: index == 0 ? 'white' : 'black',
-                            fontSize: 16,
-                            marginBottom: 10
-                        }}>{item.title}</Text>
-                        <Text style={{
-                            color: index == 0 ? 'whitesmoke' : 'grey',
-                            marginBottom: 10
-                        }}>{item.subtitle}</Text>
-                    </View>
-                    <View style={{
-                        width: '40%',
-                        backgroundColor: 'black',
-                        alignItems: 'flex-end',
-                        borderRadius: 12,
-                        justifyContent: 'center',
-                        overflow: 'hidden'
-                    }}>
-                        <ImageBackground
-                            style={{width: '100%', height: '100%', flex: 1, borderRadius: 12}}
-                            resizeMode="cover" source={item.image}/>
-                    </View>
-                </View>
-            </View>
-        </TouchableOpacity>
-    )
-}
 
-const AstuceItem = ({item, index, navigation}) => {
-    return (
-        <View style={{
-            flex: 1,
-            height: 90,
-            backgroundColor: 'whitesmoke',
-            borderRadius: 15,
-            marginBottom: 10
-        }}>
-            <View style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'row-reverse',
-                justifyContent: 'space-between',
-                backgroundColor: 'transparent',
-            }}>
-                <View style={{
-                    flex: 1,
-                    backgroundColor: 'transparent',
-                    alignItems: 'flex-start',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    paddingHorizontal: 8
-                }}>
-                    <Text style={{
-                        color: '#62A01A',
-                        fontSize: 10,
-                    }}>{item.cat}</Text>
-
-                    <Text style={{
-                        color: 'black',
-                        fontSize: 13,
-                        marginBottom: 8
-                    }}>{item.title.length > 40 ? item.title.substr(0, 40) + ' ...' : item.title}</Text>
-                    <Text style={{
-                        color: 'grey',
-                        marginBottom: 5,
-                        overflow: 'scroll'
-                    }}>{item.subtitle.substr(0, 20) + '...'}</Text>
-                </View>
-                <View style={{
-                    width: '40%',
-                    backgroundColor: 'black',
-                    alignItems: 'flex-end',
-                    borderRadius: 12,
-                    justifyContent: 'center',
-                    overflow: 'hidden'
-                }}>
-                    <ImageBackground
-                        style={{width: '100%', height: '100%', flex: 1, borderRadius: 12}}
-                        resizeMode="cover" source={item.image}/>
-                </View>
-            </View>
-        </View>
-    )
-}
-
-const AdminHome = ({navigation}) => {
-
-    const Tab = createMaterialTopTabNavigator();
-    return (
-        <View style={styles.admincontainer}>
-            <View style={{flexDirection: "row", backgroundColor: 'transparent'}}>
-                <TouchableOpacity style={styles.card}>
-                    <View style={[styles.fontCommon, {backgroundColor: '#fff6ee'}]}>
-                        <FontAwesome5 name="users" size={24} style={{alignSelf: 'center'}}
-                                      color={Colors.light.sekhmetOrange}/>
-                    </View>
-                    <Text style={[styles.number, {color: Colors.light.sekhmetOrange}]}>314</Text>
-                    <Text style={{color: Colors.light.colorTextGrey}}>Clients</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.card]}>
-                    <View style={[styles.fontCommon, {backgroundColor: '#efffdc'}]}>
-                        <FontAwesome5 name="headset" style={{alignSelf: 'center'}} size={24}
-                                      color={Colors.light.sekhmetGreen}/>
-                    </View>
-                    <Text style={[styles.number, {color: Colors.light.sekhmetGreen}]}>25</Text>
-                    <Text style={{color: Colors.light.colorTextGrey}}>Coachs</Text>
-                </TouchableOpacity>
-            </View>
-
-            <Tab.Navigator
-                screenOptions={{
-                    tabBarActiveTintColor: Colors.light.sekhmetGreen,
-                    tabBarIndicatorStyle: {backgroundColor: Colors.light.sekhmetGreen},
-                    tabBarLabelStyle: {fontSize: 12},
-                }}
-            >
-                <Tab.Screen name="Produits sekhmet"
-                            children={() => <View style={{flexDirection: 'column', height: height * 0.8}}>
-                                <TouchableOpacity style={[styles.ajouterButton]}>
-                                    <AntDesign name="plus" size={24} color="black"/>
-                                    <Text style={{marginLeft: 10, color: Colors.light.colorTextGrey}}>Ajouter un produit
-                                        sekhmet</Text>
-                                </TouchableOpacity>
-                                <View style={{margin: 20}}>
-                                    <FlatList data={DataProducts}
-                                              keyExtractor={(item: any) => item.id}
-                                              renderItem={({item, index}) => (
-                                                  <ProductItem navigation={navigation} item={item}
-                                                               index={index}/>)}/>
-                                </View>
-                            </View>}/>
-                <Tab.Screen name="Astuces et Conseils"
-                            children={() => <View style={{flexDirection: 'column', height: height * 0.8}}>
-                                <TouchableOpacity style={[styles.ajouterButton]}>
-                                    <AntDesign name="plus" size={24} color="black"/>
-                                    <Text style={{marginLeft: 10, color: Colors.light.colorTextGrey}}>Ajouter une astuce
-                                        et conseil</Text>
-                                </TouchableOpacity>
-                                <View style={{margin: 20}}>
-                                    <FlatList data={DataAstuces}
-                                              keyExtractor={(item: any) => item.id}
-                                              renderItem={({item, index}) => (
-                                                  <AstuceItem navigation={navigation} item={item}
-                                                              index={index}/>)}/>
-                                </View>
-                            </View>}/>
-
-            </Tab.Navigator>
-        </View>)
-};
 
 const styles = StyleSheet.create({
     container: {

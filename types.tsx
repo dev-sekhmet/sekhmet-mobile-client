@@ -54,6 +54,15 @@ export type ProductParamList = {
             image: {}
         },
         backScreenName: ''
+    },
+    ProductEdit: {
+        product: {
+            id: 1,
+            title: 'Muesli Croustilles',
+            subtitle: 'By Coach Emy',
+            image: {}
+        },
+        backScreenName: ''
     }
 };
 export type InputPhoneParamList = {

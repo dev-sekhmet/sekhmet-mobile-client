@@ -3,7 +3,7 @@ const tintColorDark = '#fff';
 const sekhmetGreen = '#62A01A';
 const online = '#68D389';
 const sekhmetOrange = 'orangered';
-const colorTextGrey = 'c#8C8C8C';
+const colorTextGrey = '#8C8C8C';
 
 export default {
   light: {
