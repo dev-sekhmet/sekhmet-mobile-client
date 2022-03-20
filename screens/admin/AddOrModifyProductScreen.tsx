@@ -6,6 +6,7 @@ import {successToast} from "../../components/toast";
 import {
     Dimensions,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -97,6 +98,9 @@ const AddOrModifyProduct = () => {
             setShowAtoutInputField(false);
             setValue(atoutInputFieldName, '');
         }
+    };
+    const removeImage = () => {
+        setImage(null);
     };
 
 
@@ -197,13 +201,7 @@ const AddOrModifyProduct = () => {
                     <FlatList data={atouts}
                               keyExtractor={(item: any) => item}
                               renderItem={({item, index}) => (
-                                  <View style={[styles.inputText, {
-                                      alignItems: 'center',
-                                      backgroundColor: '#e8e8e8',
-                                      flex: 1, justifyContent: 'space-between',
-                                      flexDirection: 'row',
-                                      marginBottom: 10
-                                  }]}>
+                                  <View style={[styles.inputText, styles.atoutItem]}>
                                       <Text style={{textAlign: 'center', paddingHorizontal: 0}}>{item}</Text>
                                       <TouchableOpacity style={{alignItems: 'flex-end'}}
                                                         onPress={() => removeAtout(item)}>
@@ -211,24 +209,12 @@ const AddOrModifyProduct = () => {
                                       </TouchableOpacity>
                                   </View>)}/>
 
-                    <TouchableOpacity style={{
-                        flex: 1,
-                        padding: 5,
-                        borderRadius: 10,
-                        maxHeight: height * 0.05,
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                    }} onPress={() => addFieldComponent()}>
+                    <TouchableOpacity style={styles.addFieldButton} onPress={() => addFieldComponent()}>
                         <AntDesign name="plus" size={15} color={Colors.light.sekhmetGreen}/>
                         <Text style={{marginLeft: 10, color: Colors.light.sekhmetGreen}}>Ajouter un champ</Text>
                     </TouchableOpacity>
 
-                    {showAtoutInputField && <View style={[styles.inputText, {
-                        alignItems: 'center',
-                        flex: 1, justifyContent: 'space-between',
-                        flexDirection: 'row',
-                        marginBottom: 10
-                    }]}>
+                    {showAtoutInputField && <View style={[styles.inputText, styles.addAtoutField]}>
                         <Controller
                             control={control}
                             rules={{
@@ -270,18 +256,24 @@ const AddOrModifyProduct = () => {
                             required: true,
                         }}
                         render={({field: {onChange, onBlur, value}}) => (
-                            <TouchableOpacity style={{
-                                alignItems: 'center',
-                                flex: 1, justifyContent: 'center',
-                                marginBottom: 10,
-                                height: height * 0.1,
-                                borderColor: Colors.light.sekhmetGreen,
-                                borderWidth: 1.5,
-                                borderStyle: 'dashed',
-                                borderRadius: 3
-                            }} onPress={pickImage}>
-                                <Entypo name="upload" size={24} color={Colors.light.sekhmetGreen}/>
-                            </TouchableOpacity>
+
+                            <View>
+                                {!image && <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                                    <Entypo name="upload" size={24} color={Colors.light.sekhmetGreen}/>
+                                </TouchableOpacity>}
+                                {image &&
+                                <View>
+                                    <Image
+                                        source={{uri: image}}
+                                        style={{height: height * 0.1, borderRadius: 10}}
+                                    />
+                                    <TouchableOpacity style={styles.removeImage} onPress={() => removeImage()}>
+                                        <AntDesign name="close" size={24} color={Colors.light.sekhmetOrange}/>
+                                    </TouchableOpacity>
+
+                                </View>
+                                }
+                            </View>
 
                         )}
                         name="productName"
@@ -301,15 +293,14 @@ const AddOrModifyProduct = () => {
                                 onSelect={onChange}
                                 defaultOption={publishedTypeOptions[0]}
                                 options={publishedTypeOptions}
-                            />
-                        )}
+                            />)}
                         name="published"
                     />
                     {errors.published && <Text style={{color: 'red'}}>This is required.</Text>}
                 </View>
 
                 <View
-                    style={{paddingVertical: 10, marginTop: 20, marginBottom: 20, alignItems: 'center'}}>
+                    style={styles.terminerButton}>
                     <Button mode="contained" onPress={handleSubmit(handleValidSubmit)}
                             contentStyle={{paddingHorizontal: 50}}
                             style={{borderRadius: 20, marginBottom: 10}} color="#62A01A">
@@ -321,7 +312,7 @@ const AddOrModifyProduct = () => {
     ];
     return (
         <KeyboardAvoidingView
-            style={{justifyContent: 'center', backgroundColor: 'white', height: isHideFieldEnter ? "50%" : 'auto'}}
+            style={[styles.container, {height: isHideFieldEnter ? "50%" : 'auto'}]}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
             <FlatList data={fieldOutOfScrollView}
@@ -337,6 +328,7 @@ export default AddOrModifyProduct;
 
 
 const styles = StyleSheet.create({
+    container: {justifyContent: 'center', backgroundColor: 'white'},
     inputText: {
         height: 40,
         borderColor: 'grey',
@@ -345,6 +337,45 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8
     },
     text: {textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3},
+
+    addAtoutField: {
+        alignItems: 'center',
+        flex: 1, justifyContent: 'space-between',
+        flexDirection: 'row',
+        marginBottom: 10
+    },
+    atoutItem: {
+        alignItems: 'center',
+        backgroundColor: '#e8e8e8',
+        flex: 1, justifyContent: 'space-between',
+        flexDirection: 'row',
+        marginBottom: 10
+    },
+    addFieldButton: {
+        flex: 1,
+        padding: 5,
+        borderRadius: 10,
+        maxHeight: height * 0.05,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
     fieldSeparator: {marginBottom: 10, marginTop: 5},
-    view: {backgroundColor: 'transparent', marginRight: 20, marginLeft: 20, marginTop: 20, flexDirection: "column"}
+    view: {backgroundColor: 'transparent', marginRight: 20, marginLeft: 20, marginTop: 20, flexDirection: "column"},
+    terminerButton: {paddingVertical: 10, marginTop: 20, marginBottom: 20, alignItems: 'center'},
+    uploadButton: {
+        alignItems: 'center',
+        flex: 1, justifyContent: 'center',
+        marginBottom: 10,
+        height: height * 0.1,
+        borderColor: Colors.light.sekhmetGreen,
+        borderWidth: 1.5,
+        borderStyle: 'dashed',
+        borderRadius: 3
+    },
+    removeImage: {
+        position: 'absolute',
+        margin: 16,
+        right: -12,
+        bottom: 32
+    }
 });
