@@ -190,6 +190,7 @@ export const AuthenticationSlice = createSlice({
         logoutSession() {
             return {
                 ...initialState,
+                onBoardingFinish: true
             };
         },
         authError(state, action) {

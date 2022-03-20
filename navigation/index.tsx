@@ -110,6 +110,7 @@ function RootNavigator() {
                     refreshingTwilioToken();
                 }
             });
+            console.log(account);
         }
         return () => {
             twilioClient?.removeAllListeners();
