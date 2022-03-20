@@ -5,8 +5,9 @@ import {AntDesign, FontAwesome5} from "@expo/vector-icons";
 import Colors from "../../constants/Colors";
 import * as React from "react";
 import ProductItem from "../../components/ProductItem";
-import {DataAstuces, DataProducts} from "../HomeScreen";
+
 import AstuceItem from "../../components/AstuceItem";
+import {DataAstuces, DataProducts} from "../sampleData";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;

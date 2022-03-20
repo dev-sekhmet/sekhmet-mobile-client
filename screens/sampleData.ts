@@ -1,7 +1,8 @@
 import {IMessage} from "../model/message.model";
 import {ChatType} from "../model/enumerations/chat-type.model";
 
-export const messages: IMessage[] = [{
+export const messages: IMessage[] = [
+    {
     "id": "23489c4f-930e-4f1b-b338-9b30a3d4c021",
     "text": "Bonjour chef",
     "createdAt": "2022-01-25T21:14:19.133872",
@@ -456,3 +457,35 @@ export const messages: IMessage[] = [{
         "resetDate": null
     }
 }];
+
+
+export const DataProducts = [
+    {
+        id: 1,
+        title: 'Muesli Croustilles',
+        subtitle: 'By Coach Emy',
+        image: require('../assets/images/prods/p1.png')
+    },
+    {
+        id: 2,
+        title: 'Breuvage Ventre Plat Et Détox',
+        subtitle: 'Dégonflage Ventre',
+        image: require('../assets/images/prods/p2.png')
+    },
+    {
+        id: 3,
+        title: 'Plats Diététiques',
+        subtitle: 'Avec alliés minceurs',
+        image: require('../assets/images/prods/p3.png')
+    }
+
+]
+export const DataAstuces = [
+    {
+        id: 1,
+        cat: 'Sekhmet',
+        title: 'Manger au moins 5 fruits et legumes',
+        subtitle: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry hey hey hey hey hey',
+        image: require('../assets/images/prods/p4.png')
+    },
+]

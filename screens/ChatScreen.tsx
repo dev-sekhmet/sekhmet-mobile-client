@@ -22,7 +22,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     const [paginator, setPaginator] = useState<Paginator<Message>>(null);
     const [hasMore, setHasMore] = useState(
         false
-    )
+    );
 
     useEffect(() => {
         console.log("useEffect: ChatScreen")
@@ -51,17 +51,16 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
         const sid = route.params.clickedConversation.sid;
         if (twilioClient && sid) {
             twilioClient.getConversationBySid(sid).then(conversation => {
-
+                setConversation(conversation);
                 conversation.on("messageAdded", (event: Message) => {
                     setMessages(prevMsgs => {
                         if (prevMsgs.some(msg=>msg.sid === event.sid)){
                             return  [...prevMsgs]
-                        }else {
+                        } else {
                             return [...prevMsgs, event]
                         }
-                    })
+                    });
                 });
-                setConversation(conversation);
             });
         }
     };

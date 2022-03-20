@@ -28,7 +28,9 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     const [conversations, setConversations] = useState<Conversation[]>([]);
 
     useEffect(() => {
+        console.log("twilioClient outif", twilioClient?.version);
         if (twilioClient) {
+            console.log("twilioClient inif", twilioClient.version);
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();
                 setConversations(cons.items);
@@ -58,7 +60,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
             initConversations();
         }
 
-    }, [searchQuery])
+    }, [])
 
     useEffect(() => {
         return () => {

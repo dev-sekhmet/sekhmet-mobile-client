@@ -11,40 +11,10 @@ import {createMaterialTopTabNavigator} from "@react-navigation/material-top-tabs
 import AdminHomeScreen from "./admin/AdminHomeScreen";
 import ProductItem from "../components/ProductItem";
 import AstuceItem from "../components/AstuceItem";
+import {DataAstuces, DataProducts} from "./sampleData";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
-
-export const DataProducts = [
-    {
-        id: 1,
-        title: 'Muesli Croustilles',
-        subtitle: 'By Coach Emy',
-        image: require('../assets/images/prods/p1.png')
-    },
-    {
-        id: 2,
-        title: 'Breuvage Ventre Plat Et Détox',
-        subtitle: 'Dégonflage Ventre',
-        image: require('../assets/images/prods/p2.png')
-    },
-    {
-        id: 3,
-        title: 'Plats Diététiques',
-        subtitle: 'Avec alliés minceurs',
-        image: require('../assets/images/prods/p3.png')
-    }
-
-]
-export const DataAstuces = [
-    {
-        id: 1,
-        cat: 'Sekhmet',
-        title: 'Manger au moins 5 fruits et legumes',
-        subtitle: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry hey hey hey hey hey',
-        image: require('../assets/images/prods/p4.png')
-    },
-]
 
 export default function HomeScreen({navigation}) {
     const [items, setItems] = useState([false, false]);

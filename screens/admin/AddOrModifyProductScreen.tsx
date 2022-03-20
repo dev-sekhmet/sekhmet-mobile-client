@@ -49,30 +49,10 @@ const AddOrModifyProduct = () => {
             <SafeAreaView style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
                 <ScrollView style={{backgroundColor: 'white'}} showsVerticalScrollIndicator={false}
                             showsHorizontalScrollIndicator={false}>
-                    <View style={{paddingVertical: 10, alignItems: 'center'}}>
-                        <Avatar
-                            size={80}
-                            rounded
-                            icon={{
-                                name: 'camera-alt',
-                                type: 'material',
-                                color: 'grey',
-                            }}
-                            containerStyle={{
-                                borderColor: 'grey',
-                                borderStyle: 'solid',
-                                borderWidth: 1,
-                            }}
-                        />
-                        <Text style={{textAlign: 'center', marginTop: 5, marginBottom: 4, fontSize: 15}}>Photo de
-                            profil</Text>
-                        <View style={{height: 1.0, marginTop: 1, width: width * 0.8, backgroundColor: 'grey'}}/>
-                    </View>
 
                     {/*For first name*/}
                     <View style={{marginBottom: 10, marginTop: 5}}>
-                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Votre
-                            nom*</Text>
+                        <Text style={{textAlign: 'left', color: 'grey', fontWeight: 'normal', marginVertical: 3}}>Nom du produit</Text>
                         <Controller
                             control={control}
                             rules={{
