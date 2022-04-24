@@ -1,30 +1,36 @@
-import { Feather } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import {View, Text, Pressable, StyleSheet, Image} from "react-native";
-import {getFriendlyName} from "../../shared/conversation/conversation.util";
+import React, {useState} from "react";
+import {Image, Pressable, StyleSheet, View} from "react-native";
+import SekhmetActivityIndicator from "../SekhmetActivityIndicator";
 
-const  ImageView = ({ uri, style, navigator}) => {
-    const [fullScreen, setFullScreen] = useState(false);
+const ImageView = ({uri, style, navigator}) => {
+    const [loading, setLoading] = useState(false);
 
-    const showFullScreen= ()=> {
+    const showFullScreen = () => {
         navigator.navigate("Modal", {
             uri
         });
     }
 
-    return (
-        <View>{!fullScreen &&
-            <Pressable
+    const onLoading = (value, lable) => {
+        console.log(value, lable);
+        setLoading(value);
+    }
 
+    return (
+        <View>
+            <Pressable
                 onPress={showFullScreen}>
-                <Image style={style} source={{uri}}/>
-            </Pressable>}
+                <Image style={[style, {display: loading? 'none':'flex'}]}
+                       source={{uri}}
+                       onLoadStart={() => onLoading(true, 'onLoadStart')}
+                       onLoadEnd={() => onLoading(false, 'onLoadEnd')}
+                />
+            </Pressable>
+            {loading && <SekhmetActivityIndicator size="small" />}
         </View>
     );
 };
 
-const styles = StyleSheet.create({
-
-});
+const styles = StyleSheet.create({});
 
 export default ImageView;

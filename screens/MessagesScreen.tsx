@@ -183,8 +183,9 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     const getListUsersModal = () => {
         return <BottomSheetModal
             ref={bottomSheetModalRef}
-
             index={1}
+            enablePanDownToClose={true}
+            stackBehavior='replace'
             style={{
                 shadowColor: "#000",
                 shadowOffset: {
@@ -199,13 +200,9 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             snapPoints={snapPoints}
             onChange={handleSheetChanges}
         >
-            <FlatList
-                data={users}
-                renderItem={({item}) => (
-                    <UserItem item={item} selectedUser={selectedUser}/>
-                )}
-                keyExtractor={item => item.id}
-            />
+            <View>
+                <Text>Awesome 🎉</Text>
+            </View>
         </BottomSheetModal>
     }
 
