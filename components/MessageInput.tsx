@@ -9,6 +9,8 @@ import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
 import {Conversation, Message} from "@twilio/conversations";
+import {ImageInfo, ImagePickerCancelledResult} from "expo-image-picker";
+import VideoPlayer from "./media/video/VideoPlayer";
 
 
 const MessageInput = ({
@@ -22,6 +24,7 @@ const MessageInput = ({
     const [progress, setProgress] = useState(0);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [soundURI, setSoundURI] = useState<string | null>(null);
+    const [videoURI, setVideoURI] = useState<string | null>(null);
 
     const navigation = useNavigation();
 
@@ -99,6 +102,9 @@ const MessageInput = ({
     };
 
     const onPress = () => {
+        if (videoURI) {
+            sendVideo();
+        }
         if (image) {
             sendImage();
         } else if (soundURI) {
@@ -108,7 +114,7 @@ const MessageInput = ({
         } else {
             onPlusClicked();
         }
-        setMessage("");
+        resetFields();
         conversation.setAllMessagesRead();
     };
 
@@ -118,35 +124,41 @@ const MessageInput = ({
         setImage(null);
         setProgress(0);
         setSoundURI(null);
+        setVideoURI(null);
         removeMessageReplyTo();
     };
 
-    // Image picker
+    const setImageOrVideoUri = (result: ImageInfo) => {
+        if (!result.cancelled) {
+            if (result.type === 'video') {
+                setVideoURI(result.uri);
+            }
+            if (result.type === 'image') {
+                setImage(result.uri);
+            }
+        }
+    }
+
+// Image picker
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 0.5,
         });
         console.log("result", result);
-
-        if (!result.cancelled) {
-            // @ts-ignore
-            setImage(result.uri);
-        }
+        // @ts-ignore
+        setImageOrVideoUri(result);
     };
 
     const takePhoto = async () => {
         const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             aspect: [4, 3],
         });
-
-        if (!result.cancelled) {
-            // @ts-ignore
-            setImage(result.uri);
-        }
+        // @ts-ignore
+        setImageOrVideoUri(result);
     };
 
     const progressCallback = (progress) => {
@@ -170,7 +182,6 @@ const MessageInput = ({
         // @ts-ignore
         fileData.append("image", {uri: image, name: filename, type});
         conversation.sendMessage(fileData);
-        resetFields();
     };
 
     async function startRecording() {
@@ -219,9 +230,18 @@ const MessageInput = ({
         let {filename, type} = buildFileInfo("audio", soundURI);
         // @ts-ignore
         fileData.append("audio", {uri: soundURI, name: filename, type});
-        console.log("fileData", fileData);
         conversation.sendMessage(fileData);
-        resetFields();
+    };
+
+    const sendVideo = async () => {
+        if (!videoURI) {
+            return;
+        }
+        const fileData = new FormData();
+        let {filename, type} = buildFileInfo("video", videoURI);
+        // @ts-ignore
+        fileData.append("video", {uri: videoURI, name: filename, type});
+        conversation.sendMessage(fileData);
     };
 
     return (
@@ -291,6 +311,11 @@ const MessageInput = ({
             )}
 
             {soundURI && <AudioPlayer soundURI={soundURI}/>}
+{/*            {videoURI && <VideoPlayer
+                style={{
+                    minHeight: 150,
+                    minWidth: 150
+                }} uri={videoURI}/>}*/}
 
             <View style={styles.row}>
                 <View style={styles.inputContainer}>
@@ -343,7 +368,7 @@ const MessageInput = ({
                 </View>
 
                 <Pressable onPress={onPress} style={styles.buttonContainer}>
-                    {message || image || soundURI ? (
+                    {message || image || videoURI || soundURI ? (
                         <Ionicons name="send" size={18} color={"white"}/>
                     ) : (
                         <AntDesign name="plus" size={24} color="white"/>

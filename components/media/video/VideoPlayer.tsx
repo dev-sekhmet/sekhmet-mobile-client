@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Video } from 'expo-av';
+import SekhmetActivityIndicator from "../../SekhmetActivityIndicator";
 const { height, width } = Dimensions.get('window');
 export default function VideoPlayer({style, uri}) {
     const playbackInstance = useRef<Video>(null);
@@ -18,7 +19,9 @@ export default function VideoPlayer({style, uri}) {
                 source={{ uri}}
                 resizeMode="cover"
                 isLooping
-            />
+            >
+                <SekhmetActivityIndicator size="small" />
+            </Video>
         </View>
     );
 }
