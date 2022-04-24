@@ -14,7 +14,9 @@ const  ImageView = ({ uri, style, navigator}) => {
 
     return (
         <View>{!fullScreen &&
-            <Pressable  onPress={showFullScreen}>
+            <Pressable
+
+                onPress={showFullScreen}>
                 <Image style={style} source={{uri}}/>
             </Pressable>}
         </View>

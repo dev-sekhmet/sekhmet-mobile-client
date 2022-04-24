@@ -11,7 +11,11 @@ import Colors from "../constants/Colors";
 import {Conversation, Message} from "@twilio/conversations";
 
 
-const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {conversation: Conversation, messageReplyTo:Message, removeMessageReplyTo:() =>void}) => {
+const MessageInput = ({
+                          conversation,
+                          messageReplyTo,
+                          removeMessageReplyTo
+                      }: { conversation: Conversation, messageReplyTo: Message, removeMessageReplyTo: () => void }) => {
     const [message, setMessage] = useState("");
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [image, setImage] = useState<string | null>(null);
@@ -79,7 +83,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
     };
 
     const sendMessage = async () => {
-       conversation.sendMessage(message);
+        conversation.sendMessage(message);
     };
 
     const updateLastMessage = async (newMessage) => {
@@ -125,6 +129,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
             aspect: [4, 3],
             quality: 0.5,
         });
+        console.log("result", result);
 
         if (!result.cancelled) {
             // @ts-ignore
@@ -148,30 +153,24 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
         setProgress(progress.loaded / progress.total);
     };
 
+    const buildImageInfo = () => {
+        const filename = image.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        return {filename, type};
+    }
+
     const sendImage = async () => {
-        /*if (!image) {
+        if (!image) {
             return;
         }
         const blob = await getBlob(image);
-        const { key } = await Storage.put(`${uuidv4()}.png`, blob, {
-            progressCallback,
-        });
-
-        // send message
-        const user = await Auth.currentAuthenticatedUser();
-        const newMessage = await DataStore.save(
-            new Message({
-                content: message,
-                image: key,
-                userID: user.attributes.sub,
-                chatroomID: chatRoom.id,
-                replyToMessageID: messageReplyTo?.id,
-            })
-        );
-
-        updateLastMessage(newMessage);
-
-        resetFields();*/
+        const fileData = new FormData();
+        let {filename, type} = buildImageInfo();
+        // @ts-ignore
+        fileData.append("image", {uri: image, name: filename, type});
+        conversation.sendMessage(fileData);
+        resetFields();
     };
 
     const getBlob = async (uri: string) => {
@@ -265,7 +264,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
                 >
                     <View style={{flex: 1}}>
                         <Text>Reply to:</Text>
-                        <MessageBox  message={messageReplyTo}/>
+                        <MessageBox message={messageReplyTo}/>
                     </View>
                     <Pressable onPress={() => removeMessageReplyTo()}>
                         <AntDesign

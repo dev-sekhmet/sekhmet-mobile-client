@@ -55,7 +55,7 @@
     "react-native-country-picker-modal": "^2.0.0",
     "react-native-elements": "^3.4.2",
     "react-native-emoji-selector": "^0.2.0",
-    "react-native-gesture-handler": "^2.2.0",
+    "react-native-gesture-handler": "^2.4.0",
     "react-native-modal": "^13.0.0",
     "react-native-onboarding-swiper": "^1.1.4",
     "react-native-pager-view": "5.4.9",
@@ -73,7 +73,8 @@
     "redux": "^4.1.2",
     "redux-thunk": "^2.4.1",
     "rxjs": "^7.5.2",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
+    "expo-dev-client": "~0.8.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

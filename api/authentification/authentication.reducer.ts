@@ -114,6 +114,7 @@ export const checkVerification: (request: ICheckPhoneVerificationRequest) => App
 export const refreshTwilioToken: (request: ICheckPhoneVerificationRequest) => AppThunk =
     (request: ICheckPhoneVerificationRequest) =>
         async dispatch => {
+            console.log("A refreshingTwilioToken............");
             const result = await dispatch(refreshTwilioTokenApi(request));
             extractTokenAndGetUser(result, dispatch);
         };
