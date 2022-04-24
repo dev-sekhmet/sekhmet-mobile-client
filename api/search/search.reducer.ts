@@ -13,6 +13,7 @@ export const SearchSlice = createSlice({
     initialState: initialState as SearchState,
     reducers: {
         onSearchQuery(state, action) {
+            console.log('onSearchQuery', action.payload);
             return {
                 ...state,
                 searchQuery: action.payload
