@@ -95,7 +95,7 @@ const MessageInput = ({
     };
 
     const onPlusClicked = () => {
-        console.warn("On plus clicked");
+        // console.warn("On plus clicked");
     };
 
     const onPress = () => {
@@ -153,10 +153,11 @@ const MessageInput = ({
         setProgress(progress.loaded / progress.total);
     };
 
-    const buildImageInfo = () => {
-        const filename = image.split('/').pop();
+    const buildFileInfo = (fileType, file) => {
+        const filename = file.split('/').pop();
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
+        console.log("match", match);
+        const type = match ? `${fileType}/${match[1]}` : `${fileType}`;
         return {filename, type};
     }
 
@@ -164,19 +165,12 @@ const MessageInput = ({
         if (!image) {
             return;
         }
-        const blob = await getBlob(image);
         const fileData = new FormData();
-        let {filename, type} = buildImageInfo();
+        let {filename, type} = buildFileInfo("image", image);
         // @ts-ignore
         fileData.append("image", {uri: image, name: filename, type});
         conversation.sendMessage(fileData);
         resetFields();
-    };
-
-    const getBlob = async (uri: string) => {
-        const respone = await fetch(uri);
-        const blob = await respone.blob();
-        return blob;
     };
 
     async function startRecording() {
@@ -218,32 +212,16 @@ const MessageInput = ({
     }
 
     const sendAudio = async () => {
-        /* if (!soundURI) {
-             return;
-         }
-         const uriParts = soundURI.split(".");
-         const extenstion = uriParts[uriParts.length - 1];
-         const blob = await getBlob(soundURI);
-         const { key } = await Storage.put(`${uuidv4()}.${extenstion}`, blob, {
-             progressCallback,
-         });
-
-         // send message
-         const user = await Auth.currentAuthenticatedUser();
-         const newMessage = await DataStore.save(
-             new Message({
-                 content: message,
-                 audio: key,
-                 userID: user.attributes.sub,
-                 chatroomID: chatRoom.id,
-                 status: "SENT",
-                 replyToMessageID: messageReplyTo?.id,
-             })
-         );
-
-         updateLastMessage(newMessage);
-
-         resetFields();*/
+        if (!soundURI) {
+            return;
+        }
+        const fileData = new FormData();
+        let {filename, type} = buildFileInfo("audio", soundURI);
+        // @ts-ignore
+        fileData.append("audio", {uri: soundURI, name: filename, type});
+        console.log("fileData", fileData);
+        conversation.sendMessage(fileData);
+        resetFields();
     };
 
     return (
