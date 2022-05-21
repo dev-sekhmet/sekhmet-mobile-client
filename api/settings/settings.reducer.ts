@@ -1,9 +1,9 @@
 import {axiosInstance} from "../axios-config";
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getSession } from '../authentification/authentication.reducer';
-import { AppThunk } from '../store';
-import { serializeAxiosError } from '../reducer.utils';
+import {getSession} from '../authentification/authentication.reducer';
+import {AppThunk} from '../store';
+import {serializeAxiosError} from '../reducer.utils';
 
 const initialState = {
     loading: false,
@@ -24,7 +24,16 @@ export const saveAccountSettings: (account: any) => AppThunk = account => async 
     dispatch(getSession());
 };
 
-export const updateAccount = createAsyncThunk('settings/update_account', async (account: any) => axiosInstance.post<any>(apiUrl, account), {
+export const updateAccount = createAsyncThunk('settings/update_account',
+    async (account: any) => axiosInstance.post<any>(apiUrl, account, {
+        headers: {
+            "Content-Type": "multipart/form-data"
+        }
+    }), {
+        serializeError: serializeAxiosError
+    });
+
+export const updateProfilPicture = createAsyncThunk('settings/update_user-profil-picture', async (formdata: any) => axiosInstance.post<any>(`${apiUrl}/user-profil-picture`, account), {
     serializeError: serializeAxiosError,
 });
 
@@ -53,11 +62,27 @@ export const SettingsSlice = createSlice({
                 state.updateSuccess = true;
                 state.updateFailure = false;
                 state.successMessage = 'settings.messages.success';
+            })
+            .addCase(updateProfilPicture.pending, state => {
+                state.loading = true;
+                state.errorMessage = null;
+                state.updateSuccess = false;
+            })
+            .addCase(updateProfilPicture.rejected, state => {
+                state.loading = false;
+                state.updateSuccess = false;
+                state.updateFailure = true;
+            })
+            .addCase(updateProfilPicture.fulfilled, state => {
+                state.loading = false;
+                state.updateSuccess = true;
+                state.updateFailure = false;
+                state.successMessage = 'settings.messages.success';
             });
     },
 });
 
-export const { reset } = SettingsSlice.actions;
+export const {reset} = SettingsSlice.actions;
 
 // Reducer
 export default SettingsSlice.reducer;

@@ -1,4 +1,13 @@
-import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
+import {
+    ColorValue,
+    Dimensions,
+    FlatList,
+    Platform,
+    Pressable,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet
+} from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
@@ -8,11 +17,14 @@ import {FontAwesome} from "@expo/vector-icons";
 import {useActionSheet} from "@expo/react-native-action-sheet";
 import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {logout} from "../api/authentification/authentication.reducer";
+import {AUTH_TOKEN_KEY, logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
-import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
+import {reset, saveAccountSettings, updateProfilPicture} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
 import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
+import * as ImagePicker from "expo-image-picker";
+import {axiosInstance} from "../api/axios-config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -45,6 +57,7 @@ export default function ProfilScreen({navigation}) {
 
     // variables
     const snapPoints = useMemo(() => ['100%', '80%'], []);
+    const [token, setToken] = useState('');
 
     // callbacks
     const handleSheetChanges = useCallback((index: number) => {
@@ -378,16 +391,44 @@ export default function ProfilScreen({navigation}) {
             </SafeAreaView>
         </BottomSheetModal>
     }
+    // Image picker
+    const pickImage = async () => {
+        console.log("account ", account);
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.5,
+        });
+
+        if (!result.cancelled) {
+            const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+            console.log("token ", token);
+            setToken(token);
+            let profilPic = {
+                type: 'image/jpeg',
+                name: 'random-file-name',
+                // @ts-ignore
+                uri: Platform.OS === 'android' ? result.uri : result.uri.replace('file://', ''),
+            };
+
+            let formData = new FormData();
+            // @ts-ignore
+            formData.append("file", profilPic);
+            dispatch(updateProfilPicture(formData));
+        }
+    };
     const borderTopRadius = 33;
     return (
         <View style={{backgroundColor: '#eaeaea', flex: 1, height: height}}>
 
             <SafeAreaView style={{flex: 1}}>
                 <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
+                    <Pressable onPress={pickImage}>
                     <Avatar
                         size={height<670? 45:80}
                         rounded
-                        source={require("../assets/images/photoprofil.png")}
+                        source={{uri: `${axiosInstance.defaults.baseURL}/${account.imageUrl}?access_token=${token}`}}
                         containerStyle={{
                             borderColor: 'grey',
                             borderStyle: 'solid',
@@ -398,6 +439,7 @@ export default function ProfilScreen({navigation}) {
                         value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
                         badgeStyle={styles.pencilContainer}
                     />
+                    </Pressable>
 
                     <Text style={{
                         textAlign: 'center',
