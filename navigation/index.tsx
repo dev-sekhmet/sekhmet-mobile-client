@@ -28,10 +28,18 @@ import ChatScreen from "../screens/ChatScreen";
 import Colors from "../constants/Colors";
 import ProductDetail from "../screens/ProductDetail";
 import {useAppDispatch, useAppSelector} from '../api/store';
-import {getOnBoarding, getSession, getTwilioToken} from "../api/authentification/authentication.reducer";
+import {
+    getOnBoarding,
+    getSession,
+    getTwilioToken, onRefreshSuccess,
+    refreshTwilioToken
+} from "../api/authentification/authentication.reducer";
 import {Searchbar} from 'react-native-paper';
 import {onPerformSearchQuery} from "../api/search/search.reducer";
-import {Client, Conversation} from "@twilio/conversations";
+import {Client} from "@twilio/conversations";
+import {hasAnyAuthority} from "../components/PrivateRoute";
+import {AUTHORITIES} from "../constants/constants";
+import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -62,9 +70,27 @@ const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 function RootNavigator() {
     const account = useAppSelector(state => state.authentification.account);
     const onBoardingFinish = useAppSelector(state => state.authentification.onBoardingFinish);
+    const refreshSuccess = useAppSelector(state => state.authentification.refreshSuccess);
+    const isAuthenticated = useAppSelector(state => state.authentification.isAuthenticated);
     const twilioToken = useAppSelector(state => state.authentification.twilioToken);
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities, [AUTHORITIES.ADMIN]));
+
     const dispatch = useAppDispatch();
     const [twilioClient, setTwilioClient] = useState(null);
+
+    function refreshingTwilioToken() {
+        twilioClient?.removeAllListeners();
+        if (!refreshSuccess) {
+            dispatch(refreshTwilioToken({
+                phoneNumber: account.phoneNumber,
+                token: 'not needed',
+                locale: 'fr',
+                langKey: 'fr'
+            }))
+        } else {
+            dispatch(onRefreshSuccess());
+        }
+    }
 
     useEffect(() => {
         dispatch(getTwilioToken());
@@ -77,16 +103,19 @@ function RootNavigator() {
                     console.log("Init Good");
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
+                        refreshingTwilioToken();
                     });
-
-                    //updateLoadingState(false);
+                }
+                if (state === 'failed') {
+                    refreshingTwilioToken();
                 }
             });
+            console.log(account);
         }
         return () => {
             twilioClient?.removeAllListeners();
         }
-    }, [twilioToken]);
+    }, [isAuthenticated, refreshSuccess]);
 
 
     useEffect(() => {
@@ -94,33 +123,6 @@ function RootNavigator() {
         dispatch(getOnBoarding());
     }, []);
 
-    async function updateConvoList(
-        client: Client,
-        conversation: Conversation,
-        setConvos,
-        addMessages,
-        updateUnreadMessages
-    ) {
-        if (conversation.status === "joined") {
-            const messages = await conversation.getMessages();
-            dispatch(addMessages({channelSid: conversation.sid, messages: messages.items}));
-        } else {
-            dispatch(addMessages({channelSid: conversation.sid, messages: []}));
-        }
-
-        loadUnreadMessagesCount(conversation, updateUnreadMessages);
-
-        const subscribedConversations = await client.getSubscribedConversations();
-        dispatch(setConvos(subscribedConversations.items));
-    }
-
-    async function loadUnreadMessagesCount(
-        convo: Conversation,
-        updateUnreadMessages
-    ) {
-        const count = await convo.getUnreadMessagesCount();
-        dispatch(updateUnreadMessages({channelSid: convo.sid, unreadCount: count ?? 0}));
-    }
 
     return (
         onBoardingFinish ?
@@ -138,8 +140,7 @@ function RootNavigator() {
                                      options={({route}) => ({
                                          title: route.params.clickedConversation.name,
                                          headerBackTitle: 'Messages'
-                                     })}
-                    >
+                                     })}>
                         {props => <ChatScreen twilioClient={twilioClient} {...props} />}
                     </MsgStack.Screen>
                     <ProductStack.Screen name="ProductDetail" component={ProductDetail}
@@ -148,6 +149,12 @@ function RootNavigator() {
                                              headerBackTitle: route.params.backScreenName
                                          })}
                     />
+                    {isAdmin && <ProductStack.Screen name="ProductEdit" component={AddOrModifyProductScreen}
+                                                     options={({route}) => ({
+                                                         title: route.params.product.title,
+                                                         headerBackTitle: route.params.backScreenName
+                                                     })}
+                    />}
                 </Stack.Navigator>
                 :
                 account?.login ?

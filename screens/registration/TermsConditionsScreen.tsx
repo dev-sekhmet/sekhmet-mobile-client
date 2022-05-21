@@ -1,10 +1,10 @@
-import React, {useEffect} from "react";
-import {Alert, Image, StyleSheet, Text, View, ActivityIndicator, Linking} from "react-native";
+import React from "react";
+import {Image, Linking, StyleSheet, Text, View} from "react-native";
 import {Button} from "react-native-paper";
 import LAYOUT from '../../constants/Layout';
 import {useNavigation} from "@react-navigation/core";
 import {useAppSelector} from "../../api/store";
-import Colors from "../../constants/Colors";
+import SekhmetActivityIndicator from "../../components/SekhmetActivityIndicator";
 
 const TermsConditionsScreen = () => {
     const navigation = useNavigation();
@@ -15,42 +15,45 @@ const TermsConditionsScreen = () => {
         navigation.navigate('InputPhone')
     }
     return (
-        account?.login? <ActivityIndicator size="large" color={Colors.light.sekhmetGreen} />:
+        account?.login ? <SekhmetActivityIndicator/> :
             <View style={{
-            height: LAYOUT.window.height,
-            alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'space-around'
-        }}>
-            <View style={{paddingTop: 20, maxWidth: LAYOUT.window.width}}>
-                <View style={{alignItems: 'center', marginTop: 20}}>
-                    <Image resizeMode="contain" borderRadius={5} width={400} height={400}
-                           source={require('../../assets/images/logo.png')}/>
-                </View>
-                <View style={{alignItems: 'center', maxWidth: '90%'}}>
-                    <Text style={styles.title}>Welcome to Sekhmet</Text>
-                </View>
-            </View>
-
-            <View style={{
-                display: 'flex',
-                justifyContent: 'center',
-                maxWidth: LAYOUT.window.width,
+                height: LAYOUT.window.height,
                 alignItems: 'center',
-                paddingVertical: 30,
-                paddingHorizontal: 20
+                display: 'flex',
+                justifyContent: 'space-around'
             }}>
-                <Text style={styles.subtitle}>
-                    Please read our <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/PrivatePolicy.html")} style={styles.link}>privacy policy</Text>.
-                    Press "accept and continue" to accept the <Text onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/TermsConditions.html")}
-                                                                    style={styles.link}>terms of use</Text>
-                </Text>
-                <Button mode="contained" onPress={checkAndGo} contentStyle={{paddingHorizontal: 30}}
-                        style={{borderRadius: 20, marginBottom: 10}} color="#62A01A">
-                    ACCEPT AND CONTINUE
-                </Button>
+                <View style={{paddingTop: 20, maxWidth: LAYOUT.window.width}}>
+                    <View style={{alignItems: 'center', marginTop: 20}}>
+                        <Image resizeMode="contain" borderRadius={5} width={400} height={400}
+                               source={require('../../assets/images/logo.png')}/>
+                    </View>
+                    <View style={{alignItems: 'center', maxWidth: '90%'}}>
+                        <Text style={styles.title}>Welcome to Sekhmet</Text>
+                    </View>
+                </View>
+
+                <View style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    maxWidth: LAYOUT.window.width,
+                    alignItems: 'center',
+                    paddingVertical: 30,
+                    paddingHorizontal: 20
+                }}>
+                    <Text style={styles.subtitle}>
+                        Please read our <Text
+                        onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/PrivatePolicy.html")}
+                        style={styles.link}>privacy policy</Text>.
+                        Press "accept and continue" to accept the <Text
+                        onPress={() => Linking.openURL("https://dev-sekhmet.github.io/sekhmet-mobile-client/TermsConditions.html")}
+                        style={styles.link}>terms of use</Text>
+                    </Text>
+                    <Button mode="contained" onPress={checkAndGo} contentStyle={{paddingHorizontal: 30}}
+                            style={{borderRadius: 20, marginBottom: 10}} color="#62A01A">
+                        ACCEPT AND CONTINUE
+                    </Button>
+                </View>
             </View>
-        </View>
     )
 }
 

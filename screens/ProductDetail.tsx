@@ -43,7 +43,7 @@ export default function ProductDetail({navigation, route}) {
         return (
             <ListItem
                 bottomDivider>
-                <Icon color={Colors.light.sekhmetGreen} name={item.icon}/>
+                <Icon color={Colors.light.sekhmetGreen} name={item.icon} tvParallaxProperties={false}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.text}</ListItem.Title>
                 </ListItem.Content>

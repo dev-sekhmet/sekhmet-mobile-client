@@ -10,6 +10,7 @@ import {setupAxiosInterceptors} from "./api/authentification/authentication.redu
 import {Provider} from 'react-redux';
 import {store} from "./api/store";
 import {BottomSheetModalProvider,} from '@gorhom/bottom-sheet';
+import { SelectProvider } from '@mobile-reality/react-native-select-pro';
 
 setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 
@@ -25,7 +26,9 @@ export default function App() {
                 <Provider store={store}>
                     <ActionSheetProvider>
                         <BottomSheetModalProvider>
+                            <SelectProvider>
                             <Navigation colorScheme={colorScheme}/>
+                            </SelectProvider>
                         </BottomSheetModalProvider>
                     </ActionSheetProvider>
                     <StatusBar/>

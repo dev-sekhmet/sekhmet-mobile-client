@@ -32,7 +32,6 @@ export const MessagesSlice = createSlice({
 
         },
         updateLastMessage(state, action: PayloadAction<LastMessageParam>) {
-            console.log("action.payload", action.payload)
             //get convo sid and messages to add from payload
             const {channelSid, lastMessage} = action.payload;
             //overwrite the channelSid lastMessages

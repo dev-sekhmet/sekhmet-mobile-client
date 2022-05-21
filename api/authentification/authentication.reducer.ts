@@ -3,7 +3,7 @@ import {axiosInstance} from "../axios-config";
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
 import {serializeAxiosError} from '../reducer.utils';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {AppThunk} from '../store';
+import {AppDispatch, AppThunk} from '../store';
 import {setLocale} from '../locale';
 import {IStartPhoneVerificationRequest} from "../../model/login/start-phone-verification-request.model";
 import qs from 'qs';
@@ -37,6 +37,7 @@ export const initialState = {
     isAuthenticated: false,
     loginSuccess: false,
     startVerificationSuccess: false,
+    refreshSuccess: false,
     loginError: false, // Errors returned from server side
     startVerificationError: false, // Errors returned from server side
     onBoardingFinish: false,
@@ -82,23 +83,39 @@ export const authenticate = createAsyncThunk(
         return axiosInstance.get<any>(requestUrl)
     }
 );
+export const refreshTwilioTokenApi = createAsyncThunk(
+    'authentication/refresh-twilio-token',
+    async (request: ICheckPhoneVerificationRequest) => {
+        const requestUrl = `/refresh-twilio-token?${qs.stringify(request)}`;
+        return axiosInstance.get<any>(requestUrl)
+    }
+);
+
+function extractTokenAndGetUser<R>(result, dispatch: AppDispatch) {
+    const response = result.payload as AxiosResponse;
+    const bearerToken = response?.headers?.authorization;
+    const twilioToken = response?.headers[TWILIO_TOKEN_KEY];
+
+    if (bearerToken && bearerToken.slice(0, 7) === 'Bearer ') {
+        const jwt = bearerToken.slice(7, bearerToken.length);
+        AsyncStorage.setItem(AUTH_TOKEN_KEY, jwt);
+        AsyncStorage.setItem(TWILIO_TOKEN_KEY, twilioToken);
+    }
+    dispatch(getSession());
+}
 
 export const checkVerification: (request: ICheckPhoneVerificationRequest) => AppThunk =
     (request: ICheckPhoneVerificationRequest) =>
         async dispatch => {
             const result = await dispatch(authenticate(request));
-            const response = result.payload as AxiosResponse;
-            const bearerToken = response?.headers?.authorization;
-            const twilioToken = response?.headers[TWILIO_TOKEN_KEY];
-            console.log("response?.headers ", response?.headers);
-            if (bearerToken && bearerToken.slice(0, 7) === 'Bearer ') {
-                const jwt = bearerToken.slice(7, bearerToken.length);
-                console.log("jwt ", jwt);
-                console.log("TWILIO_TOKEN_KEY ", twilioToken);
-                AsyncStorage.setItem(AUTH_TOKEN_KEY, jwt);
-                AsyncStorage.setItem(TWILIO_TOKEN_KEY, twilioToken);
-            }
-            dispatch(getSession());
+            extractTokenAndGetUser(result, dispatch);
+        };
+
+export const refreshTwilioToken: (request: ICheckPhoneVerificationRequest) => AppThunk =
+    (request: ICheckPhoneVerificationRequest) =>
+        async dispatch => {
+            const result = await dispatch(refreshTwilioTokenApi(request));
+            extractTokenAndGetUser(result, dispatch);
         };
 
 export const clearAuthToken = async () => {
@@ -141,6 +158,9 @@ export const getTwilioToken = () => async dispatch => {
         dispatch(onGetTwilioToken(twilioToken));
     }
 };
+export const onRefreshSuccess = () => async dispatch => {
+        dispatch(resetRefreshSuccess());
+};
 
 export const AuthenticationSlice = createSlice({
     name: 'authentication',
@@ -161,9 +181,16 @@ export const AuthenticationSlice = createSlice({
                 startVerificationError: false
             };
         },
+        resetRefreshSuccess(state) {
+            return {
+                ...state,
+                refreshSuccess: false
+            };
+        },
         logoutSession() {
             return {
                 ...initialState,
+                onBoardingFinish: true
             };
         },
         authError(state, action) {
@@ -211,6 +238,20 @@ export const AuthenticationSlice = createSlice({
                 loginSuccess: true,
                 twilioToken: action.payload.data.twilio_token
             }))
+            .addCase(refreshTwilioTokenApi.fulfilled, (state, action) => {
+
+                    const newVar = {
+                        ...state,
+                        loading: false,
+                        loginError: false,
+                        loginSuccess: true,
+                        refreshSuccess: true,
+                        twilioToken: action.payload.data.twilio_token
+                    };
+                    // console.log("newVar", newVar);
+                    return newVar
+                }
+            )
             .addCase(startVerification.fulfilled, state => {
                 state.startVerificationSuccess = true;
                 state.startVerificationError = false;
@@ -256,6 +297,7 @@ export const {
     onGetTwilioToken,
     onBoardFailure,
     resetAuthentication,
+    resetRefreshSuccess,
     resetStartVerification
 } = AuthenticationSlice.actions;
 
