@@ -45,9 +45,6 @@ export default function ProfilScreen({navigation}) {
         }
     });
 
-    const [, updateState] = useState();
-    // @ts-ignore
-    const forceUpdate = useCallback(() => updateState({}), []);
     // ref
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -84,8 +81,6 @@ export default function ProfilScreen({navigation}) {
             successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
         }
         if (successMessageProfilPic) {
-            forceUpdate();
-            console.log('successMessageProfilPic', successMessageProfilPic);
             dispatch(reset());
         }
         if (errorMessage) {
@@ -438,6 +433,7 @@ export default function ProfilScreen({navigation}) {
                         <Avatar
                             size={height < 670 ? 45 : 80}
                             rounded
+                            key={account.imageUrl}
                             source={{uri: `${axiosInstance.defaults.baseURL}/${account.imageUrl}?access_token=${token}`}}
                             onPress={pickImage}
                             containerStyle={{
