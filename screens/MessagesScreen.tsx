@@ -177,7 +177,6 @@ const Discussion = ({navigation, conversations, twilioClient}: {
         bottomSheetModalRef.current.close();
         console.log("val ", user);
         dispatch(findOrCreateConversationDual(user.id));
-
     }
 
     const getListUsersModal = () => {

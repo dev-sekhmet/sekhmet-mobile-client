@@ -4,6 +4,7 @@ import {Avatar, Badge, CheckBox, Icon, ListItem, Switch} from "react-native-elem
 import React, {useState} from "react";
 import Colors from "../constants/Colors";
 import {IUser} from "../model/user.model";
+import ProfilAvatar from "./ProfilAvatar";
 
 
 export default function UserItem({item, selectedUser}: { item: IUser, selectedUser: (user: IUser) => void }) {
@@ -16,15 +17,12 @@ export default function UserItem({item, selectedUser}: { item: IUser, selectedUs
             <ListItem
 
                 onPress={()=>selectedUser(item)}>
-                <Avatar
+                <ProfilAvatar
                     size={30}
-                    rounded
-                    source={{uri: 'https://randomuser.me/api/portraits/men/75.jpg'}}
-                    containerStyle={{
-                        borderColor: 'grey',
-                        borderStyle: 'solid',
-                        borderWidth: 1,
-                    }}/>
+                    key={item.imageUrl}
+                    title={item.firstName.charAt(0)}
+                    imageUrl={item.imageUrl}
+                />
                 <ListItem.Content>
                     <ListItem.Title>{`${item?.firstName} ${item?.lastName}`}</ListItem.Title>
                 </ListItem.Content>
