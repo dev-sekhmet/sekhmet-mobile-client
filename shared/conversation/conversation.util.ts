@@ -7,5 +7,15 @@ export const getFriendlyName = (conv: Conversation, account)=>{
     }else{
         name = conv.attributes;
     }
-    return name[account.id] ? `${name[account.id]}` : conv.friendlyName;
+    return name[account.id] ? `${name[account.id].friendlyName}` : conv.friendlyName;
+}
+
+export const getImageUrl = (conv: Conversation, account)=>{
+    let name: any = null;
+    if(typeof conv.attributes === 'string'){
+        name = JSON.parse(conv.attributes);
+    }else{
+        name = conv.attributes;
+    }
+    return `${name[account.id].imageUrl}`;
 }

@@ -1,7 +1,7 @@
 import {Pressable, StyleSheet} from 'react-native';
 import {Text, View} from './Themed';
-import {Avatar, Badge} from "react-native-elements";
-import React, {useEffect} from "react";
+import {Badge} from "react-native-elements";
+import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
 import {Conversation, ConversationUpdateReason, Message} from "@twilio/conversations";
 import Moment from "moment";
@@ -9,8 +9,9 @@ import {TwilioProps} from "../types";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {from} from "rxjs";
 import {updateLastMessage, updateUnreadMessagesCount} from "../api/messages/messages.reducer";
-import {getFriendlyName} from "../shared/conversation/conversation.util";
+import {getFriendlyName, getImageUrl} from "../shared/conversation/conversation.util";
 import {APP_TIME_FORMAT} from "../constants/constants";
+import ProfilAvatar from "./ProfilAvatar";
 
 
 export default function ChatItem({item, navigation}: TwilioProps) {
@@ -19,6 +20,8 @@ export default function ChatItem({item, navigation}: TwilioProps) {
     const lastMessages = useAppSelector(state => state.messages.lastMessages);
     const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
     const account = useAppSelector(state => state.authentification.account);
+    const [friendlyName, setFriendlyName] = useState("");
+    const [imageUrl, setImageUrl] = useState("");
 
     const updateUnreadMessageCount = (item: Conversation) => {
         from(item.getUnreadMessagesCount()).subscribe(nb => {
@@ -38,6 +41,10 @@ export default function ChatItem({item, navigation}: TwilioProps) {
 
     useEffect(() => {
         updateUnreadMessageCount(item);
+        if(account){
+          setFriendlyName(getFriendlyName(item, account));
+          setImageUrl(getImageUrl(item, account));
+        }
         // get last message
         item.getMessages(1).then(res => {
             if (res.items && res.items.length > 0) {
@@ -63,22 +70,20 @@ export default function ChatItem({item, navigation}: TwilioProps) {
         navigation.navigate("Chat", {
             clickedConversation: {
                 sid: item.sid,
-                name: `${(getFriendlyName(item, account))}`
+                name: friendlyName,
+                imageUrl: imageUrl
             }
         });
     };
 
     return (
         <Pressable onPress={onPress} style={styles.container}>
-            <Avatar
+            <ProfilAvatar
                 size={60}
-                rounded
-                source={{uri: 'https://randomuser.me/api/portraits/men/75.jpg'}}
-                containerStyle={{
-                    borderColor: 'grey',
-                    borderStyle: 'solid',
-                    borderWidth: 1,
-                }}/>
+                key={account.imageUrl}
+                title={friendlyName.charAt(0)}
+                imageUrl={imageUrl}
+            />
 
             {/*{item?.user?.isCoach &&*/}
             <Badge
@@ -90,7 +95,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
             <View style={styles.rightContainer}>
                 <View style={styles.row}>
                     <View style={styles.row}>
-                        <Text style={styles.name}>{getFriendlyName(item, account)}</Text>
+                        <Text style={styles.name}>{friendlyName}</Text>
 
                         <Badge
                             badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
