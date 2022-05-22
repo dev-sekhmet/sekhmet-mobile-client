@@ -1,13 +1,4 @@
-import {
-    ColorValue,
-    Dimensions,
-    FlatList,
-    Platform,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet
-} from 'react-native';
+import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
 import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
@@ -19,7 +10,7 @@ import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {AUTH_TOKEN_KEY, logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
-import {reset, saveAccountSettings, updateProfilPicture} from "../api/settings/settings.reducer";
+import {reset, saveAccountSettings, saveProfilPicture} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
 import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
 import * as ImagePicker from "expo-image-picker";
@@ -42,6 +33,7 @@ export default function ProfilScreen({navigation}) {
     const {showActionSheetWithOptions} = useActionSheet();
     const account = useAppSelector(state => state.authentification.account);
     const successMessage = useAppSelector(state => state.settings.successMessage);
+    const successMessageProfilPic = useAppSelector(state => state.settings.updateProfilPictureSuccess);
     const errorMessage = useAppSelector(state => state.settings.errorMessage);
     const phoneInput = useRef<PhoneInput>(null);
     const {control, handleSubmit, formState: {errors}} = useForm({
@@ -52,6 +44,10 @@ export default function ProfilScreen({navigation}) {
             phoneNumber: account?.phoneNumber
         }
     });
+
+    const [, updateState] = useState();
+    // @ts-ignore
+    const forceUpdate = useCallback(() => updateState({}), []);
     // ref
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -73,15 +69,29 @@ export default function ProfilScreen({navigation}) {
 
 
     useEffect(() => {
+        const initToken = async () => {
+            const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+            console.log('token', token);
+            setToken(token);
+        }
+        if (token === '') {
+            initToken();
+        }
+
         if (successMessage) {
             bottomSheetModalRef.current.close();
             dispatch(reset());
             successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
         }
+        if (successMessageProfilPic) {
+            forceUpdate();
+            console.log('successMessageProfilPic', successMessageProfilPic);
+            dispatch(reset());
+        }
         if (errorMessage) {
             errorToast('Erreur', errorMessage);
         }
-    }, [successMessage, errorMessage]);
+    }, [successMessage, errorMessage, successMessageProfilPic]);
 
 
     const languageOptions = ["Francais", "Anglais", "Annuler"];
@@ -207,8 +217,7 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
-
-    const menuData =[
+    const menuData = [
         {nameMenu: "Mon Compte", data: accountItems},
         {nameMenu: "Notifications", data: notificationItems},
         {nameMenu: "Plus", data: plusItems}
@@ -393,7 +402,6 @@ export default function ProfilScreen({navigation}) {
     }
     // Image picker
     const pickImage = async () => {
-        console.log("account ", account);
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -402,20 +410,22 @@ export default function ProfilScreen({navigation}) {
         });
 
         if (!result.cancelled) {
-            const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-            console.log("token ", token);
-            setToken(token);
-            let profilPic = {
-                type: 'image/jpeg',
-                name: 'random-file-name',
+            // @ts-ignore
+            const split = result.uri.split('/')
+            const fileName = split[split.length - 1]
+            const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+            const profilPic = {
+                type: 'image/' + fileExtension,
+                name: fileName,
+                //uri: Platform.OS === 'android' ? result.uri : result.uri.replace('file://', ''),
                 // @ts-ignore
-                uri: Platform.OS === 'android' ? result.uri : result.uri.replace('file://', ''),
+                uri: result.uri
             };
 
             let formData = new FormData();
             // @ts-ignore
             formData.append("file", profilPic);
-            dispatch(updateProfilPicture(formData));
+            dispatch(saveProfilPicture(formData));
         }
     };
     const borderTopRadius = 33;
@@ -424,22 +434,22 @@ export default function ProfilScreen({navigation}) {
 
             <SafeAreaView style={{flex: 1}}>
                 <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
-                    <Pressable onPress={pickImage}>
-                    <Avatar
-                        size={height<670? 45:80}
-                        rounded
-                        source={{uri: `${axiosInstance.defaults.baseURL}/${account.imageUrl}?access_token=${token}`}}
-                        containerStyle={{
-                            borderColor: 'grey',
-                            borderStyle: 'solid',
-                            borderWidth: 1,
-                        }}
-                    />
-                    <Badge
-                        value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
-                        badgeStyle={styles.pencilContainer}
-                    />
-                    </Pressable>
+
+                        <Avatar
+                            size={height < 670 ? 45 : 80}
+                            rounded
+                            source={{uri: `${axiosInstance.defaults.baseURL}/${account.imageUrl}?access_token=${token}`}}
+                            onPress={pickImage}
+                            containerStyle={{
+                                borderColor: 'grey',
+                                borderStyle: 'solid',
+                                borderWidth: 1,
+                            }}>
+                            <Badge
+                                value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
+                                badgeStyle={styles.pencilContainer}/>
+                        </Avatar>
+
 
                     <Text style={{
                         textAlign: 'center',
@@ -449,11 +459,16 @@ export default function ProfilScreen({navigation}) {
                     }}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
-                <View style={{backgroundColor: 'white',flex: 1,borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}>
+                <View style={{
+                    backgroundColor: 'white',
+                    flex: 1,
+                    borderTopLeftRadius: borderTopRadius,
+                    borderTopRightRadius: borderTopRadius
+                }}>
                     <FlatList
                         data={menuData}
-                        style={{borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}
-                        renderItem={({ item }) => {
+                        style={{borderTopLeftRadius: borderTopRadius, borderTopRightRadius: borderTopRadius}}
+                        renderItem={({item}) => {
                             return <View style={{backgroundColor: 'transparent'}}>
                                 <Text style={styles.titleMenu}>{item.nameMenu}</Text>
                                 <FlatList
@@ -467,7 +482,7 @@ export default function ProfilScreen({navigation}) {
 
                 </View>
 
-            {getAccountModal()}
+                {getAccountModal()}
             </SafeAreaView>
         </View>
     )

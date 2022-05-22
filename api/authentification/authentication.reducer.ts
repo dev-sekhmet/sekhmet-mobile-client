@@ -272,6 +272,7 @@ export const AuthenticationSlice = createSlice({
             )
             .addCase(getAccount.fulfilled, (state, action) => {
                 const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
+                console.log("isAuthenticated", action.payload.data);
                 return {
                     ...state,
                     isAuthenticated,
