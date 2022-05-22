@@ -1,21 +1,19 @@
 import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
-import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
+import {Avatar, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Colors from "../constants/Colors";
 import {IUser} from "../model/user.model";
-import {FontAwesome} from "@expo/vector-icons";
 import {useActionSheet} from "@expo/react-native-action-sheet";
 import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {AUTH_TOKEN_KEY, logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
 import {reset, saveAccountSettings, saveProfilPicture} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
 import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
 import * as ImagePicker from "expo-image-picker";
-import {axiosInstance} from "../api/axios-config";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import ProfilAvatar from "../components/ProfilAvatar";
+import {logout} from "../api/authentification/authentication.reducer";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -50,7 +48,6 @@ export default function ProfilScreen({navigation}) {
 
     // variables
     const snapPoints = useMemo(() => ['100%', '80%'], []);
-    const [token, setToken] = useState('');
 
     // callbacks
     const handleSheetChanges = useCallback((index: number) => {
@@ -66,15 +63,6 @@ export default function ProfilScreen({navigation}) {
 
 
     useEffect(() => {
-        const initToken = async () => {
-            const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-            console.log('token', token);
-            setToken(token);
-        }
-        if (token === '') {
-            initToken();
-        }
-
         if (successMessage) {
             bottomSheetModalRef.current.close();
             dispatch(reset());
@@ -153,9 +141,6 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
-    const onChangeAvatar = () => {
-
-    }
     const onSave = (values) => {
         dispatch(
             saveAccountSettings({
@@ -248,17 +233,12 @@ export default function ProfilScreen({navigation}) {
                         }>
                         <View
                             style={styles.row}>
-                            <Avatar
+                            <ProfilAvatar
                                 size={60}
-                                rounded
-                                source={require("../assets/images/photoprofil.png")}
-                                containerStyle={
-                                    {
-                                        borderColor: 'grey',
-                                        borderStyle: 'solid',
-                                        borderWidth: 1,
-                                    }
-                                }/>
+                                key={account.imageUrl}
+                                title={account.firstName.charAt(0)}
+                                imageUrl={account.imageUrl}
+                            />
                             <Pressable onPress={handleSubmit(onSave)}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
                             </Pressable>
@@ -430,23 +410,14 @@ export default function ProfilScreen({navigation}) {
             <SafeAreaView style={{flex: 1}}>
                 <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
 
-                        <Avatar
-                            size={height < 670 ? 45 : 80}
-                            rounded
-                            key={account.imageUrl}
-                            source={{uri: `${axiosInstance.defaults.baseURL}/${account.imageUrl}?access_token=${token}`}}
-                            onPress={pickImage}
-                            containerStyle={{
-                                borderColor: 'grey',
-                                borderStyle: 'solid',
-                                borderWidth: 1,
-                            }}>
-                            <Badge
-                                value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
-                                badgeStyle={styles.pencilContainer}/>
-                        </Avatar>
-
-
+                    <ProfilAvatar
+                        size={height < 670 ? 45 : 80}
+                        key={account.imageUrl}
+                        title={account.firstName.charAt(0)}
+                        imageUrl={account.imageUrl}
+                        badge={{styles: styles.pencilContainer}}
+                        onPress={pickImage}
+                    />
                     <Text style={{
                         textAlign: 'center',
                         marginTop: 5,

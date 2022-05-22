@@ -43,7 +43,6 @@ export default function ChatItem({item, navigation}: TwilioProps) {
             if (res.items && res.items.length > 0) {
                 const message = res.items[0];
                 updateMessage(item.sid, message.body, message.dateUpdated);
-                console.log("updateMessage ", item.sid, message.body, message.dateUpdated);
             }
         })
         item.on("messageAdded", (message: Message) => {
@@ -51,7 +50,6 @@ export default function ChatItem({item, navigation}: TwilioProps) {
         });
 
         item.on("updated", (data: { conversation: Conversation, updateReasons: ConversationUpdateReason[] }) => {
-            console.log("updateReasons", data.updateReasons)
             updateUnreadMessageCount(data.conversation);
         });
 
