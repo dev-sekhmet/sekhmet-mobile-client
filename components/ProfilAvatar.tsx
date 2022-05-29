@@ -5,6 +5,8 @@ import {Avatar, Badge} from "react-native-elements";
 import {FontAwesome} from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {AUTH_TOKEN_KEY} from "../api/authentification/authentication.reducer";
+import {StyleSheet} from "react-native";
+import Colors from "../constants/Colors";
 
 const ProfilAvatar = (props) => {
     const [token, setToken] = useState('');
@@ -23,12 +25,8 @@ const ProfilAvatar = (props) => {
         <Avatar
             rounded
             {...props}
-            source={{uri: `${axiosInstance.defaults.baseURL}/${props.imageUrl}?access_token=${token}`}}
-            containerStyle={{
-                borderColor: 'grey',
-                borderStyle: 'solid',
-                borderWidth: 1,
-            }}>
+            source={{uri: props.imageUrl?`${axiosInstance.defaults.baseURL}/${props.imageUrl}?access_token=${token}`:'null'}}
+            containerStyle={styles.profilAvatar}>
             {props.badge && <Badge
                 value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
                 badgeStyle={props.badge.styles}/>
@@ -37,5 +35,13 @@ const ProfilAvatar = (props) => {
         </Avatar>
     )
 }
+
+const styles = StyleSheet.create({
+    profilAvatar: {
+        borderColor: 'grey',
+        borderStyle: 'solid',
+        borderWidth: 1,
+    }
+});
 
 export default ProfilAvatar;

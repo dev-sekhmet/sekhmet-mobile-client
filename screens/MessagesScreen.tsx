@@ -180,6 +180,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }
 
     const getListUsersModal = () => {
+        const usersWithoutMe = users.filter(user =>user.id.toLowerCase() !== account.id.toLowerCase());
         return <BottomSheetModal
             ref={bottomSheetModalRef}
 
@@ -199,7 +200,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             onChange={handleSheetChanges}
         >
             <FlatList
-                data={users}
+                data={usersWithoutMe}
                 renderItem={({item}) => (
                     <UserItem item={item} selectedUser={selectedUser}/>
                 )}

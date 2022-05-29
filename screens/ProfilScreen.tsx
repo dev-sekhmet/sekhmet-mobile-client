@@ -236,7 +236,7 @@ export default function ProfilScreen({navigation}) {
                             <ProfilAvatar
                                 size={60}
                                 key={account.imageUrl}
-                                title={account.firstName.charAt(0)}
+                                title={account?.firstName?.charAt(0)}
                                 imageUrl={account.imageUrl}
                             />
                             <Pressable onPress={handleSubmit(onSave)}>
@@ -413,7 +413,7 @@ export default function ProfilScreen({navigation}) {
                     <ProfilAvatar
                         size={height < 670 ? 45 : 80}
                         key={account.imageUrl}
-                        title={account.firstName.charAt(0)}
+                        title={account?.firstName?.charAt(0)}
                         imageUrl={account.imageUrl}
                         badge={{styles: styles.pencilContainer}}
                         onPress={pickImage}
@@ -454,7 +454,6 @@ export default function ProfilScreen({navigation}) {
         </View>
     )
 }
-
 
 const styles = StyleSheet.create({
     titleMenu: {
