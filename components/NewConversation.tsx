@@ -13,7 +13,7 @@ import {FAB} from "react-native-elements";
 import {View} from './Themed';
 import Colors from "../constants/Colors";
 
-const NewConversation = ({navigation}) => {
+const NewConversation = ({navigation, buttonLabel}) => {
     const dispatch = useAppDispatch();
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const [searchvaluealue, setSearchvaluealue] = useState('');
@@ -108,7 +108,7 @@ const NewConversation = ({navigation}) => {
             style={styles.fab}
             size="small"
             color={Colors.light.sekhmetOrange}
-            title={"Nouvelle discussion"}
+            title={buttonLabel}
             icon={{name: "comment", color: "white"}}
             onPress={() => handlePresentModalPress()}
         />

@@ -12,12 +12,27 @@ import {TwilioProps} from "../types";
 import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
+import {hasAnyAuthority} from "../components/PrivateRoute";
+import {AUTHORITIES} from "../constants/constants";
+
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
     const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
-    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [dualConversations, setDualConversations] = useState<Conversation[]>([]);
+    const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
+
+    const isConversationGroup = (c: Conversation) : boolean => {
+        return isConversation(c, "GROUP");
+    }
+
+    const isConversationDual = (c: Conversation) : boolean => {
+        return isConversation(c, "DUAL");
+    }
+    const isConversation = (c: Conversation, type: string): boolean => {
+        return c.uniqueName.includes(type);
+    }
 
     useEffect(() => {
         console.log("twilioClient outif", twilioClient?.version);
@@ -25,8 +40,9 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
             console.log("twilioClient inif", twilioClient.version);
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();
-                setConversations(cons.items);
-
+                setDualConversations(cons.items.filter(c => isConversationDual(c)));
+                setGroupConversations(cons.items.filter(c => isConversationGroup(c)));
+                console.log("cons", cons.items.forEach(c => console.log("CONVV", c.friendlyName, c.uniqueName)));
                 twilioClient.on("conversationAdded", async (conversation: Conversation) => {
                     conversation.on("typingStarted", (participant) => {
                         // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
@@ -36,11 +52,11 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                         // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
                     });
                     console.log("New conversation", conversation.friendlyName);
-                    setConversations(oldConversations => [conversation, ...oldConversations]);
                     conversation.setAllMessagesUnread();
-                    if (conversation.uniqueName.includes("GROUPE")) {
-                        console.log("GROUPE", conversation.uniqueName);
-
+                    if (isConversationGroup(conversation)) {
+                        setGroupConversations(oldConversations => [conversation, ...oldConversations]);
+                    } else {
+                        setDualConversations(oldConversations => [conversation, ...oldConversations]);
                     }
                 });
                 twilioClient.on("conversationRemoved", (conversation: Conversation) => {
@@ -85,14 +101,14 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                                 </View>;
                             }
                         }}
-                        children={() => <Discussion navigation={navigation} conversations={conversations}/>}/>
+                        children={() => <Discussion navigation={navigation} conversations={dualConversations}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
                             </View>
                         }}
-                        children={() => <Groupes navigation={navigation} conversations={conversations}/>}/>
+                        children={() => <Groupes navigation={navigation} conversations={groupConversations}/>}/>
 
         </Tab.Navigator>
 
@@ -121,7 +137,7 @@ const Discussion = ({navigation, conversations}: {
         };
     }, [updateSuccess, updateFailure]);
 
-    return (loadingConversation? <SekhmetActivityIndicator/>:<View style={styles.container}>
+    return (loadingConversation ? <SekhmetActivityIndicator/> : <View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (
@@ -129,14 +145,14 @@ const Discussion = ({navigation, conversations}: {
             )}
             keyExtractor={item => item.sid}
         />
-        <NewConversation navigation={navigation}/>
+        <NewConversation navigation={navigation} buttonLabel={"Nouvelle discussion"}/>
     </View>)
 }
 
-
 const Groupes = ({navigation, conversations}) => {
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities, [AUTHORITIES.ADMIN]));
     return <View style={styles.container}>
-        <Text style={styles.title}>{navigation.state}</Text>
+        {isAdmin && <NewConversation navigation={navigation} buttonLabel={"Nouveau Groupe"}/>}
     </View>
 }
 const styles = StyleSheet.create({
