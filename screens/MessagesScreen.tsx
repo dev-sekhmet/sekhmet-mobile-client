@@ -17,6 +17,7 @@ import {findOrCreateConversationDual} from "../api/conversation-write/conversati
 import {reset} from "../api/settings/settings.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
+import SearchHidableBar from "../components/SearchHidableBar";
 
 
 const height = Dimensions.get('screen').height;
@@ -46,7 +47,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                     console.log("New conversation", conversation.friendlyName);
                     setConversations(oldConversations => [conversation, ...oldConversations]);
                     conversation.setAllMessagesUnread();
-                    if (conversation.uniqueName.includes("GROUPE")){
+                    if (conversation.uniqueName.includes("GROUPE")) {
                         console.log("GROUPE", conversation.uniqueName);
 
                     }
@@ -115,38 +116,32 @@ const Discussion = ({navigation, conversations, twilioClient}: {
 }) => {
     const dispatch = useAppDispatch();
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
     const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
     const account = useAppSelector(state => state.authentification.account);
-    const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
-        activePage: 0,
-        sort: 'id',
-        order: 'DESC'
-    });
     // callbacks
     const handleSheetChanges = useCallback((index: number) => {
         console.log('handleSheetChanges', index);
     }, []);
     const snapPoints = useMemo(() => ['100%', '80%'], []);
 
-    useEffect(()=>{
-        if (updateSuccess){
+    useEffect(() => {
+        if (updateSuccess) {
             console.log('OK');
         }
-        if (updateFailure){
+        if (updateFailure) {
             console.log('KO');
         }
         dispatch(reset());
 
     }, [updateSuccess, updateFailure]);
 
-    useEffect(()=>{
-        if (selectedConversation){
-            console.log("selectedConversation",selectedConversation.attributes);
+    useEffect(() => {
+        if (selectedConversation) {
+            console.log("selectedConversation", selectedConversation.attributes);
             navigation.navigate("Chat", {
                 clickedConversation: {
                     sid: selectedConversation.sid,
@@ -158,32 +153,44 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }, [selectedConversation]);
 
     useEffect(() => {
-        dispatch(
-            getUsers({
-                page: pagination.activePage,
-                size: 10,
-                sort: `${pagination.sort},${pagination.order}`,
-            }));
         return () => {
             dispatch(reset());
         };
     }, []);
 
     const openUsers = () => {
+        console.log("val openUsers");
         bottomSheetModalRef.current.present();
     }
 
     const selectedUser = (user: IUser) => {
         bottomSheetModalRef.current.close();
-        console.log("val ", user);
         dispatch(findOrCreateConversationDual(user.id));
     }
 
     const getListUsersModal = () => {
-        const usersWithoutMe = users.filter(user =>user.id.toLowerCase() !== account.id.toLowerCase());
+        const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
+        const searchQuery = useAppSelector(state => state.search.searchQuery);
+        const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
+            activePage: 0,
+            sort: 'id',
+            order: 'DESC'
+        });
+        useEffect(() => {
+            console.log("searchQuery", searchQuery);
+            dispatch(
+                getUsers({
+                    page: pagination.activePage,
+                    size: 10,
+                    sort: `${pagination.sort},${pagination.order}`,
+                    search: searchQuery ? searchQuery : ''
+                }));
+        }, [searchQuery]);
+
+        const usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
+
         return <BottomSheetModal
             ref={bottomSheetModalRef}
-
             index={1}
             style={{
                 shadowColor: "#000",
@@ -199,6 +206,12 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             snapPoints={snapPoints}
             onChange={handleSheetChanges}
         >
+
+            <View style={{
+                alignItems: 'center',
+            }}>
+                <SearchHidableBar/>
+            </View>
             <FlatList
                 data={usersWithoutMe}
                 renderItem={({item}) => (
@@ -210,7 +223,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }
 
 
-    return (loadingConversation?  <SekhmetActivityIndicator/> :<View style={styles.container}>
+    return (loadingConversation ? <SekhmetActivityIndicator/> : <View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (

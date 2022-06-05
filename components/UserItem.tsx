@@ -8,12 +8,7 @@ import ProfilAvatar from "./ProfilAvatar";
 
 
 export default function UserItem({item, selectedUser}: { item: IUser, selectedUser: (user: IUser) => void }) {
-    const [isSelected, setSelection] = useState(false);
-    const onPress = () => {
-        console.log("Press")
-    };
-
-    return (
+      return (
             <ListItem
 
                 onPress={()=>selectedUser(item)}>
@@ -30,46 +25,3 @@ export default function UserItem({item, selectedUser}: { item: IUser, selectedUs
 
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        padding: 10,
-    },
-    image: {
-        height: 50,
-        width: 50,
-        borderRadius: 30,
-        marginRight: 10,
-    },
-    badgeContainer: {
-        backgroundColor: Colors.light.sekhmetOrange,
-
-        borderWidth: 1,
-        borderColor: 'white',
-        position: 'absolute',
-        left: -20,
-        top: 40,
-    },
-    badgeText: {
-        color: 'white',
-        fontSize: 12
-    },
-    rightContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        marginLeft: 5
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between'
-    },
-    name: {
-        fontWeight: 'bold',
-        fontSize: 18,
-        marginBottom: 3,
-    },
-    text: {
-        color: 'grey',
-    }
-});

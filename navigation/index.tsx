@@ -8,7 +8,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
 import {createContext, useEffect, useState} from 'react';
-import {Dimensions, Pressable, View} from 'react-native';
+import {Pressable, View} from 'react-native';
 import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
@@ -31,18 +31,15 @@ import {useAppDispatch, useAppSelector} from '../api/store';
 import {
     getOnBoarding,
     getSession,
-    getTwilioToken, onRefreshSuccess,
+    getTwilioToken,
+    onRefreshSuccess,
     refreshTwilioToken
 } from "../api/authentification/authentication.reducer";
-import {Searchbar} from 'react-native-paper';
-import {onPerformSearchQuery} from "../api/search/search.reducer";
 import {Client} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
-
-const width = Dimensions.get('screen').width;
-const height = Dimensions.get('screen').height;
+import SearchHidableBar from "../components/SearchHidableBar";
 
 export const ChatContext = createContext({});
 
@@ -196,43 +193,11 @@ function RootNavigator() {
     );
 }
 
-const getRightView = ({navigation}) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showInputSearch, setShowInputSearch] = useState(false);
-    const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        setSearchQuery(query);
-        dispatch(onPerformSearchQuery(query))
-    };
 
-    useEffect(() => {
-        return () => {
-            setShowInputSearch(false)
-        };
-    }, []);
-
+const getRightView = () => {
     return <View style={{flexDirection: 'row'}}>
-        {showInputSearch && <Searchbar
-            placeholder="Search"
-            onChangeText={onChangeSearch}
-            value={searchQuery}
-            autoFocus={true}
-            onBlur={() => setShowInputSearch(false)}
-            style={{width: width * 0.8, height: 40}}
-        />}
-        {!showInputSearch && <Pressable
-            onPress={() => setShowInputSearch(true)}
-            style={({pressed}) => ({
-                opacity: pressed ? 0.5 : 1,
-            })}>
-            <FontAwesome
-                name="search"
-                size={25}
-                color="grey"
-                style={{marginRight: 15, fontWeight: 'bold'}}
-            />
-        </Pressable>}
 
+        <SearchHidableBar/>
         <Pressable
             onPress={() => {
             }}
@@ -287,7 +252,7 @@ function BottomTabNavigator({twilioClient}) {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () => getRightView({navigation})
+                    headerRight: () => getRightView()
                 })}
             />
             <BottomTab.Screen
@@ -296,7 +261,7 @@ function BottomTabNavigator({twilioClient}) {
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
-                    headerRight: () => getRightView({navigation}),
+                    headerRight: () => getRightView(),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
             >
