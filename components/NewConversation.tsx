@@ -5,18 +5,22 @@ import UserItem from "../components/UserItem";
 import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import SearchHidableBar from "../components/SearchHidableBar";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {Conversation} from "@twilio/conversations";
-import {FlatList, StyleSheet} from 'react-native';
+import {FlatList, Pressable, StyleSheet} from 'react-native';
 import {FAB} from "react-native-elements";
-import {View} from './Themed';
+import {Text, View} from './Themed';
 import Colors from "../constants/Colors";
+import {CONVERSATION_TYPE} from "../constants/constants";
 
-const NewConversation = ({navigation, buttonLabel}) => {
+const NewConversation = ({
+                             navigation,
+                             conversationInfo
+                         }: { navigation: any, conversationInfo: { buttonLabel: string, type: CONVERSATION_TYPE } }) => {
     const dispatch = useAppDispatch();
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
-    const [searchvaluealue, setSearchvaluealue] = useState('');
+    const [searchValue, setSearchValue] = useState('');
     const account = useAppSelector(state => state.authentification.account);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
@@ -25,6 +29,7 @@ const NewConversation = ({navigation, buttonLabel}) => {
         sort: 'id',
         order: 'DESC'
     });
+    const [selectedUsers, setSelectedUsers] = useState<IUser[]>([]);
     const snapPoints = useMemo(() => ['100%', '80%'], []);
 
 
@@ -55,7 +60,7 @@ const NewConversation = ({navigation, buttonLabel}) => {
     }, []);
 
     const onChangeSearch = (searchQuery) => {
-        setSearchvaluealue(searchQuery);
+        setSearchValue(searchQuery);
         dispatch(
             getUsers({
                 page: pagination.activePage,
@@ -65,9 +70,22 @@ const NewConversation = ({navigation, buttonLabel}) => {
             }));
     }
 
-    const selectedUser = (user: IUser) => {
-        bottomSheetModalRef.current.close();
-        dispatch(findOrCreateConversationDual(user.id));
+    const selectedUser = (user: IUser, isSelected) => {
+        if (conversationInfo.type === CONVERSATION_TYPE.DUAL) {
+            bottomSheetModalRef.current.close();
+            dispatch(findOrCreateConversationDual(user.id));
+        } else {
+            console.log("selectedUser", selectedUsers.length);
+            setSelectedUsers(isSelected ?
+                [...selectedUsers, user] : selectedUsers.filter(selectedUser => selectedUser.id !== user.id));
+        }
+    }
+
+    const createGroup = () => {
+        if (selectedUsers.length > 0) {
+            bottomSheetModalRef.current.close();
+            //dispatch(findOrCreateConversationGroup(selectedUsers.map(user => user.id)));
+        }
     }
     let usersWithoutMe = [];
     if (users) {
@@ -85,21 +103,28 @@ const NewConversation = ({navigation, buttonLabel}) => {
                 },
                 shadowOpacity: 0.57,
                 shadowRadius: 15.19,
-
                 elevation: 23
             }}
             onChange={handleSheetChanges}
             snapPoints={snapPoints}>
 
-            <View style={{
-                alignItems: 'center',
-            }}>
-                <SearchHidableBar onChangeSearch={onChangeSearch} value={searchvaluealue}/>
+            <View>
+                <SearchHidableBar onChangeSearch={onChangeSearch} value={searchValue}/>
+                <Pressable onPress={createGroup}  style={{
+                    alignItems: 'flex-end',
+                }}>
+                    <Text style={{color: Colors.light.sekhmetGreen}}>Terminer</Text>
+                </Pressable>
             </View>
             <FlatList
                 data={usersWithoutMe}
                 renderItem={({item}) => (
-                    <UserItem item={item} selectedUser={selectedUser}/>
+                    <UserItem
+                        item={item}
+                        execSelection={selectedUser}
+                        creationType={conversationInfo.type}
+                        isUserSelected={selectedUsers.some(selectedUser => selectedUser.id === item.id)}
+                    />
                 )}
                 keyExtractor={item => item.id}
             />
@@ -108,7 +133,7 @@ const NewConversation = ({navigation, buttonLabel}) => {
             style={styles.fab}
             size="small"
             color={Colors.light.sekhmetOrange}
-            title={buttonLabel}
+            title={conversationInfo.buttonLabel}
             icon={{name: "comment", color: "white"}}
             onPress={() => handlePresentModalPress()}
         />

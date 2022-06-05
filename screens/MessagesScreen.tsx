@@ -13,7 +13,7 @@ import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import {hasAnyAuthority} from "../components/PrivateRoute";
-import {AUTHORITIES} from "../constants/constants";
+import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
 
 const height = Dimensions.get('screen').height;
 
@@ -24,11 +24,11 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
 
     const isConversationGroup = (c: Conversation) : boolean => {
-        return isConversation(c, "GROUP");
+        return isConversation(c, CONVERSATION_TYPE.GROUP);
     }
 
     const isConversationDual = (c: Conversation) : boolean => {
-        return isConversation(c, "DUAL");
+        return isConversation(c, CONVERSATION_TYPE.DUAL);
     }
     const isConversation = (c: Conversation, type: string): boolean => {
         return c.uniqueName.includes(type);
@@ -63,8 +63,6 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
 
                 });
             }
-
-
             initConversations();
         }
 
@@ -115,10 +113,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     );
 }
 
-const Discussion = ({navigation, conversations}: {
-    conversations?: Conversation[];
-    navigation?: any;
-}) => {
+const Discussion = ({navigation, conversations}: { conversations?: Conversation[]; navigation?: any; }) => {
     const dispatch = useAppDispatch();
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
@@ -145,14 +140,17 @@ const Discussion = ({navigation, conversations}: {
             )}
             keyExtractor={item => item.sid}
         />
-        <NewConversation navigation={navigation} buttonLabel={"Nouvelle discussion"}/>
+        <NewConversation navigation={navigation}
+                         conversationInfo={{buttonLabel: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}}/>
     </View>)
 }
 
 const Groupes = ({navigation, conversations}) => {
-    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities, [AUTHORITIES.ADMIN]));
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities,
+        [AUTHORITIES.ADMIN]));
     return <View style={styles.container}>
-        {isAdmin && <NewConversation navigation={navigation} buttonLabel={"Nouveau Groupe"}/>}
+        {isAdmin && <NewConversation navigation={navigation}
+                                     conversationInfo={{buttonLabel: "Nouveau Groupe", type: CONVERSATION_TYPE.GROUP}}/>}
     </View>
 }
 const styles = StyleSheet.create({

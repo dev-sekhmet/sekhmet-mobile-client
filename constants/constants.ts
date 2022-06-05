@@ -1,11 +1,16 @@
 export const AUTHORITIES = {
-  ADMIN: 'ROLE_ADMIN',
-  USER: 'ROLE_USER',
-  COACH: 'ROLE_COACH',
+    ADMIN: 'ROLE_ADMIN',
+    USER: 'ROLE_USER',
+    COACH: 'ROLE_COACH',
+};
+
+export enum CONVERSATION_TYPE {
+    GROUP = 'GROUP',
+    DUAL = 'DUAL'
 };
 
 export const messages = {
-  DATA_ERROR_ALERT: 'Internal Error',
+    DATA_ERROR_ALERT: 'Internal Error',
 };
 
 export const APP_DATE_FORMAT = 'DD/MM/YY HH:mm';
