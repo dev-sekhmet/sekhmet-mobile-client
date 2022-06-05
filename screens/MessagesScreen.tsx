@@ -4,10 +4,10 @@ import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import ChatItem from "../components/ChatItem";
 import * as React from "react";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {Badge, FAB} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {Client, Conversation} from "@twilio/conversations";
+import {Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {getUsers} from "../api/user-management/user-management.reducer";
 import {IUser} from "../model/user.model";
@@ -16,14 +16,12 @@ import UserItem from "../components/UserItem";
 import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
 import {reset} from "../api/settings/settings.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
-import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import SearchHidableBar from "../components/SearchHidableBar";
 
 
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
-    const searchQuery = useAppSelector(state => state.search.searchQuery);
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
     const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -94,8 +92,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                                 </View>;
                             }
                         }}
-                        children={() => <Discussion navigation={navigation} conversations={conversations}
-                                                    twilioClient={twilioClient}/>}/>
+                        children={() => <Discussion navigation={navigation} conversations={conversations}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
@@ -109,24 +106,14 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     );
 }
 
-const Discussion = ({navigation, conversations, twilioClient}: {
-    twilioClient?: Client;
+const Discussion = ({navigation, conversations}: {
     conversations?: Conversation[];
     navigation?: any;
 }) => {
     const dispatch = useAppDispatch();
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
-    const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
-    const account = useAppSelector(state => state.authentification.account);
-    // callbacks
-    const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
-    }, []);
-    const snapPoints = useMemo(() => ['100%', '80%'], []);
 
     useEffect(() => {
         if (updateSuccess) {
@@ -136,8 +123,37 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             console.log('KO');
         }
         dispatch(reset());
-
+        return () => {
+            dispatch(reset());
+        };
     }, [updateSuccess, updateFailure]);
+
+    return (<View style={styles.container}>
+        <FlatList
+            data={conversations}
+            renderItem={({item}) => (
+                <ChatItem item={item} navigation={navigation}/>
+            )}
+            keyExtractor={item => item.sid}
+        />
+        {getListUsersModal(navigation)}
+    </View>)
+}
+
+
+const getListUsersModal = (navigation) => {
+    const dispatch = useAppDispatch();
+    const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
+    const account = useAppSelector(state => state.authentification.account);
+    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+    const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
+    const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
+        activePage: 0,
+        sort: 'id',
+        order: 'DESC'
+    });
+    const snapPoints = useMemo(() => ['100%', '80%'], []);
+
 
     useEffect(() => {
         if (selectedConversation) {
@@ -149,13 +165,10 @@ const Discussion = ({navigation, conversations, twilioClient}: {
                 }
             });
         }
-
     }, [selectedConversation]);
 
     useEffect(() => {
-        return () => {
-            dispatch(reset());
-        };
+        onChangeSearch('');
     }, []);
 
     const openUsers = () => {
@@ -163,33 +176,25 @@ const Discussion = ({navigation, conversations, twilioClient}: {
         bottomSheetModalRef.current.present();
     }
 
+    const onChangeSearch = (searchQuery) => {
+        console.log("val onChangeSearch", searchQuery);
+        dispatch(
+            getUsers({
+                page: pagination.activePage,
+                size: 10,
+                sort: `${pagination.sort},${pagination.order}`,
+                search: searchQuery ? searchQuery : ''
+            }));
+    }
+
     const selectedUser = (user: IUser) => {
         bottomSheetModalRef.current.close();
         dispatch(findOrCreateConversationDual(user.id));
     }
 
-    const getListUsersModal = () => {
-        const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
-        const searchQuery = useAppSelector(state => state.search.searchQuery);
-        const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
-            activePage: 0,
-            sort: 'id',
-            order: 'DESC'
-        });
-        useEffect(() => {
-            console.log("searchQuery", searchQuery);
-            dispatch(
-                getUsers({
-                    page: pagination.activePage,
-                    size: 10,
-                    sort: `${pagination.sort},${pagination.order}`,
-                    search: searchQuery ? searchQuery : ''
-                }));
-        }, [searchQuery]);
-
-        const usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
-
-        return <BottomSheetModal
+    const usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
+    return <>
+        <BottomSheetModal
             ref={bottomSheetModalRef}
             index={1}
             style={{
@@ -203,14 +208,12 @@ const Discussion = ({navigation, conversations, twilioClient}: {
 
                 elevation: 23
             }}
-            snapPoints={snapPoints}
-            onChange={handleSheetChanges}
-        >
+            snapPoints={snapPoints}>
 
             <View style={{
                 alignItems: 'center',
             }}>
-                <SearchHidableBar/>
+                <SearchHidableBar onChangeSearch={onChangeSearch}/>
             </View>
             <FlatList
                 data={usersWithoutMe}
@@ -220,18 +223,6 @@ const Discussion = ({navigation, conversations, twilioClient}: {
                 keyExtractor={item => item.id}
             />
         </BottomSheetModal>
-    }
-
-
-    return (loadingConversation ? <SekhmetActivityIndicator/> : <View style={styles.container}>
-        <FlatList
-            data={conversations}
-            renderItem={({item}) => (
-                <ChatItem item={item} navigation={navigation}/>
-            )}
-            keyExtractor={item => item.sid}
-        />
-
         <FAB
             style={styles.fab}
             size="small"
@@ -240,9 +231,9 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             icon={{name: "comment", color: "white"}}
             onPress={() => openUsers()}
         />
-        {getListUsersModal()}
-    </View>)
+    </>
 }
+
 
 const Groupes = ({navigation, conversations}) => {
     return <View style={styles.container}>

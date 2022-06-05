@@ -194,10 +194,10 @@ function RootNavigator() {
 }
 
 
-const getRightView = () => {
+const getRightView = (onChangeSearch) => {
     return <View style={{flexDirection: 'row'}}>
 
-        <SearchHidableBar/>
+        <SearchHidableBar onChangeSearch={onChangeSearch}/>
         <Pressable
             onPress={() => {
             }}
@@ -252,7 +252,8 @@ function BottomTabNavigator({twilioClient}) {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () => getRightView()
+                    headerRight: () => getRightView((search) => console.log('Search', {search})
+                    )
                 })}
             />
             <BottomTab.Screen
@@ -261,7 +262,7 @@ function BottomTabNavigator({twilioClient}) {
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
-                    headerRight: () => getRightView(),
+                    headerRight: () => getRightView((search) => console.log('Search', {search})),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
             >

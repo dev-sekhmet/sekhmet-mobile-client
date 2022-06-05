@@ -1,23 +1,16 @@
+import * as React from "react";
 import {useEffect, useState} from "react";
-import {useAppDispatch} from "../api/store";
-import {onPerformSearchQuery} from "../api/search/search.reducer";
+import {useAppDispatch, useAppSelector} from "../api/store";
 import {Dimensions, Pressable, View} from "react-native";
 import {Searchbar} from "react-native-paper";
 import {FontAwesome} from "@expo/vector-icons";
-import * as React from "react";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-const SearchHidableBar = () => {
-    const [searchQuery, setSearchQuery] = useState('');
+const SearchHidableBar = ({onChangeSearch}) => {
     const [showInputSearch, setShowInputSearch] = useState(false);
     const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        setSearchQuery(query);
-        dispatch(onPerformSearchQuery(query))
-    };
-
     useEffect(() => {
         return () => {
             setShowInputSearch(false)
@@ -28,7 +21,6 @@ const SearchHidableBar = () => {
         {showInputSearch && <Searchbar
             placeholder="Search"
             onChangeText={onChangeSearch}
-            value={searchQuery}
             autoFocus={true}
             onBlur={() => setShowInputSearch(false)}
             style={{width: width * 0.8, height: 40}}
