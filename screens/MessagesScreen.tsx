@@ -144,6 +144,7 @@ const Discussion = ({navigation, conversations}: {
 const getListUsersModal = (navigation) => {
     const dispatch = useAppDispatch();
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
+    const [searchvaluealue, setSearchvaluealue] = useState('');
     const account = useAppSelector(state => state.authentification.account);
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
@@ -177,7 +178,7 @@ const getListUsersModal = (navigation) => {
     }
 
     const onChangeSearch = (searchQuery) => {
-        console.log("val onChangeSearch", searchQuery);
+        setSearchvaluealue(searchQuery);
         dispatch(
             getUsers({
                 page: pagination.activePage,
@@ -213,7 +214,7 @@ const getListUsersModal = (navigation) => {
             <View style={{
                 alignItems: 'center',
             }}>
-                <SearchHidableBar onChangeSearch={onChangeSearch}/>
+                <SearchHidableBar onChangeSearch={onChangeSearch} value={searchvaluealue}/>
             </View>
             <FlatList
                 data={usersWithoutMe}

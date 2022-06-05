@@ -197,7 +197,7 @@ function RootNavigator() {
 const getRightView = (onChangeSearch) => {
     return <View style={{flexDirection: 'row'}}>
 
-        <SearchHidableBar onChangeSearch={onChangeSearch}/>
+        <SearchHidableBar onChangeSearch={onChangeSearch} value={''}/>
         <Pressable
             onPress={() => {
             }}

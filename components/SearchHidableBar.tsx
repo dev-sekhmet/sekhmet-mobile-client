@@ -8,7 +8,7 @@ import {FontAwesome} from "@expo/vector-icons";
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
-const SearchHidableBar = ({onChangeSearch}) => {
+const SearchHidableBar = ({onChangeSearch, value}) => {
     const [showInputSearch, setShowInputSearch] = useState(false);
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -21,6 +21,7 @@ const SearchHidableBar = ({onChangeSearch}) => {
         {showInputSearch && <Searchbar
             placeholder="Search"
             onChangeText={onChangeSearch}
+            value={value}
             autoFocus={true}
             onBlur={() => setShowInputSearch(false)}
             style={{width: width * 0.8, height: 40}}
