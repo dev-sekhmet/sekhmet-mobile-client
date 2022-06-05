@@ -11,8 +11,7 @@ import {Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
-
-
+import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
@@ -122,7 +121,7 @@ const Discussion = ({navigation, conversations}: {
         };
     }, [updateSuccess, updateFailure]);
 
-    return (<View style={styles.container}>
+    return (loadingConversation? <SekhmetActivityIndicator/>:<View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (

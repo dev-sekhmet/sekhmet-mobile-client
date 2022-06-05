@@ -5,7 +5,7 @@ import UserItem from "../components/UserItem";
 import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import SearchHidableBar from "../components/SearchHidableBar";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import {Conversation} from "@twilio/conversations";
 import {FlatList, StyleSheet} from 'react-native';
@@ -44,10 +44,15 @@ const NewConversation = ({navigation}) => {
         onChangeSearch('');
     }, []);
 
-    const openUsers = () => {
-        console.log("val openUsers");
-        bottomSheetModalRef.current.present();
-    }
+    // callbacks
+    const handlePresentModalPress = useCallback(() => {
+        bottomSheetModalRef.current?.present();
+    }, []);
+
+    const handleSheetChanges = useCallback((index: number) => {
+        console.log('handleSheetChanges', index);
+        bottomSheetModalRef.current?.forceClose();
+    }, []);
 
     const onChangeSearch = (searchQuery) => {
         setSearchvaluealue(searchQuery);
@@ -64,8 +69,10 @@ const NewConversation = ({navigation}) => {
         bottomSheetModalRef.current.close();
         dispatch(findOrCreateConversationDual(user.id));
     }
-
-    const usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
+    let usersWithoutMe = [];
+    if (users) {
+        usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
+    }
     return <>
         <BottomSheetModal
             ref={bottomSheetModalRef}
@@ -81,6 +88,7 @@ const NewConversation = ({navigation}) => {
 
                 elevation: 23
             }}
+            onChange={handleSheetChanges}
             snapPoints={snapPoints}>
 
             <View style={{
@@ -102,7 +110,7 @@ const NewConversation = ({navigation}) => {
             color={Colors.light.sekhmetOrange}
             title={"Nouvelle discussion"}
             icon={{name: "comment", color: "white"}}
-            onPress={() => openUsers()}
+            onPress={() => handlePresentModalPress()}
         />
     </>
 }

@@ -11,6 +11,7 @@ import {Provider} from 'react-redux';
 import {store} from "./api/store";
 import {BottomSheetModalProvider,} from '@gorhom/bottom-sheet';
 import { SelectProvider } from '@mobile-reality/react-native-select-pro';
+import {NativeViewGestureHandler} from "react-native-gesture-handler";
 
 setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 
@@ -25,11 +26,13 @@ export default function App() {
             <SafeAreaProvider>
                 <Provider store={store}>
                     <ActionSheetProvider>
+                        <NativeViewGestureHandler disallowInterruption={true}>
                         <BottomSheetModalProvider>
                             <SelectProvider>
                             <Navigation colorScheme={colorScheme}/>
                             </SelectProvider>
                         </BottomSheetModalProvider>
+                        </NativeViewGestureHandler>
                     </ActionSheetProvider>
                     <StatusBar/>
                     <Toast/>
