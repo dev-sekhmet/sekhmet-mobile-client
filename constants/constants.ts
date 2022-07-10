@@ -7,7 +7,7 @@ export const AUTHORITIES = {
 export enum CONVERSATION_TYPE {
     GROUP = 'GROUP',
     DUAL = 'DUAL'
-};
+}
 
 export const messages = {
     DATA_ERROR_ALERT: 'Internal Error',

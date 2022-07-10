@@ -1,19 +1,17 @@
-import {TwilioProps} from "../types";
 import {useAppDispatch, useAppSelector} from "../api/store";
 import React, {useEffect, useState} from "react";
-import {Conversation, Message, Paginator} from "@twilio/conversations";
-import {Text, View} from "../components/Themed";
-import {Icon, ListItem, Switch} from "react-native-elements";
+import {Conversation} from "@twilio/conversations";
+import {View} from "../components/Themed";
 import UserItem from "../components/UserItem";
-import {FlatList, Pressable} from "react-native";
+import {FlatList, StyleSheet, TextInput} from "react-native";
 import {IUser} from "../model/user.model";
-import {CONVERSATION_TYPE} from "../constants/constants";
-import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
+import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
+import {findOrCreateConversationDual, reset} from "../api/conversation-write/conversation-write.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import {getUsers} from "../api/user-management/user-management.reducer";
-import {NewConversationParam} from "../components/NewConversation";
-import SearchHidableBar from "../components/SearchHidableBar";
 import Colors from "../constants/Colors";
+import {FAB} from "react-native-elements";
+import {hasAnyAuthority} from "../components/PrivateRoute";
 
 export default function UserListScreen({navigation, route}) {
     const dispatch = useAppDispatch();
@@ -26,6 +24,8 @@ export default function UserListScreen({navigation, route}) {
         sort: 'id',
         order: 'DESC'
     });
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities,
+        [AUTHORITIES.ADMIN]));
 
     const [selectedUsers, setSelectedUsers] = useState<IUser[]>([]);
 
@@ -46,6 +46,12 @@ export default function UserListScreen({navigation, route}) {
         onChangeSearch('');
     }, []);
 
+    useEffect(() => {
+        return () => {
+            dispatch(reset());
+        };
+    }, []);
+
     const onChangeSearch = (searchQuery) => {
         setSearchValue(searchQuery);
         dispatch(
@@ -58,7 +64,7 @@ export default function UserListScreen({navigation, route}) {
     }
 
     const selectedUser = (user: IUser, isSelected) => {
-        if ( route.params.conversationInfo.type === CONVERSATION_TYPE.DUAL) {
+        if (route.params.conversationInfo.type === CONVERSATION_TYPE.DUAL) {
             dispatch(findOrCreateConversationDual(user.id));
         } else {
             console.log("selectedUser", selectedUsers.length);
@@ -69,6 +75,7 @@ export default function UserListScreen({navigation, route}) {
 
     const createGroup = () => {
         if (selectedUsers.length > 0) {
+            console.log("createGroup", selectedUsers);
             //dispatch(findOrCreateConversationGroup(selectedUsers.map(user => user.id)));
         }
     }
@@ -79,15 +86,14 @@ export default function UserListScreen({navigation, route}) {
         usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
     }
 
-    return <View><Text>CreateDualOrGroup</Text>
-        <View>
-            <SearchHidableBar onChangeSearch={onChangeSearch} value={searchValue}/>
-            <Pressable onPress={createGroup} style={{
-                alignItems: 'flex-end',
-            }}>
-                <Text style={{color: Colors.light.sekhmetGreen}}>Terminer</Text>
-            </Pressable>
-        </View>
+    const canCreateGroup = isAdmin && route.params.conversationInfo.type === CONVERSATION_TYPE.GROUP;
+    return <View style={[styles.view, {marginTop: 15}]}>
+        <TextInput
+            style={styles.inputText}
+            placeholder={'Taper le nom ou le numéro'}
+            onChangeText={onChangeSearch}
+            value={searchValue}
+        />
         <FlatList
             data={usersWithoutMe}
             renderItem={({item}) => (
@@ -100,5 +106,31 @@ export default function UserListScreen({navigation, route}) {
             )}
             keyExtractor={item => item.id}
         />
+        {canCreateGroup &&  <FAB
+            style={styles.fab}
+            size="small"
+            disabled={selectedUsers.length < 2}
+            color={Colors.light.sekhmetOrange}
+            title={"Terminer"}
+            icon={{name: "comment", color: "white"}}
+            onPress={createGroup}
+        />}
     </View>;
 }
+
+const styles = StyleSheet.create({
+    inputText: {
+        height: 40,
+        borderColor: 'grey',
+        borderWidth: 0.5,
+        borderRadius: 3,
+        paddingHorizontal: 8
+    },
+    view: {marginRight: 20, marginLeft: 20, marginTop: 20, flexDirection: "column", height: "100%"},
+    fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 95,
+        bottom: 50,
+    }
+});
