@@ -45,6 +45,12 @@ export type ChatParamList = {
         }
     }
 };
+export type UserListParamList = {
+    UserList: {
+        title: undefined,
+        conversationInfo: undefined
+    }
+};
 export type ProductParamList = {
     ProductDetail: {
         product: {

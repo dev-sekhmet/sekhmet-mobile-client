@@ -141,7 +141,7 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
             keyExtractor={item => item.sid}
         />
         <NewConversation navigation={navigation}
-                         conversationInfo={{buttonLabel: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}}/>
+                         conversationInfo={{label: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}}/>
     </View>)
 }
 
@@ -150,7 +150,7 @@ const Groupes = ({navigation, conversations}) => {
         [AUTHORITIES.ADMIN]));
     return <View style={styles.container}>
         {isAdmin && <NewConversation navigation={navigation}
-                                     conversationInfo={{buttonLabel: "Nouveau Groupe", type: CONVERSATION_TYPE.GROUP}}/>}
+                                     conversationInfo={{label: "Nouveau Groupe", type: CONVERSATION_TYPE.GROUP}}/>}
     </View>
 }
 const styles = StyleSheet.create({

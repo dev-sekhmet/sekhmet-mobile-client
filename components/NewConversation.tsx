@@ -1,141 +1,29 @@
-import {getUsers} from "../api/user-management/user-management.reducer";
-import {IUser} from "../model/user.model";
-import {BottomSheetModal} from "@gorhom/bottom-sheet";
-import UserItem from "../components/UserItem";
-import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
-import {getFriendlyName} from "../shared/conversation/conversation.util";
-import SearchHidableBar from "../components/SearchHidableBar";
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {useAppDispatch, useAppSelector} from "../api/store";
-import {Conversation} from "@twilio/conversations";
-import {FlatList, Pressable, StyleSheet} from 'react-native';
+import React from "react";
+import {StyleSheet} from 'react-native';
 import {FAB} from "react-native-elements";
-import {Text, View} from './Themed';
 import Colors from "../constants/Colors";
 import {CONVERSATION_TYPE} from "../constants/constants";
 
+export type NewConversationParam = { navigation?: any, route?: any, conversationInfo: { label: string, type: CONVERSATION_TYPE } };
 const NewConversation = ({
                              navigation,
                              conversationInfo
-                         }: { navigation: any, conversationInfo: { buttonLabel: string, type: CONVERSATION_TYPE } }) => {
-    const dispatch = useAppDispatch();
-    const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
-    const [searchValue, setSearchValue] = useState('');
-    const account = useAppSelector(state => state.authentification.account);
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
-    const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
-        activePage: 0,
-        sort: 'id',
-        order: 'DESC'
-    });
-    const [selectedUsers, setSelectedUsers] = useState<IUser[]>([]);
-    const snapPoints = useMemo(() => ['100%', '80%'], []);
-
-
-    useEffect(() => {
-        if (selectedConversation) {
-            console.log("selectedConversation", selectedConversation.attributes);
-            navigation.navigate("Chat", {
-                clickedConversation: {
-                    sid: selectedConversation.sid,
-                    name: getFriendlyName(selectedConversation, account)
-                }
-            });
-        }
-    }, [selectedConversation]);
-
-    useEffect(() => {
-        onChangeSearch('');
-    }, []);
-
-    // callbacks
-    const handlePresentModalPress = useCallback(() => {
-        bottomSheetModalRef.current?.present();
-    }, []);
-
-    const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
-        bottomSheetModalRef.current?.forceClose();
-    }, []);
-
-    const onChangeSearch = (searchQuery) => {
-        setSearchValue(searchQuery);
-        dispatch(
-            getUsers({
-                page: pagination.activePage,
-                size: 10,
-                sort: `${pagination.sort},${pagination.order}`,
-                search: searchQuery ? searchQuery : ''
-            }));
+                         }: NewConversationParam) => {
+    const openUserList = () => {
+        navigation.navigate("UserList", {
+            title: conversationInfo.label,
+            conversationInfo
+        });
     }
 
-    const selectedUser = (user: IUser, isSelected) => {
-        if (conversationInfo.type === CONVERSATION_TYPE.DUAL) {
-            bottomSheetModalRef.current.close();
-            dispatch(findOrCreateConversationDual(user.id));
-        } else {
-            console.log("selectedUser", selectedUsers.length);
-            setSelectedUsers(isSelected ?
-                [...selectedUsers, user] : selectedUsers.filter(selectedUser => selectedUser.id !== user.id));
-        }
-    }
-
-    const createGroup = () => {
-        if (selectedUsers.length > 0) {
-            bottomSheetModalRef.current.close();
-            //dispatch(findOrCreateConversationGroup(selectedUsers.map(user => user.id)));
-        }
-    }
-    let usersWithoutMe = [];
-    if (users) {
-        usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
-    }
     return <>
-        <BottomSheetModal
-            ref={bottomSheetModalRef}
-            index={1}
-            style={{
-                shadowColor: "#000",
-                shadowOffset: {
-                    width: 0,
-                    height: 11,
-                },
-                shadowOpacity: 0.57,
-                shadowRadius: 15.19,
-                elevation: 23
-            }}
-            onChange={handleSheetChanges}
-            snapPoints={snapPoints}>
-
-            <View>
-                <SearchHidableBar onChangeSearch={onChangeSearch} value={searchValue}/>
-                <Pressable onPress={createGroup}  style={{
-                    alignItems: 'flex-end',
-                }}>
-                    <Text style={{color: Colors.light.sekhmetGreen}}>Terminer</Text>
-                </Pressable>
-            </View>
-            <FlatList
-                data={usersWithoutMe}
-                renderItem={({item}) => (
-                    <UserItem
-                        item={item}
-                        execSelection={selectedUser}
-                        creationType={conversationInfo.type}
-                        isUserSelected={selectedUsers.some(selectedUser => selectedUser.id === item.id)}
-                    />
-                )}
-                keyExtractor={item => item.id}
-            />
-        </BottomSheetModal>
         <FAB
             style={styles.fab}
             size="small"
             color={Colors.light.sekhmetOrange}
-            title={conversationInfo.buttonLabel}
+            title={conversationInfo.label}
             icon={{name: "comment", color: "white"}}
-            onPress={() => handlePresentModalPress()}
+            onPress={() => openUserList()}
         />
     </>
 }

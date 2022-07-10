@@ -14,7 +14,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, InputPhoneParamList, ProductParamList,} from '../types';
+import {ChatParamList, UserListParamList, InputPhoneParamList, ProductParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -40,6 +40,7 @@ import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
 import SearchHidableBar from "../components/SearchHidableBar";
+import UserListScreen from "../screens/UserListScreen";
 
 export const ChatContext = createContext({});
 
@@ -61,6 +62,7 @@ export default function Navigation({colorScheme}) {
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
+const UserList = createStackNavigator<UserListParamList>();
 const ProductStack = createStackNavigator<ProductParamList>();
 const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 
@@ -129,6 +131,10 @@ function RootNavigator() {
                         {props => <BottomTabNavigator twilioClient={twilioClient} {...props} />}
                     </Stack.Screen>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
+                    <UserList.Screen name="UserList" component={UserListScreen} options={({route}) => ({
+                        title: route.params.title,
+                        headerBackTitle: 'Messages'
+                    })}/>
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
