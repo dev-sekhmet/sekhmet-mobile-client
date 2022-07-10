@@ -6,7 +6,10 @@ import UserItem from "../components/UserItem";
 import {FlatList, StyleSheet, TextInput} from "react-native";
 import {IUser} from "../model/user.model";
 import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
-import {findOrCreateConversationDual, reset} from "../api/conversation-write/conversation-write.reducer";
+import {
+    findOrCreateConversation,
+    reset
+} from "../api/conversation-write/conversation-write.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import {getUsers} from "../api/user-management/user-management.reducer";
 import Colors from "../constants/Colors";
@@ -65,7 +68,12 @@ export default function UserListScreen({navigation, route}) {
 
     const selectedUser = (user: IUser, isSelected) => {
         if (route.params.conversationInfo.type === CONVERSATION_TYPE.DUAL) {
-            dispatch(findOrCreateConversationDual(user.id));
+            console.log("selectedUser", user);
+            dispatch(findOrCreateConversation({
+                ids: [user.id],
+                friendlyName: "testDualGO",
+                description: "testDualDescriptionGO",
+            }));
         } else {
             console.log("selectedUser", selectedUsers.length);
             setSelectedUsers(isSelected ?
@@ -73,10 +81,17 @@ export default function UserListScreen({navigation, route}) {
         }
     }
 
+    const isValidUserNumber = () =>{
+        return selectedUsers.length >= 2;
+    }
+
     const createGroup = () => {
-        if (selectedUsers.length > 0) {
-            console.log("createGroup", selectedUsers);
-            //dispatch(findOrCreateConversationGroup(selectedUsers.map(user => user.id)));
+        if (isValidUserNumber()) {
+            dispatch(findOrCreateConversation({
+                ids: selectedUsers.map(user => user.id),
+                friendlyName: "testGROUPGO",
+                description: "testDescriptionGROUPGO",
+            }));
         }
     }
 
@@ -109,7 +124,7 @@ export default function UserListScreen({navigation, route}) {
         {canCreateGroup &&  <FAB
             style={styles.fab}
             size="small"
-            disabled={selectedUsers.length < 2}
+            disabled={!isValidUserNumber()}
             color={Colors.light.sekhmetOrange}
             title={"Terminer"}
             icon={{name: "comment", color: "white"}}

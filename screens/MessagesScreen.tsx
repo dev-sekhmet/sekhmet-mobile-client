@@ -149,6 +149,13 @@ const Groupes = ({navigation, conversations}) => {
     const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities,
         [AUTHORITIES.ADMIN]));
     return <View style={styles.container}>
+        <FlatList
+            data={conversations}
+            renderItem={({item}) => (
+                <ChatItem item={item} navigation={navigation}/>
+            )}
+            keyExtractor={item => item.sid}
+        />
         {isAdmin && <NewConversation navigation={navigation}
                                      conversationInfo={{label: "Nouveau Groupe", type: CONVERSATION_TYPE.GROUP}}/>}
     </View>
