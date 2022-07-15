@@ -35,9 +35,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     }
 
     useEffect(() => {
-        console.log("twilioClient outif", twilioClient?.version);
         if (twilioClient) {
-            console.log("twilioClient inif", twilioClient.version);
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();
                 setDualConversations(cons.items.filter(c => isConversationDual(c)));

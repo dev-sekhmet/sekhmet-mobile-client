@@ -43,6 +43,11 @@ export type ChatParamList = {
             sid: 'aaaaaaaaaaa',
             name: "Gaetan TEMATE"
         }
+    },
+    ConversationProfile: {
+        clickedConversation: {
+            sid: 'aaaaaaaaaaa'
+        }
     }
 };
 export type UserListParamList = {
@@ -85,7 +90,7 @@ export type TwilioProps = {
     navigation?: any;
 };
 
-export type Message = { msg: TwilioMessage, author: string };
+export type Message = { msg: TwilioMessage, author: string, deleted?: boolean };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,
     NativeStackScreenProps<RootStackParamList>>;

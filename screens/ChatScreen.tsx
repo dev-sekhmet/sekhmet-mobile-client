@@ -26,18 +26,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     );
 
     useEffect(() => {
-        console.log("useEffect: ChatScreen")
-        Moment.updateLocale('fr', {
-            calendar: {
-                sameDay: '[Aujourd\'hui]',
-                nextDay: '[Demain]',
-                nextWeek: 'dddd',
-                lastDay: '[Hier]',
-                lastWeek: 'dddd [dernier]',
-                sameElse: 'DD/MM/YYYY'
-            }
-        })
-        fetchChatRoom();
+        fetchConversation();
         return () => {
             console.log("removeAllListeners ChatScreen")
             conversation?.removeAllListeners();
@@ -48,12 +37,7 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
         fetchMessages();
     }, [conversation]);
 
-    const getUser = async (identity: string) => {
-        const user = await twilioClient.getUser(identity);
-        return user.friendlyName;
-    }
-
-    const fetchChatRoom = async () => {
+    const fetchConversation = async () => {
         const sid = route.params.clickedConversation.sid;
         if (twilioClient && sid) {
             twilioClient.getConversationBySid(sid).then(conversation => {
@@ -63,6 +47,22 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
                         twilioClient.getUser(event.author).then(user => {
                             setMessages(prevMsgs => {
                                 return [...prevMsgs, {msg: event, author: user.friendlyName}]
+                            });
+                        });
+                    }
+                });
+
+                conversation.on("messageRemoved", (event: TwilioMessage) => {
+                    if (messages.some(msg => msg.msg.sid === event.sid)) {
+                        twilioClient.getUser(event.author).then(user => {
+                            setMessages(prevMsgs => {
+                                const newMsgs = prevMsgs.map(msg => {
+                                    if (msg.msg.sid === event.sid ) {
+                                        return {...msg, deleted: true};
+                                    }
+                                    return msg;
+                                });
+                                return [...newMsgs]
                             });
                         });
                     }

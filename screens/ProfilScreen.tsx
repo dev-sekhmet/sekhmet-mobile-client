@@ -405,7 +405,7 @@ export default function ProfilScreen({navigation}) {
     };
     const borderTopRadius = 33;
     return (
-        <View style={{backgroundColor: '#eaeaea', flex: 1, height: height}}>
+        <View style={{backgroundColor: '#eaeaea', flex: 1, height}}>
 
             <SafeAreaView style={{flex: 1}}>
                 <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>

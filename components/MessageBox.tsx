@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
+import {FontAwesome, FontAwesome5, Ionicons} from '@expo/vector-icons';
 import {useActionSheet} from '@expo/react-native-action-sheet';
 import AudioPlayer from './media/AudioPlayer';
 import MessageReply from './MessageReply';
@@ -29,7 +29,6 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     );
     const [isMe, setIsMe] = useState<boolean | null>(null);
     const [soundURI, setSoundURI] = useState<any>(null);
-    const [isDeleted, setIsDeleted] = useState(false);
 
     const {width} = useWindowDimensions();
     const {showActionSheetWithOptions} = useActionSheet();
@@ -110,7 +109,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     };
 
     const deleteMessage = async () => {
-        // await DataStore.delete(message);
+        message.msg.remove();
     };
 
 
@@ -144,7 +143,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     };
 
     const openActionMenu = () => {
-        const options = ["Reply", "Delete", "Cancel"];
+        const options = ["Repondre", "Supprimer", "Annuler"];
         const destructiveButtonIndex = 1;
         const cancelButtonIndex = 2;
         showActionSheetWithOptions(
@@ -216,12 +215,18 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
                     )}
                     {!!msg.body && (
                         <View>
-                            <Text style={{backgroundColor: isMe ? blue : grey}}>
-                                {isDeleted ? "message deleted" : msg.body}
-                            </Text>
-                        </View>
-
-                    )
+                            {message.deleted && <View style={{flexDirection: "row",
+                                alignItems:'center',
+                                backgroundColor: isMe ? blue : grey}}>
+                                <FontAwesome5 size={10} name="ban"/>
+                                <Text style={{fontStyle: 'italic', marginLeft:3}}>
+                                    ce message a été supprimé
+                                </Text>
+                            </View>}
+                            {!message.deleted && <Text style={{backgroundColor: isMe ? blue : grey}}>
+                                {msg.body}
+                            </Text>}
+                        </View>)
                     }
                 </View>
             </View>

@@ -14,7 +14,7 @@ import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, UserListParamList, InputPhoneParamList, ProductParamList,} from '../types';
+import {ChatParamList, InputPhoneParamList, ProductParamList, UserListParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -41,6 +41,8 @@ import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
 import SearchHidableBar from "../components/SearchHidableBar";
 import UserListScreen from "../screens/UserListScreen";
+import {Text} from "../components/Themed";
+import ConversationProfileSreen from "../screens/ConversationProfileSreen";
 
 export const ChatContext = createContext({});
 
@@ -121,7 +123,13 @@ function RootNavigator() {
         dispatch(getOnBoarding());
     }, []);
 
-
+    const gotToConvProfil = (sid: string, navigation) => {
+        navigation.navigate("ConversationProfile", {
+            clickedConversation: {
+                sid
+            }
+        });
+    };
     return (
         onBoardingFinish ?
             account?.firstName && account?.lastName && account?.email ?
@@ -135,12 +143,24 @@ function RootNavigator() {
                         title: route.params.title,
                         headerBackTitle: 'Messages'
                     })}/>
+                    <MsgStack.Screen name="ConversationProfile"
+                                     options={({route}) => ({
+                                         sid: route.params.clickedConversation.sid,
+                                            title: '',
+                                         headerBackTitle: 'Messages'
+                                     })}>
+                        {props => <ConversationProfileSreen twilioClient={twilioClient} {...props} />}
+                    </MsgStack.Screen>
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
                     <MsgStack.Screen name="Chat"
-                                     options={({route}) => ({
-                                         title: route.params.clickedConversation.name,
+                                     options={({route, navigation}) => ({
+                                         headerTitle: () =>
+                                             <Pressable
+                                                 onPress={() => gotToConvProfil(route.params.clickedConversation.sid, navigation)}>
+                                                 <Text>{route.params.clickedConversation.name}</Text>
+                                             </Pressable>,
                                          headerBackTitle: 'Messages'
                                      })}>
                         {props => <ChatScreen twilioClient={twilioClient} {...props} />}

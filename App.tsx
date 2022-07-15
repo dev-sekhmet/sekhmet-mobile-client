@@ -12,12 +12,27 @@ import {store} from "./api/store";
 import {BottomSheetModalProvider,} from '@gorhom/bottom-sheet';
 import { SelectProvider } from '@mobile-reality/react-native-select-pro';
 import {NativeViewGestureHandler} from "react-native-gesture-handler";
+import {useEffect} from "react";
+import Moment from "moment";
 
 setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 
 export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
+
+    useEffect(() => {
+        Moment.updateLocale('fr', {
+            calendar: {
+                sameDay: '[Aujourd\'hui]',
+                nextDay: '[Demain]',
+                nextWeek: 'dddd',
+                lastDay: '[Hier]',
+                lastWeek: 'dddd [dernier]',
+                sameElse: 'DD/MM/YYYY'
+            }
+        })
+    });
 
     if (!isLoadingComplete) {
         return null;
