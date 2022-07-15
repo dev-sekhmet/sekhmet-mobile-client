@@ -114,7 +114,6 @@ export const checkVerification: (request: ICheckPhoneVerificationRequest) => App
 export const refreshTwilioToken: (request: ICheckPhoneVerificationRequest) => AppThunk =
     (request: ICheckPhoneVerificationRequest) =>
         async dispatch => {
-            console.log("A refreshingTwilioToken............");
             const result = await dispatch(refreshTwilioTokenApi(request));
             extractTokenAndGetUser(result, dispatch);
         };
@@ -160,7 +159,7 @@ export const getTwilioToken = () => async dispatch => {
     }
 };
 export const onRefreshSuccess = () => async dispatch => {
-        dispatch(resetRefreshSuccess());
+    dispatch(resetRefreshSuccess());
 };
 
 export const AuthenticationSlice = createSlice({

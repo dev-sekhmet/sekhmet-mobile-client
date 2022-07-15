@@ -26,8 +26,7 @@ const grey = '#F2F2F2';
 const blue = '#ECF3FE';
 type MediaType = 'image' | 'video' | 'audio' | 'file';
 type MediaData = { sid: string, type: MediaType, url: string };
-const width = Dimensions.get('screen').width;
-const height = Dimensions.get('screen').height;
+
 const MessageBox = (props: { navigation?: any, message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
     const {setAsMessageReply, message: propMessage, authUser} = props;
 
