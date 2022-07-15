@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import SekhmetActivityIndicator from "../SekhmetActivityIndicator";
 
 const AudioPlayer = ({ soundURI }) => {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -62,8 +63,8 @@ const AudioPlayer = ({ soundURI }) => {
 
     return (
         <View style={styles.sendAudioContainer}>
-            <Pressable onPress={playPauseSound}>
-                <Feather name={paused ? "play" : "pause"} size={24} color="gray" />
+            {sound && <><Pressable onPress={playPauseSound}>
+                <Feather name={paused ? "play" : "pause"} size={24} color="gray"/>
             </Pressable>
 
             <View style={styles.audiProgressBG}>
@@ -72,7 +73,8 @@ const AudioPlayer = ({ soundURI }) => {
                 />
             </View>
 
-            <Text>{getDuration()}</Text>
+            <Text>{getDuration()}</Text></>}
+            {!sound && <SekhmetActivityIndicator size="small" />}
         </View>
     );
 };

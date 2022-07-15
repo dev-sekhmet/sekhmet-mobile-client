@@ -159,7 +159,7 @@ export const getTwilioToken = () => async dispatch => {
     }
 };
 export const onRefreshSuccess = () => async dispatch => {
-        dispatch(resetRefreshSuccess());
+    dispatch(resetRefreshSuccess());
 };
 
 export const AuthenticationSlice = createSlice({

@@ -249,6 +249,10 @@ const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
     const colorScheme = useColorScheme();
+    const dispatch = useAppDispatch();
+    const onChangeSearch = query => {
+        dispatch(onPerformSearchQuery(query))
+    };
 
     return (
         <BottomTab.Navigator
