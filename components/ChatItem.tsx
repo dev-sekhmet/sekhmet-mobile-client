@@ -23,12 +23,6 @@ export default function ChatItem({item, navigation}: TwilioProps) {
     const [friendlyName, setFriendlyName] = useState("");
     const [imageUrl, setImageUrl] = useState("");
 
-    const updateUnreadMessageCount = (item: Conversation) => {
-        from(item.getUnreadMessagesCount()).subscribe(nb => {
-            dispatch(updateUnreadMessagesCount({channelSid: item.sid, unreadCount: nb}))
-        })
-    }
-
     const updateMessage = (channelSid: string, message: string, dateUpdated: Date | null) => {
         dispatch(updateLastMessage({
             channelSid,
@@ -37,6 +31,12 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                 dateUpdated
             }
         }));
+    }
+
+    const updateUnreadMessageCount = (item: Conversation) => {
+        from(item.getUnreadMessagesCount()).subscribe(nb => {
+            dispatch(updateUnreadMessagesCount({channelSid: item.sid, unreadCount: nb}))
+        })
     }
 
     useEffect(() => {
@@ -52,11 +52,7 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                 updateMessage(item.sid, message.body, message.dateUpdated);
             }
         })
-        item.on("messageAdded", (message: Message) => {
-            updateMessage(item.sid, message.body, message.dateUpdated);
-        });
-
-        item.on("updated", (data: { conversation: Conversation, updateReasons: ConversationUpdateReason[] }) => {
+        item.addListener("updated", (data: { conversation: Conversation, updateReasons: ConversationUpdateReason[] }) => {
             updateUnreadMessageCount(data.conversation);
         });
 

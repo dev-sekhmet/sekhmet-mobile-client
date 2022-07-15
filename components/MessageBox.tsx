@@ -28,6 +28,8 @@ const grey = '#F2F2F2';
 const blue = '#ECF3FE';
 type MediaType = 'image' | 'video' | 'audio' | 'file';
 type MediaData = { sid: string, type: MediaType, url: string };
+const width = Dimensions.get('screen').width;
+const height = Dimensions.get('screen').height;
 
 const MessageBox = (props: { navigation?: any, message: Message, authUser?: User, setAsMessageReply?: () => void }) => {
     const {setAsMessageReply, message: propMessage, authUser} = props;
@@ -38,8 +40,6 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     );
     const [isMe, setIsMe] = useState<boolean | null>(null);
     const [soundURI, setSoundURI] = useState<any>(null);
-
-    const {width} = useWindowDimensions();
     const {showActionSheetWithOptions} = useActionSheet();
     const [mediaContents, setMediaContents] = useState<MediaData[]>([]);
 
@@ -123,20 +123,25 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
 
 
     const confirmDelete = () => {
-        Alert.alert(
-            "Confirmer la Suppression",
-            "Voulez-vous vraiment supprimer ce message ?",
-            [
-                {
-                    text: "Supprimer",
-                    onPress: deleteMessage,
-                    style: "destructive",
-                },
-                {
-                    text: "Cancel",
-                },
-            ]
-        );
+        if (message.deleted) {
+            Alert.alert("Action impossible", "Message déja supprimé");
+        } else {
+            Alert.alert(
+                "Confirmer la Suppression",
+                "Voulez-vous vraiment supprimer ce message ?",
+                [
+                    {
+                        text: "Supprimer",
+                        onPress: deleteMessage,
+                        style: "destructive",
+                    },
+                    {
+                        text: "Cancel",
+                    },
+                ]
+            );
+        }
+
     };
 
     const onActionPress = (index) => {

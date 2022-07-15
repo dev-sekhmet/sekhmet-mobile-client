@@ -1,15 +1,11 @@
 import {TwilioProps} from "../types";
 import {Text, View} from "../components/Themed";
-import {Dimensions, FlatList, SafeAreaView, StyleSheet, TouchableOpacity} from "react-native";
+import {Dimensions, SafeAreaView, StyleSheet, TouchableOpacity} from "react-native";
 import ProfilAvatar from "../components/ProfilAvatar";
 import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
 import {Conversation, Participant} from "@twilio/conversations";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
-import {AntDesign, FontAwesome5} from "@expo/vector-icons";
-import {DataAstuces, DataProducts} from "./sampleData";
-import ProductItem from "../components/ProductItem";
-import AstuceItem from "../components/AstuceItem";
 import Moment from "moment";
 
 const width = Dimensions.get('screen').width;
@@ -26,8 +22,6 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
 
     const fetchConversation = async () => {
         const sid = route.params.clickedConversation.sid;
-        console.log("fetchConversation: ", sid);
-        console.log("twilioClient: ", twilioClient.version);
         if (twilioClient && sid) {
             twilioClient.getConversationBySid(sid).then(conversation => {
                 setConversation(conversation);
@@ -68,12 +62,14 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                 <View style={styles.admincontainer}>
                     <View style={{flexDirection: "row", backgroundColor: 'transparent'}}>
                         <TouchableOpacity style={styles.card}>
-                            <Text style={[styles.number, {color: Colors.light.sekhmetGreen}]}>{Moment(conversation.dateCreated).calendar()}</Text>
+                            <Text
+                                style={[styles.number, {color: Colors.light.sekhmetGreen}]}>{Moment(conversation.dateCreated).calendar()}</Text>
                             <Text style={{color: Colors.light.colorTextGrey}}>Date Creation</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.card]}>
 
-                            <Text style={[styles.number, {color: Colors.light.sekhmetGreen}]}>{participants.length}</Text>
+                            <Text
+                                style={[styles.number, {color: Colors.light.sekhmetGreen}]}>{participants.length}</Text>
                             <Text style={{color: Colors.light.colorTextGrey}}>Participants</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.card]}>

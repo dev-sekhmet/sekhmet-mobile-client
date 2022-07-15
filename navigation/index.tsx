@@ -9,7 +9,6 @@ import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/na
 import * as React from 'react';
 import {createContext, useEffect, useState} from 'react';
 import {Pressable, View} from 'react-native';
-import useColorScheme from '../hooks/useColorScheme';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -43,9 +42,6 @@ import SearchHidableBar from "../components/SearchHidableBar";
 import UserListScreen from "../screens/UserListScreen";
 import {Text} from "../components/Themed";
 import ConversationProfileSreen from "../screens/ConversationProfileSreen";
-
-export const ChatContext = createContext({});
-
 export default function Navigation({colorScheme}) {
 
     return (
@@ -97,7 +93,7 @@ function RootNavigator() {
         dispatch(getTwilioToken());
         if (twilioToken) {
             // const client = new Client(twilioToken, {logLevel: "debug"}).on('stateChanged', (state) => {
-            const client = new Client(twilioToken).on('stateChanged', (state) => {
+            const client = new Client(twilioToken).addListener('stateChanged', (state) => {
                 console.log("stateChanged", state);
                 if (state === 'initialized') {
                     setTwilioClient(client);
@@ -146,7 +142,7 @@ function RootNavigator() {
                     <MsgStack.Screen name="ConversationProfile"
                                      options={({route}) => ({
                                          sid: route.params.clickedConversation.sid,
-                                            title: '',
+                                         title: '',
                                          headerBackTitle: 'Messages'
                                      })}>
                         {props => <ConversationProfileSreen twilioClient={twilioClient} {...props} />}
@@ -248,12 +244,6 @@ const getRightView = (onChangeSearch) => {
 const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
-    const colorScheme = useColorScheme();
-    const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        dispatch(onPerformSearchQuery(query))
-    };
-
     return (
         <BottomTab.Navigator
             initialRouteName="Home"

@@ -40,15 +40,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                 const cons = await twilioClient.getSubscribedConversations();
                 setDualConversations(cons.items.filter(c => isConversationDual(c)));
                 setGroupConversations(cons.items.filter(c => isConversationGroup(c)));
-                twilioClient.on("conversationAdded", async (conversation: Conversation) => {
-                    conversation.on("typingStarted", (participant) => {
-                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
-                    });
-
-                    conversation.on("typingEnded", (participant) => {
-                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
-                    });
-                    console.log("New conversation", conversation.friendlyName);
+                twilioClient.addListener("conversationAdded", async (conversation: Conversation) => {
                     conversation.setAllMessagesUnread();
                     if (isConversationGroup(conversation)) {
                         setGroupConversations(oldConversations => [conversation, ...oldConversations]);
@@ -56,7 +48,7 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                         setDualConversations(oldConversations => [conversation, ...oldConversations]);
                     }
                 });
-                twilioClient.on("conversationRemoved", (conversation: Conversation) => {
+                twilioClient.addListener("conversationRemoved", (conversation: Conversation) => {
 
                 });
             }
