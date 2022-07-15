@@ -3,7 +3,7 @@ import React, {useEffect, useState} from "react";
 import {Conversation} from "@twilio/conversations";
 import {View} from "../components/Themed";
 import UserItem from "../components/UserItem";
-import {FlatList, StyleSheet, TextInput} from "react-native";
+import {Alert, FlatList, StyleSheet, TextInput} from "react-native";
 import {IUser} from "../model/user.model";
 import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
 import {
@@ -85,15 +85,37 @@ export default function UserListScreen({navigation, route}) {
         return selectedUsers.length >= 2;
     }
 
-    const createGroup = () => {
+    const createGroup = (groupName: string) => {
+        if (!groupName){
+            enterGroupName();
+            return;
+        }
         if (isValidUserNumber()) {
             dispatch(findOrCreateConversation({
                 ids: selectedUsers.map(user => user.id),
-                friendlyName: "testGROUPGO",
-                description: "testDescriptionGROUPGO",
+                friendlyName: groupName,
+                description: "",
             }));
         }
     }
+
+    const enterGroupName = () => {
+        Alert.prompt(
+            "Nom du groupe",
+            "Entrer un nom pour le groupe",
+            [
+                {
+                    text: "Créer le groupe",
+                    onPress: (groupName) => createGroup(groupName),
+                    style: "destructive",
+                },
+                {
+                    text: "Cancel",
+                },
+            ],
+            "plain-text",
+        );
+    };
 
 
     let usersWithoutMe = [];
@@ -128,7 +150,7 @@ export default function UserListScreen({navigation, route}) {
             color={Colors.light.sekhmetOrange}
             title={"Suivant"}
             icon={{name: "comment", color: "white"}}
-            onPress={createGroup}
+            onPress={enterGroupName}
         />}
     </View>;
 }

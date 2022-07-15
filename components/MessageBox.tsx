@@ -116,11 +116,11 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
 
     const confirmDelete = () => {
         Alert.alert(
-            "Confirm delete",
-            "Are you sure you want to delete the message?",
+            "Confirmer la Suppression",
+            "Voulez-vous vraiment supprimer ce message ?",
             [
                 {
-                    text: "Delete",
+                    text: "Supprimer",
                     onPress: deleteMessage,
                     style: "destructive",
                 },
@@ -138,7 +138,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
             if (isMe) {
                 confirmDelete();
             } else {
-                Alert.alert("Can't perform action", "This is not your message");
+                Alert.alert("Action impossible", "Ceci n'est pas votre message");
             }
         }
     };

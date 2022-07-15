@@ -73,8 +73,6 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
 
      const addAuthors = async (items: TwilioMessage[]) => {
         return await Promise.all(items.map(async msg => {
-            console.log("msg: ", msg.body)
-            console.log("lastUpdatedBy: ", msg.author)
             const user = await twilioClient.getUser(msg.author);
             return {msg: msg, author: user.friendlyName}
         }));
@@ -133,8 +131,6 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
             return;
         }
         const moreMessages = result.items;
-        console.log("result.items ", result.items.length)
-        console.log("result.hasPrevPa ge ", result.hasPrevPage)
         setPaginator(result);
         setHasMore(result.hasPrevPage);
         (async () => {
