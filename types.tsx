@@ -6,7 +6,7 @@
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Client, Conversation} from "@twilio/conversations";
+import {Client, Conversation, Message as TwilioMessage} from "@twilio/conversations";
 
 declare global {
     namespace ReactNavigation {
@@ -84,6 +84,8 @@ export type TwilioProps = {
     route?: any;
     navigation?: any;
 };
+
+export type Message = { msg: TwilioMessage, author: string };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,
     NativeStackScreenProps<RootStackParamList>>;

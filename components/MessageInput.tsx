@@ -8,7 +8,8 @@ import AudioPlayer from './media/AudioPlayer';
 import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
-import {Conversation, Message} from "@twilio/conversations";
+import {Conversation} from "@twilio/conversations";
+import {Message} from "../types";
 
 
 const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {conversation: Conversation, messageReplyTo:Message, removeMessageReplyTo:() =>void}) => {
@@ -176,8 +177,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
 
     const getBlob = async (uri: string) => {
         const respone = await fetch(uri);
-        const blob = await respone.blob();
-        return blob;
+        return await respone.blob();
     };
 
     async function startRecording() {

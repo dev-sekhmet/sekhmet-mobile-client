@@ -126,7 +126,7 @@ export default function UserListScreen({navigation, route}) {
             size="small"
             disabled={!isValidUserNumber()}
             color={Colors.light.sekhmetOrange}
-            title={"Terminer"}
+            title={"Suivant"}
             icon={{name: "comment", color: "white"}}
             onPress={createGroup}
         />}

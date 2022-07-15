@@ -6,12 +6,14 @@ import AudioPlayer from './media/AudioPlayer';
 import MessageReply from './MessageReply';
 import {Text, View} from "./Themed";
 import Moment from 'moment';
-import {Media, Message, User} from "@twilio/conversations";
+import {Media, User} from "@twilio/conversations";
 import {forkJoin, from, map,} from "rxjs";
 import {transparent} from "react-native-paper/lib/typescript/styles/colors";
 import VideoPlayer from "./media/video/VideoPlayer";
 import ImageView from "./media/ImageView";
 import {APP_TIME_FORMAT} from "../constants/constants";
+import {Message} from "../types";
+import Colors from "../constants/Colors";
 
 const grey = '#F2F2F2';
 const blue = '#ECF3FE';
@@ -35,11 +37,8 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
 
     useEffect(() => {
         setMessage(propMessage);
+
     }, [propMessage]);
-
-    useEffect(() => {
-
-    }, [message]);
 
     useEffect(() => {
         // subscription to websocket chat
@@ -62,9 +61,10 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
         setAsRead();
     }, [isMe, message]);
 
+    const msg = message.msg;
     useEffect(() => {
-        if (message.attachedMedia) {
-            forkJoin(message.attachedMedia.map(value => {
+        if (msg.attachedMedia) {
+            forkJoin(msg.attachedMedia.map(value => {
                 return from<Promise<string | null>>(value.getContentTemporaryUrl())
                     .pipe(map(url => {
                         const res: MediaData = {sid:value.sid, type: 'file', url}
@@ -84,13 +84,13 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
             });
         }
         const checkIfMe = async () => {
-            if (!message.author) {
+            if (!message.msg.author) {
                 return;
             }
-            setIsMe(message.author === authUser.identity);
+            setIsMe(message.msg.author === authUser.identity);
         };
         checkIfMe();
-        if (!message?.body) {
+        if (!msg?.body) {
             return;
         }
 
@@ -159,7 +159,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     const getFileUrl = async (media: Media): Promise<string> => {
         return await media.getContentTemporaryUrl().then();
     };
-    if (!message.author) {
+    if (!message.msg.author) {
         return <ActivityIndicator/>;
     }
 
@@ -174,13 +174,16 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
                     isMe ? styles.rightContainer : styles.leftContainer,
                     {width:  "auto"},
                 ]}>
+                {!isMe && <Text style={styles.author}>
+                    {message.author}
+                </Text>}
                 {repliedTo && <MessageReply message={repliedTo}/>}
                 <View style={styles.row}>
-                    {message.type === 'media' && message.attachedMedia && (
+                    {msg.type === 'media' && msg.attachedMedia && (
                         <FlatList
                             data={mediaContents}
                             renderItem={({item, index}) => (
-                                <View style={{marginBottom: message.body ? 10 : 0}}>
+                                <View style={{marginBottom: msg.body ? 10 : 0}}>
                                     {item.type === 'image' ? <ImageView
                                             uri={item.url}
                                             navigator={props.navigation}
@@ -211,32 +214,21 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
                         />
 
                     )}
-                    {!!message.body && (
+                    {!!msg.body && (
                         <View>
                             <Text style={{backgroundColor: isMe ? blue : grey}}>
-                                {isDeleted ? "message deleted" : message.body}
+                                {isDeleted ? "message deleted" : msg.body}
                             </Text>
                         </View>
 
                     )
                     }
-
-                    {isMe && !!message.sid && (
-                        <Ionicons
-                            name={
-                                message.sid ? "checkmark" : "checkmark-done"
-                            }
-                            size={16}
-                            color="gray"
-                            style={{marginHorizontal: 5}}
-                        />
-                    )}
                 </View>
             </View>
             <Text style={[
                 isMe ? styles.rightHour : styles.leftHour,
                 {width: soundURI ? "75%" : "auto"},
-            ]}>{Moment(message.dateUpdated).format(APP_TIME_FORMAT)}</Text>
+            ]}>{Moment(msg.dateUpdated).format(APP_TIME_FORMAT)}</Text>
         </Pressable>
     );
 };
@@ -287,6 +279,10 @@ const styles = StyleSheet.create({
         color: '#8C8C8C',
         alignItems: "flex-end",
     },
+    author: {
+        color: Colors.light.sekhmetOrange,
+        fontWeight: "bold",
+    }
 });
 
 export default MessageBox;

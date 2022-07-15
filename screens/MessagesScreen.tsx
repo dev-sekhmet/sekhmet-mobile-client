@@ -42,7 +42,6 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                 const cons = await twilioClient.getSubscribedConversations();
                 setDualConversations(cons.items.filter(c => isConversationDual(c)));
                 setGroupConversations(cons.items.filter(c => isConversationGroup(c)));
-                console.log("cons", cons.items.forEach(c => console.log("CONVV", c.friendlyName, c.uniqueName)));
                 twilioClient.on("conversationAdded", async (conversation: Conversation) => {
                     conversation.on("typingStarted", (participant) => {
                         // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
