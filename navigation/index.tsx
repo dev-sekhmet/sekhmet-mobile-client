@@ -40,6 +40,7 @@ import {Client} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
+import SearchWidget from "../components/SearchWidget";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -197,59 +198,6 @@ function RootNavigator() {
     );
 }
 
-const getRightView = ({navigation}) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showInputSearch, setShowInputSearch] = useState(false);
-    const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        setSearchQuery(query);
-        dispatch(onPerformSearchQuery(query))
-    };
-
-    useEffect(() => {
-        return () => {
-            setShowInputSearch(false)
-        };
-    }, []);
-
-    return <View style={{flexDirection: 'row'}}>
-        {showInputSearch && <Searchbar
-            placeholder="Search"
-            onChangeText={onChangeSearch}
-            value={searchQuery}
-            autoFocus={true}
-            onBlur={() => setShowInputSearch(false)}
-            style={{width: width * 0.8, height: 40}}
-        />}
-        {!showInputSearch && <Pressable
-            onPress={() => setShowInputSearch(true)}
-            style={({pressed}) => ({
-                opacity: pressed ? 0.5 : 1,
-            })}>
-            <FontAwesome
-                name="search"
-                size={25}
-                color="grey"
-                style={{marginRight: 15, fontWeight: 'bold'}}
-            />
-        </Pressable>}
-
-        <Pressable
-            onPress={() => {
-            }}
-            style={({pressed}) => ({
-                opacity: pressed ? 0.5 : 1,
-            })}>
-            <MaterialIcons
-                name="more-vert"
-                size={25}
-                color="grey"
-                style={{marginRight: 15, fontWeight: 'bold'}}
-            />
-        </Pressable>
-    </View>;
-}
-
 
 /**
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
@@ -259,6 +207,10 @@ const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
     const colorScheme = useColorScheme();
+    const dispatch = useAppDispatch();
+    const onChangeSearch = query => {
+        dispatch(onPerformSearchQuery(query))
+    };
 
     return (
         <BottomTab.Navigator
@@ -288,7 +240,23 @@ function BottomTabNavigator({twilioClient}) {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () => getRightView({navigation})
+                    headerRight: () =>  <View style={{flexDirection: 'row'}}>
+                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true} />
+                        <Pressable
+                            onPress={() => {
+                            }}
+                            style={({pressed}) => ({
+                                opacity: pressed ? 0.5 : 1,
+                            })}>
+                            <MaterialIcons
+                                name="more-vert"
+                                size={25}
+                                color="grey"
+                                style={{marginRight: 15, fontWeight: 'bold'}}
+                            />
+                        </Pressable>
+
+                    </View>
                 })}
             />
             <BottomTab.Screen
@@ -297,7 +265,22 @@ function BottomTabNavigator({twilioClient}) {
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
-                    headerRight: () => getRightView({navigation}),
+                    headerRight: () => <View style={{flexDirection: 'row'}}>
+                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true}/>
+                        <Pressable
+                            onPress={() => {
+                            }}
+                            style={({pressed}) => ({
+                                opacity: pressed ? 0.5 : 1,
+                            })}>
+                            <MaterialIcons
+                                name="more-vert"
+                                size={25}
+                                color="grey"
+                                style={{marginRight: 15, fontWeight: 'bold'}}
+                            />
+                        </Pressable>
+                    </View>,
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
             >

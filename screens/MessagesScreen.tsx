@@ -17,6 +17,8 @@ import {findOrCreateConversationDual} from "../api/conversation-write/conversati
 import {reset} from "../api/settings/settings.reducer";
 import {getFriendlyName} from "../shared/conversation/conversation.util";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
+import SearchWidget from "../components/SearchWidget";
+import {onPerformSearchQuery} from "../api/search/search.reducer";
 
 
 const height = Dimensions.get('screen').height;
@@ -181,10 +183,15 @@ const Discussion = ({navigation, conversations, twilioClient}: {
     }
 
     const getListUsersModal = () => {
+        const onChangeSearch = query => {
+            console.log("query", query);
+        };
+
         return <BottomSheetModal
             ref={bottomSheetModalRef}
-
             index={1}
+            enablePanDownToClose={true}
+            stackBehavior='replace'
             style={{
                 shadowColor: "#000",
                 shadowOffset: {
@@ -199,6 +206,7 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             snapPoints={snapPoints}
             onChange={handleSheetChanges}
         >
+            <SearchWidget onChangeSearch={onChangeSearch} style={{alignSelf: 'center', marginBottom:10}} iconStyle={{alignSelf: 'flex-end'}}/>
             <FlatList
                 data={users}
                 renderItem={({item}) => (

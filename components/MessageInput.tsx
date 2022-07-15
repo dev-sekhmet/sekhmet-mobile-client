@@ -9,15 +9,22 @@ import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
 import {Conversation, Message} from "@twilio/conversations";
+import {ImageInfo, ImagePickerCancelledResult} from "expo-image-picker";
+import VideoPlayer from "./media/video/VideoPlayer";
 
 
-const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {conversation: Conversation, messageReplyTo:Message, removeMessageReplyTo:() =>void}) => {
+const MessageInput = ({
+                          conversation,
+                          messageReplyTo,
+                          removeMessageReplyTo
+                      }: { conversation: Conversation, messageReplyTo: Message, removeMessageReplyTo: () => void }) => {
     const [message, setMessage] = useState("");
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
     const [image, setImage] = useState<string | null>(null);
     const [progress, setProgress] = useState(0);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [soundURI, setSoundURI] = useState<string | null>(null);
+    const [videoURI, setVideoURI] = useState<string | null>(null);
 
     const navigation = useNavigation();
 
@@ -79,7 +86,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
     };
 
     const sendMessage = async () => {
-       conversation.sendMessage(message);
+        conversation.sendMessage(message);
     };
 
     const updateLastMessage = async (newMessage) => {
@@ -91,10 +98,13 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
     };
 
     const onPlusClicked = () => {
-        console.warn("On plus clicked");
+        // console.warn("On plus clicked");
     };
 
     const onPress = () => {
+        if (videoURI) {
+            sendVideo();
+        }
         if (image) {
             sendImage();
         } else if (soundURI) {
@@ -104,7 +114,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
         } else {
             onPlusClicked();
         }
-        setMessage("");
+        resetFields();
         conversation.setAllMessagesRead();
     };
 
@@ -114,70 +124,64 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
         setImage(null);
         setProgress(0);
         setSoundURI(null);
+        setVideoURI(null);
         removeMessageReplyTo();
     };
 
-    // Image picker
+    const setImageOrVideoUri = (result: ImageInfo) => {
+        if (!result.cancelled) {
+            if (result.type === 'video') {
+                setVideoURI(result.uri);
+            }
+            if (result.type === 'image') {
+                setImage(result.uri);
+            }
+        }
+    }
+
+// Image picker
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 0.5,
         });
-
-        if (!result.cancelled) {
-            // @ts-ignore
-            setImage(result.uri);
-        }
+        console.log("result", result);
+        // @ts-ignore
+        setImageOrVideoUri(result);
     };
 
     const takePhoto = async () => {
         const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
             aspect: [4, 3],
         });
-
-        if (!result.cancelled) {
-            // @ts-ignore
-            setImage(result.uri);
-        }
+        // @ts-ignore
+        setImageOrVideoUri(result);
     };
 
     const progressCallback = (progress) => {
         setProgress(progress.loaded / progress.total);
     };
 
+    const buildFileInfo = (fileType, file) => {
+        const filename = file.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        console.log("match", match);
+        const type = match ? `${fileType}/${match[1]}` : `${fileType}`;
+        return {filename, type};
+    }
+
     const sendImage = async () => {
-        /*if (!image) {
+        if (!image) {
             return;
         }
-        const blob = await getBlob(image);
-        const { key } = await Storage.put(`${uuidv4()}.png`, blob, {
-            progressCallback,
-        });
-
-        // send message
-        const user = await Auth.currentAuthenticatedUser();
-        const newMessage = await DataStore.save(
-            new Message({
-                content: message,
-                image: key,
-                userID: user.attributes.sub,
-                chatroomID: chatRoom.id,
-                replyToMessageID: messageReplyTo?.id,
-            })
-        );
-
-        updateLastMessage(newMessage);
-
-        resetFields();*/
-    };
-
-    const getBlob = async (uri: string) => {
-        const respone = await fetch(uri);
-        const blob = await respone.blob();
-        return blob;
+        const fileData = new FormData();
+        let {filename, type} = buildFileInfo("image", image);
+        // @ts-ignore
+        fileData.append("image", {uri: image, name: filename, type});
+        conversation.sendMessage(fileData);
     };
 
     async function startRecording() {
@@ -219,32 +223,25 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
     }
 
     const sendAudio = async () => {
-        /* if (!soundURI) {
-             return;
-         }
-         const uriParts = soundURI.split(".");
-         const extenstion = uriParts[uriParts.length - 1];
-         const blob = await getBlob(soundURI);
-         const { key } = await Storage.put(`${uuidv4()}.${extenstion}`, blob, {
-             progressCallback,
-         });
+        if (!soundURI) {
+            return;
+        }
+        const fileData = new FormData();
+        let {filename, type} = buildFileInfo("audio", soundURI);
+        // @ts-ignore
+        fileData.append("audio", {uri: soundURI, name: filename, type});
+        conversation.sendMessage(fileData);
+    };
 
-         // send message
-         const user = await Auth.currentAuthenticatedUser();
-         const newMessage = await DataStore.save(
-             new Message({
-                 content: message,
-                 audio: key,
-                 userID: user.attributes.sub,
-                 chatroomID: chatRoom.id,
-                 status: "SENT",
-                 replyToMessageID: messageReplyTo?.id,
-             })
-         );
-
-         updateLastMessage(newMessage);
-
-         resetFields();*/
+    const sendVideo = async () => {
+        if (!videoURI) {
+            return;
+        }
+        const fileData = new FormData();
+        let {filename, type} = buildFileInfo("video", videoURI);
+        // @ts-ignore
+        fileData.append("video", {uri: videoURI, name: filename, type});
+        conversation.sendMessage(fileData);
     };
 
     return (
@@ -265,7 +262,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
                 >
                     <View style={{flex: 1}}>
                         <Text>Reply to:</Text>
-                        <MessageBox  message={messageReplyTo}/>
+                        <MessageBox message={messageReplyTo}/>
                     </View>
                     <Pressable onPress={() => removeMessageReplyTo()}>
                         <AntDesign
@@ -314,6 +311,11 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
             )}
 
             {soundURI && <AudioPlayer soundURI={soundURI}/>}
+{/*            {videoURI && <VideoPlayer
+                style={{
+                    minHeight: 150,
+                    minWidth: 150
+                }} uri={videoURI}/>}*/}
 
             <View style={styles.row}>
                 <View style={styles.inputContainer}>
@@ -366,7 +368,7 @@ const MessageInput = ({conversation, messageReplyTo, removeMessageReplyTo}: {con
                 </View>
 
                 <Pressable onPress={onPress} style={styles.buttonContainer}>
-                    {message || image || soundURI ? (
+                    {message || image || videoURI || soundURI ? (
                         <Ionicons name="send" size={18} color={"white"}/>
                     ) : (
                         <AntDesign name="plus" size={24} color="white"/>

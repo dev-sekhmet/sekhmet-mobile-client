@@ -1,5 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, useWindowDimensions,} from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    Pressable,
+    StyleSheet,
+    useWindowDimensions,
+} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useActionSheet} from '@expo/react-native-action-sheet';
 import AudioPlayer from './media/AudioPlayer';
@@ -185,9 +194,10 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
                                             uri={item.url}
                                             navigator={props.navigation}
                                             style={{
-                                                minHeight: 150,
-                                                minWidth: 150
-                                            }}/> :
+                                                minHeight: height*0.1,
+                                                minWidth: width*0.5
+                                            }}/>
+                                        :
                                         item.type === 'audio' ?
                                             <AudioPlayer soundURI={item.url}/> :
                                             item.type === 'video' ?
@@ -220,7 +230,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
 
                     )
                     }
-
+{/*
                     {isMe && !!message.sid && (
                         <Ionicons
                             name={
@@ -230,7 +240,7 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
                             color="gray"
                             style={{marginHorizontal: 5}}
                         />
-                    )}
+                    )}*/}
                 </View>
             </View>
             <Text style={[

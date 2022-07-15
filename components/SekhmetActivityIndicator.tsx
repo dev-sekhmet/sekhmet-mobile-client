@@ -2,8 +2,8 @@ import Colors from "../constants/Colors";
 import {ActivityIndicator, StyleSheet} from "react-native";
 import React from "react";
 
-const SekhmetActivityIndicator = () => {
-    return <ActivityIndicator style={styles.loading} size="large" color={Colors.light.sekhmetGreen}/>
+const SekhmetActivityIndicator = (props) => {
+    return <ActivityIndicator style={props.style? props.style : styles.loading} size={props.size? props.size :'large'} color={Colors.light.sekhmetGreen}/>
 }
 
 const styles = StyleSheet.create({
