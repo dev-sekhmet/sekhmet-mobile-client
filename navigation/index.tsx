@@ -8,13 +8,12 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
 import {createContext, useEffect, useState} from 'react';
-import {Dimensions, Pressable, View} from 'react-native';
-import useColorScheme from '../hooks/useColorScheme';
+import {Pressable, View} from 'react-native';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, InputPhoneParamList, ProductParamList,} from '../types';
+import {ChatParamList, InputPhoneParamList, ProductParamList, UserListParamList,} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -31,24 +30,38 @@ import {useAppDispatch, useAppSelector} from '../api/store';
 import {
     getOnBoarding,
     getSession,
-    getTwilioToken, onRefreshSuccess,
+    getTwilioToken,
+    onRefreshSuccess,
     refreshTwilioToken
 } from "../api/authentification/authentication.reducer";
-import {Searchbar} from 'react-native-paper';
-import {onPerformSearchQuery} from "../api/search/search.reducer";
-import {Client} from "@twilio/conversations";
+import {Client, Conversation} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
-import SearchWidget from "../components/SearchWidget";
-
-const width = Dimensions.get('screen').width;
-const height = Dimensions.get('screen').height;
-
-export const ChatContext = createContext({});
-
+import SearchHidableBar from "../components/SearchHidableBar";
+import UserListScreen from "../screens/UserListScreen";
+import {Text} from "../components/Themed";
+import ConversationProfileSreen from "../screens/ConversationProfileSreen";
+import Toast from "react-native-toast-message";
+import {handlePromiseRejection, updateTypingIndicator} from "../shared/helpers";
+import {addNotifications} from "../api/notification/notification.reducer";
+import {endTyping, startTyping} from "../api/typing-data/typing-data.reducer";
 export default function Navigation({colorScheme}) {
+    const notifications = useAppSelector(state => state.notifications);
+    useEffect(() => {
+        if (!notifications.length) {
+            return;
+        }
+        notifications.forEach(notification =>
+            Toast.show({
+                type: notification.type,
+                text1: notification.title,
+                position: 'bottom',
+                text2: notification.message
+            })
+        );
 
+    }, [notifications]);
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
@@ -65,6 +78,7 @@ export default function Navigation({colorScheme}) {
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
+const UserList = createStackNavigator<UserListParamList>();
 const ProductStack = createStackNavigator<ProductParamList>();
 const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 
@@ -97,21 +111,36 @@ function RootNavigator() {
         dispatch(getTwilioToken());
         if (twilioToken) {
             // const client = new Client(twilioToken, {logLevel: "debug"}).on('stateChanged', (state) => {
-            const client = new Client(twilioToken).on('stateChanged', (state) => {
+            const client = new Client(twilioToken).addListener('stateChanged', (state) => {
                 console.log("stateChanged", state);
                 if (state === 'initialized') {
                     setTwilioClient(client);
-                    console.log("Init Good");
+
+
+
+                    client.addListener("conversationAdded", async (conversation: Conversation) => {
+                        conversation.addListener("typingStarted", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, startTyping), addNotifications);
+                        });
+                        client.user
+
+                        conversation.addListener("typingEnded", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, endTyping), addNotifications);
+                        });
+                    });
+
+
+
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
                         refreshingTwilioToken();
                     });
                 }
+
                 if (state === 'failed') {
                     refreshingTwilioToken();
                 }
             });
-            console.log(account);
         }
         return () => {
             twilioClient?.removeAllListeners();
@@ -124,7 +153,13 @@ function RootNavigator() {
         dispatch(getOnBoarding());
     }, []);
 
-
+    const gotToConvProfil = (sid: string, navigation) => {
+        navigation.navigate("ConversationProfile", {
+            clickedConversation: {
+                sid
+            }
+        });
+    };
     return (
         onBoardingFinish ?
             account?.firstName && account?.lastName && account?.email ?
@@ -134,12 +169,28 @@ function RootNavigator() {
                         {props => <BottomTabNavigator twilioClient={twilioClient} {...props} />}
                     </Stack.Screen>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
+                    <UserList.Screen name="UserList" component={UserListScreen} options={({route}) => ({
+                        title: route.params.title,
+                        headerBackTitle: 'Messages'
+                    })}/>
+                    <MsgStack.Screen name="ConversationProfile"
+                                     options={({route}) => ({
+                                         sid: route.params.clickedConversation.sid,
+                                         title: '',
+                                         headerBackTitle: 'Messages'
+                                     })}>
+                        {props => <ConversationProfileSreen twilioClient={twilioClient} {...props} />}
+                    </MsgStack.Screen>
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
                     <MsgStack.Screen name="Chat"
-                                     options={({route}) => ({
-                                         title: route.params.clickedConversation.name,
+                                     options={({route, navigation}) => ({
+                                         headerTitle: () =>
+                                             <Pressable
+                                                 onPress={() => gotToConvProfil(route.params.clickedConversation.sid, navigation)}>
+                                                 <Text>{route.params.clickedConversation.name}</Text>
+                                             </Pressable>,
                                          headerBackTitle: 'Messages'
                                      })}>
                         {props => <ChatScreen twilioClient={twilioClient} {...props} />}
@@ -199,6 +250,27 @@ function RootNavigator() {
 }
 
 
+const getRightView = (onChangeSearch) => {
+    return <View style={{flexDirection: 'row'}}>
+
+        <SearchHidableBar onChangeSearch={onChangeSearch} value={''}/>
+        <Pressable
+            onPress={() => {
+            }}
+            style={({pressed}) => ({
+                opacity: pressed ? 0.5 : 1,
+            })}>
+            <MaterialIcons
+                name="more-vert"
+                size={25}
+                color="grey"
+                style={{marginRight: 15, fontWeight: 'bold'}}
+            />
+        </Pressable>
+    </View>;
+}
+
+
 /**
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
  * https://reactnavigation.org/docs/bottom-tab-navigator
@@ -206,12 +278,6 @@ function RootNavigator() {
 const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
-    const colorScheme = useColorScheme();
-    const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        dispatch(onPerformSearchQuery(query))
-    };
-
     return (
         <BottomTab.Navigator
             initialRouteName="Home"
@@ -240,23 +306,8 @@ function BottomTabNavigator({twilioClient}) {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () =>  <View style={{flexDirection: 'row'}}>
-                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true} />
-                        <Pressable
-                            onPress={() => {
-                            }}
-                            style={({pressed}) => ({
-                                opacity: pressed ? 0.5 : 1,
-                            })}>
-                            <MaterialIcons
-                                name="more-vert"
-                                size={25}
-                                color="grey"
-                                style={{marginRight: 15, fontWeight: 'bold'}}
-                            />
-                        </Pressable>
-
-                    </View>
+                    headerRight: () => getRightView((search) => console.log('Search', {search})
+                    )
                 })}
             />
             <BottomTab.Screen
@@ -265,22 +316,7 @@ function BottomTabNavigator({twilioClient}) {
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
                     tabBarBadge: 5,
-                    headerRight: () => <View style={{flexDirection: 'row'}}>
-                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true}/>
-                        <Pressable
-                            onPress={() => {
-                            }}
-                            style={({pressed}) => ({
-                                opacity: pressed ? 0.5 : 1,
-                            })}>
-                            <MaterialIcons
-                                name="more-vert"
-                                size={25}
-                                color="grey"
-                                style={{marginRight: 15, fontWeight: 'bold'}}
-                            />
-                        </Pressable>
-                    </View>,
+                    headerRight: () => getRightView((search) => console.log('Search', {search})),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
             >

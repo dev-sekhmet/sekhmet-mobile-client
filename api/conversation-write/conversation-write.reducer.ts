@@ -20,9 +20,11 @@ export type ConversationWriteState = Readonly<typeof initialState>;
 // Actions
 const apiUrl = '/conversations';
 
-export const findOrCreateConversationDual = createAsyncThunk('conversations/findOrCreateConversationDual', async (id: string) => axiosInstance.get<any>(`${apiUrl}/${id}/user?`), {
-    serializeError: serializeAxiosError,
-});
+export const findOrCreateConversation = createAsyncThunk('conversations/findOrCreateConversation',
+async (conversationDto: any) => axiosInstance.post<any>(`${apiUrl}`, conversationDto), {
+    serializeError: serializeAxiosError
+}
+);
 
 export const ConversationWriteStateSlice = createSlice({
     name: 'conversations',
@@ -34,17 +36,17 @@ export const ConversationWriteStateSlice = createSlice({
     },
     extraReducers(builder) {
         builder
-            .addCase(findOrCreateConversationDual.pending, state => {
+            .addCase(findOrCreateConversation.pending, state => {
                 state.loading = true;
                 state.errorMessage = null;
                 state.updateSuccess = false;
             })
-            .addCase(findOrCreateConversationDual.rejected, state => {
+            .addCase(findOrCreateConversation.rejected, state => {
                 state.loading = false;
                 state.updateSuccess = false;
                 state.updateFailure = true;
             })
-            .addCase(findOrCreateConversationDual.fulfilled, (state, action) => {
+            .addCase(findOrCreateConversation.fulfilled, (state, action) => {
                 state.loading = false;
                 state.updateSuccess = true;
                 state.updateFailure = false;

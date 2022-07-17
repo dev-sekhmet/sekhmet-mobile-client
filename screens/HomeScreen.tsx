@@ -20,10 +20,6 @@ export default function HomeScreen({navigation}) {
     const [items, setItems] = useState([false, false]);
     const [isRefreshing, setRefresh] = useState(false);
     const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities, [AUTHORITIES.ADMIN]));
-    useEffect(() => {
-        console.log("isAdmin ", isAdmin);
-    }, [])
-
     const refreshData = async () => {
         setRefresh(true);
 

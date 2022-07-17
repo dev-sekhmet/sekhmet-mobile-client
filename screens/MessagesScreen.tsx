@@ -4,61 +4,54 @@ import {Text, View} from '../components/Themed';
 import Colors from "../constants/Colors";
 import ChatItem from "../components/ChatItem";
 import * as React from "react";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Badge, FAB} from "react-native-elements";
+import {useEffect, useState} from "react";
+import {Badge} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {Client, Conversation} from "@twilio/conversations";
+import {Conversation} from "@twilio/conversations";
 import {TwilioProps} from "../types";
-import {getUsers} from "../api/user-management/user-management.reducer";
-import {IUser} from "../model/user.model";
-import {BottomSheetModal} from "@gorhom/bottom-sheet";
-import UserItem from "../components/UserItem";
-import {findOrCreateConversationDual} from "../api/conversation-write/conversation-write.reducer";
 import {reset} from "../api/settings/settings.reducer";
-import {getFriendlyName} from "../shared/conversation/conversation.util";
+import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
-import SearchWidget from "../components/SearchWidget";
-import {onPerformSearchQuery} from "../api/search/search.reducer";
-
+import {hasAnyAuthority} from "../components/PrivateRoute";
+import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
 
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
-    const searchQuery = useAppSelector(state => state.search.searchQuery);
     const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
     const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
-    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [dualConversations, setDualConversations] = useState<Conversation[]>([]);
+    const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
+
+    const isConversationGroup = (c: Conversation): boolean => {
+        return isConversation(c, CONVERSATION_TYPE.GROUP);
+    }
+
+    const isConversationDual = (c: Conversation): boolean => {
+        return isConversation(c, CONVERSATION_TYPE.DUAL);
+    }
+    const isConversation = (c: Conversation, type: string): boolean => {
+        return c.uniqueName.includes(type);
+    }
 
     useEffect(() => {
-        console.log("twilioClient outif", twilioClient?.version);
         if (twilioClient) {
-            console.log("twilioClient inif", twilioClient.version);
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();
-                setConversations(cons.items);
-
-                twilioClient.on("conversationAdded", async (conversation: Conversation) => {
-                    conversation.on("typingStarted", (participant) => {
-                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
-                    });
-
-                    conversation.on("typingEnded", (participant) => {
-                        // handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
-                    });
-                    console.log("New conversation", conversation.friendlyName);
-                    setConversations(oldConversations => [conversation, ...oldConversations]);
+                setDualConversations(cons.items.filter(c => isConversationDual(c)));
+                setGroupConversations(cons.items.filter(c => isConversationGroup(c)));
+                twilioClient.addListener("conversationAdded", async (conversation: Conversation) => {
                     conversation.setAllMessagesUnread();
-                    if (conversation.uniqueName.includes("GROUPE")){
-                        console.log("GROUPE", conversation.uniqueName);
-
+                    if (isConversationGroup(conversation)) {
+                        setGroupConversations(oldConversations => [conversation, ...oldConversations]);
+                    } else {
+                        setDualConversations(oldConversations => [conversation, ...oldConversations]);
                     }
                 });
-                twilioClient.on("conversationRemoved", (conversation: Conversation) => {
+                twilioClient.addListener("conversationRemoved", (conversation: Conversation) => {
 
                 });
             }
-
-
             initConversations();
         }
 
@@ -95,130 +88,40 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                                 </View>;
                             }
                         }}
-                        children={() => <Discussion navigation={navigation} conversations={conversations}
-                                                    twilioClient={twilioClient}/>}/>
+                        children={() => <Discussion navigation={navigation} conversations={dualConversations}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
                             tabBarLabel: () => <View style={styles.tabItem}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
                             </View>
                         }}
-                        children={() => <Groupes navigation={navigation} conversations={conversations}/>}/>
+                        children={() => <Groupes navigation={navigation} conversations={groupConversations}/>}/>
 
         </Tab.Navigator>
 
     );
 }
 
-const Discussion = ({navigation, conversations, twilioClient}: {
-    twilioClient?: Client;
-    conversations?: Conversation[];
-    navigation?: any;
-}) => {
+const Discussion = ({navigation, conversations}: { conversations?: Conversation[]; navigation?: any; }) => {
     const dispatch = useAppDispatch();
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
-    const totalItems = useAppSelector<number>(state => state.userManagement.totalItems);
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
-    const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
-    const account = useAppSelector(state => state.authentification.account);
-    const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
-        activePage: 0,
-        sort: 'id',
-        order: 'DESC'
-    });
-    // callbacks
-    const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
-    }, []);
-    const snapPoints = useMemo(() => ['100%', '80%'], []);
 
-    useEffect(()=>{
-        if (updateSuccess){
+    useEffect(() => {
+        if (updateSuccess) {
             console.log('OK');
         }
-        if (updateFailure){
+        if (updateFailure) {
             console.log('KO');
         }
         dispatch(reset());
-
-    }, [updateSuccess, updateFailure]);
-
-    useEffect(()=>{
-        if (selectedConversation){
-            console.log("selectedConversation",selectedConversation.attributes);
-            navigation.navigate("Chat", {
-                clickedConversation: {
-                    sid: selectedConversation.sid,
-                    name: getFriendlyName(selectedConversation, account)
-                }
-            });
-        }
-
-    }, [selectedConversation]);
-
-    useEffect(() => {
-        dispatch(
-            getUsers({
-                page: pagination.activePage,
-                size: 10,
-                sort: `${pagination.sort},${pagination.order}`,
-            }));
         return () => {
             dispatch(reset());
         };
-    }, []);
+    }, [updateSuccess, updateFailure]);
 
-    const openUsers = () => {
-        bottomSheetModalRef.current.present();
-    }
-
-    const selectedUser = (user: IUser) => {
-        bottomSheetModalRef.current.close();
-        console.log("val ", user);
-        dispatch(findOrCreateConversationDual(user.id));
-
-    }
-
-    const getListUsersModal = () => {
-        const onChangeSearch = query => {
-            console.log("query", query);
-        };
-
-        return <BottomSheetModal
-            ref={bottomSheetModalRef}
-            index={1}
-            enablePanDownToClose={true}
-            stackBehavior='replace'
-            style={{
-                shadowColor: "#000",
-                shadowOffset: {
-                    width: 0,
-                    height: 11,
-                },
-                shadowOpacity: 0.57,
-                shadowRadius: 15.19,
-
-                elevation: 23
-            }}
-            snapPoints={snapPoints}
-            onChange={handleSheetChanges}
-        >
-            <SearchWidget onChangeSearch={onChangeSearch} style={{alignSelf: 'center', marginBottom:10}} iconStyle={{alignSelf: 'flex-end'}}/>
-            <FlatList
-                data={users}
-                renderItem={({item}) => (
-                    <UserItem item={item} selectedUser={selectedUser}/>
-                )}
-                keyExtractor={item => item.id}
-            />
-        </BottomSheetModal>
-    }
-
-
-    return (loadingConversation?  <SekhmetActivityIndicator/> :<View style={styles.container}>
+    return (loadingConversation ? <SekhmetActivityIndicator/> : <View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (
@@ -226,22 +129,24 @@ const Discussion = ({navigation, conversations, twilioClient}: {
             )}
             keyExtractor={item => item.sid}
         />
-
-        <FAB
-            style={styles.fab}
-            size="small"
-            color={Colors.light.sekhmetOrange}
-            title={"Nouvelle discussion"}
-            icon={{name: "comment", color: "white"}}
-            onPress={() => openUsers()}
-        />
-        {getListUsersModal()}
+        <NewConversation navigation={navigation}
+                         conversationInfo={{label: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}}/>
     </View>)
 }
 
 const Groupes = ({navigation, conversations}) => {
+    const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities,
+        [AUTHORITIES.ADMIN]));
     return <View style={styles.container}>
-        <Text style={styles.title}>{navigation.state}</Text>
+        <FlatList
+            data={conversations}
+            renderItem={({item}) => (
+                <ChatItem item={item} navigation={navigation}/>
+            )}
+            keyExtractor={item => item.sid}
+        />
+        {isAdmin && <NewConversation navigation={navigation}
+                                     conversationInfo={{label: "Nouveau Groupe", type: CONVERSATION_TYPE.GROUP}}/>}
     </View>
 }
 const styles = StyleSheet.create({
@@ -259,11 +164,5 @@ const styles = StyleSheet.create({
         justifyContent: 'space-evenly',
         width: 120,
         alignItems: 'center',
-    },
-    fab: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 0,
-    },
+    }
 });

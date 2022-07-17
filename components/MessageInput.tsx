@@ -8,7 +8,8 @@ import AudioPlayer from './media/AudioPlayer';
 import MessageBox from './MessageBox';
 import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
-import {Conversation, Message} from "@twilio/conversations";
+import {Conversation} from "@twilio/conversations";
+import {Message} from "../types";
 import {ImageInfo, ImagePickerCancelledResult} from "expo-image-picker";
 import VideoPlayer from "./media/video/VideoPlayer";
 
