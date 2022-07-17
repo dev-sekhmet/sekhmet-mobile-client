@@ -7,10 +7,14 @@ import userManagement from './user-management/user-management.reducer';
 import conversationWrite from './conversation-write/conversation-write.reducer';
 import products from './products/products.reducer';
 import  notifications from "./notification/notification.reducer";
+import  typingData from "./typing-data/typing-data.reducer";
+import currentConv from "./current-conv/current-conv.reducer";
 
 export const store = configureStore({
     reducer: {
+        currentConv,
         notifications,
+        typingData,
         authentification,
         settings,
         messages,

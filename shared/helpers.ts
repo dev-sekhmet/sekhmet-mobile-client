@@ -1,7 +1,9 @@
-
-import { NOTIFICATION_TIMEOUT, UNEXPECTED_ERROR_MESSAGE } from "../constants/constants";
+import {NOTIFICATION_TIMEOUT, UNEXPECTED_ERROR_MESSAGE} from "../constants/constants";
 import {NotificationsType, NotificationVariantType} from "../api/notification/notification.reducer";
-import store  from "../api/store";
+import store from "../api/store";
+import {Participant, User} from "@twilio/conversations";
+import {AnyAction} from "redux";
+
 export const getTypingMessage = (typingData: string[]): string =>
     typingData.length > 1
         ? `${typingData.length + " participants are typing..."}`
@@ -12,16 +14,14 @@ export const pushNotification = (
     func?: any
 ): void => {
     if (func) {
-        console.log("func", messages);
         store().dispatch(func(
-            messages.map(({ variant, message }) => ({
+            messages.map(({variant, message}) => ({
                 variant,
                 message,
                 id: new Date().getTime(),
                 dismissAfter: NOTIFICATION_TIMEOUT,
             })))
         );
-        console.log("after func", messages);
     }
 };
 
@@ -72,8 +72,20 @@ export const handlePromiseRejection = async (
     }
     try {
         await func();
-    } catch {
+    } catch (e) {
         unexpectedErrorNotification(addNotifications);
         return Promise.reject(UNEXPECTED_ERROR_MESSAGE);
     }
 };
+
+export const updateTypingIndicator = (participant: Participant, sid: string, logInUser: User,  callback: (ids: {channelSid:string, participant:string}) => AnyAction) => {
+    if (participant.identity === logInUser.identity) {
+        return;
+    }
+    store().dispatch(callback(
+        {
+            channelSid: sid,
+            participant: participant.identity || participant.sid || ""
+        }
+    ));
+}

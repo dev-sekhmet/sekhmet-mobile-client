@@ -13,9 +13,7 @@ import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import {hasAnyAuthority} from "../components/PrivateRoute";
-import {AUTHORITIES, CONVERSATION_MESSAGES, CONVERSATION_TYPE} from "../constants/constants";
-import {successNotification} from "../shared/helpers";
-import {addNotifications} from "../api/notification/notification.reducer";
+import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
 
 const height = Dimensions.get('screen').height;
 
@@ -25,11 +23,11 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     const [dualConversations, setDualConversations] = useState<Conversation[]>([]);
     const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
 
-    const isConversationGroup = (c: Conversation) : boolean => {
+    const isConversationGroup = (c: Conversation): boolean => {
         return isConversation(c, CONVERSATION_TYPE.GROUP);
     }
 
-    const isConversationDual = (c: Conversation) : boolean => {
+    const isConversationDual = (c: Conversation): boolean => {
         return isConversation(c, CONVERSATION_TYPE.DUAL);
     }
     const isConversation = (c: Conversation, type: string): boolean => {
@@ -37,11 +35,6 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     }
 
     useEffect(() => {
-        successNotification({
-            message: CONVERSATION_MESSAGES.LEFT,
-            addNotifications,
-        });
-
         if (twilioClient) {
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();

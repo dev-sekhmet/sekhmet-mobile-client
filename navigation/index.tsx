@@ -43,6 +43,9 @@ import UserListScreen from "../screens/UserListScreen";
 import {Text} from "../components/Themed";
 import ConversationProfileSreen from "../screens/ConversationProfileSreen";
 import Toast from "react-native-toast-message";
+import {handlePromiseRejection, updateTypingIndicator} from "../shared/helpers";
+import {addNotifications} from "../api/notification/notification.reducer";
+import {endTyping, startTyping} from "../api/typing-data/typing-data.reducer";
 export default function Navigation({colorScheme}) {
     const notifications = useAppSelector(state => state.notifications);
     useEffect(() => {
@@ -112,12 +115,28 @@ function RootNavigator() {
                 console.log("stateChanged", state);
                 if (state === 'initialized') {
                     setTwilioClient(client);
-                    console.log("Init Good");
+
+
+
+                    client.addListener("conversationAdded", async (conversation: Conversation) => {
+                        conversation.addListener("typingStarted", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, startTyping), addNotifications);
+                        });
+                        client.user
+
+                        conversation.addListener("typingEnded", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, endTyping), addNotifications);
+                        });
+                    });
+
+
+
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
                         refreshingTwilioToken();
                     });
                 }
+
                 if (state === 'failed') {
                     refreshingTwilioToken();
                 }

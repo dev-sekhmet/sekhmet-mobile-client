@@ -84,7 +84,6 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     }
 
     const fetchConversation = async () => {
-        console.log("fetchConversation")
         const sid = route.params.clickedConversation.sid;
         if (twilioClient && sid) {
             twilioClient.getConversationBySid(sid).then(conversation => {

@@ -25,7 +25,7 @@ const ProfilAvatar = (props) => {
         <Avatar
             rounded
             {...props}
-            title={props.title.charAt(0).toUpperCase()}
+            title={props.title?.charAt(0).toUpperCase()}
             source={{uri: props.imageUrl?`${axiosInstance.defaults.baseURL}/${props.imageUrl}?access_token=${token}`:'null'}}
             containerStyle={styles.profilAvatar}>
             {props.badge && <Badge
