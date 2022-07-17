@@ -13,7 +13,9 @@ import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import {hasAnyAuthority} from "../components/PrivateRoute";
-import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
+import {AUTHORITIES, CONVERSATION_MESSAGES, CONVERSATION_TYPE} from "../constants/constants";
+import {successNotification} from "../shared/helpers";
+import {addNotifications} from "../api/notification/notification.reducer";
 
 const height = Dimensions.get('screen').height;
 
@@ -35,6 +37,11 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     }
 
     useEffect(() => {
+        successNotification({
+            message: CONVERSATION_MESSAGES.LEFT,
+            addNotifications,
+        });
+
         if (twilioClient) {
             const initConversations = async () => {
                 const cons = await twilioClient.getSubscribedConversations();

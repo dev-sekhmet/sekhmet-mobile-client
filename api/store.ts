@@ -6,9 +6,11 @@ import messages from './messages/messages.reducer';
 import userManagement from './user-management/user-management.reducer';
 import conversationWrite from './conversation-write/conversation-write.reducer';
 import products from './products/products.reducer';
+import  notifications from "./notification/notification.reducer";
 
 export const store = configureStore({
     reducer: {
+        notifications,
         authentification,
         settings,
         messages,

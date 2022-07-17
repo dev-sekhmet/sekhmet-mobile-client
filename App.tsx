@@ -8,9 +8,9 @@ import {ActionSheetProvider} from "@expo/react-native-action-sheet";
 import Toast from 'react-native-toast-message';
 import {setupAxiosInterceptors} from "./api/authentification/authentication.reducer";
 import {Provider} from 'react-redux';
-import {store} from "./api/store";
+import {store, useAppSelector} from "./api/store";
 import {BottomSheetModalProvider,} from '@gorhom/bottom-sheet';
-import { SelectProvider } from '@mobile-reality/react-native-select-pro';
+import {SelectProvider} from '@mobile-reality/react-native-select-pro';
 import {NativeViewGestureHandler} from "react-native-gesture-handler";
 import {useEffect} from "react";
 import Moment from "moment";
@@ -20,6 +20,7 @@ setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
+    const notifications = useAppSelector(state => state.notifications);
 
     useEffect(() => {
         Moment.updateLocale('fr', {
@@ -33,6 +34,20 @@ export default function App() {
             }
         })
     });
+    useEffect(() => {
+        if (!notifications.length) {
+            return;
+        }
+        notifications.forEach(notification =>
+            Toast.show({
+                type: notification.type,
+                text1: notification.title,
+                position: 'bottom',
+                text2: notification.message
+            })
+        );
+
+    }, [notifications]);
 
     if (!isLoadingComplete) {
         return null;
@@ -42,11 +57,11 @@ export default function App() {
                 <Provider store={store}>
                     <ActionSheetProvider>
                         <NativeViewGestureHandler disallowInterruption={true}>
-                        <BottomSheetModalProvider>
-                            <SelectProvider>
-                            <Navigation colorScheme={colorScheme}/>
-                            </SelectProvider>
-                        </BottomSheetModalProvider>
+                            <BottomSheetModalProvider>
+                                <SelectProvider>
+                                    <Navigation colorScheme={colorScheme}/>
+                                </SelectProvider>
+                            </BottomSheetModalProvider>
                         </NativeViewGestureHandler>
                     </ActionSheetProvider>
                     <StatusBar/>

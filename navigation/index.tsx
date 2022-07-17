@@ -34,7 +34,7 @@ import {
     onRefreshSuccess,
     refreshTwilioToken
 } from "../api/authentification/authentication.reducer";
-import {Client} from "@twilio/conversations";
+import {Client, Conversation} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
@@ -97,7 +97,93 @@ function RootNavigator() {
                 console.log("stateChanged", state);
                 if (state === 'initialized') {
                     setTwilioClient(client);
-                    console.log("Init Good");
+
+
+
+                    client.addListener("conversationAdded", async (conversation: Conversation) => {
+                        conversation.addListener("typingStarted", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, startTyping), addNotifications);
+                        });
+
+                        conversation.addListener("typingEnded", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, endTyping), addNotifications);
+                        });
+
+                        handlePromiseRejection(async () => {
+                            if (conversation.status === "joined") {
+                                const result = await getConversationParticipants(conversation);
+                                updateParticipants(result, conversation.sid);
+                            }
+
+                            updateConvoList(
+                                client,
+                                conversation,
+                                listConversations,
+                                addMessages,
+                                updateUnreadMessages
+                            );
+                        }, addNotifications);
+                    });
+
+                    client.addListener("conversationRemoved", (conversation: Conversation) => {
+                        updateCurrentConversation("");
+                        handlePromiseRejection(() => {
+                            removeConversation(conversation.sid);
+                            updateParticipants([], conversation.sid);
+                        }, addNotifications);
+                    });
+                    client.addListener("messageAdded", (event: Message) => {
+                        console.log("MessageMessage" ,Message)
+                        addMessage(event, addMessages, updateUnreadMessages);
+                    });
+                    client.addListener("participantLeft", (participant) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantUpdated", (event) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(event.participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantJoined", (participant) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("conversationUpdated", ({conversation}) => {
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageUpdated", ({message}) => {
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            message.conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageRemoved", (message) => {
+                        handlePromiseRejection(() => removeMessages(
+                            message.conversation.sid, [message]
+                        ), addNotifications);
+                    });
+
+                    client.addListener("tokenExpired", () => {
+                        if (username && password) {
+                            getToken(username, password).then((token) => {
+                                login(token);
+                            });
+                        }
+                    });
+
+                    updateLoadingState(false);
+
+
+
+
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
                         refreshingTwilioToken();
