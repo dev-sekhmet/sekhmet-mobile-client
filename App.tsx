@@ -20,7 +20,7 @@ setupAxiosInterceptors(() => console.log('login.error.unauthorized'));
 export default function App() {
     const isLoadingComplete = useCachedResources();
     const colorScheme = useColorScheme();
-    const notifications = useAppSelector(state => state.notifications);
+
 
     useEffect(() => {
         Moment.updateLocale('fr', {
@@ -34,20 +34,6 @@ export default function App() {
             }
         })
     });
-    useEffect(() => {
-        if (!notifications.length) {
-            return;
-        }
-        notifications.forEach(notification =>
-            Toast.show({
-                type: notification.type,
-                text1: notification.title,
-                position: 'bottom',
-                text2: notification.message
-            })
-        );
-
-    }, [notifications]);
 
     if (!isLoadingComplete) {
         return null;

@@ -12,6 +12,7 @@ export const pushNotification = (
     func?: any
 ): void => {
     if (func) {
+        console.log("func", messages);
         store().dispatch(func(
             messages.map(({ variant, message }) => ({
                 variant,
@@ -20,6 +21,7 @@ export const pushNotification = (
                 dismissAfter: NOTIFICATION_TIMEOUT,
             })))
         );
+        console.log("after func", messages);
     }
 };
 
