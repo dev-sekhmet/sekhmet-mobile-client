@@ -53,7 +53,7 @@ export const PARTICIPANT_MESSAGES = {
     REMOVED: "Participant removed.",
 };
 
-export const CONVERSATION_PAGE_SIZE = 30;
+export const CONVERSATION_PAGE_SIZE = 10;
 
 export const NOTIFICATION_LEVEL = {
     DEFAULT: "default",

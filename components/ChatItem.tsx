@@ -3,66 +3,102 @@ import {Text, View} from './Themed';
 import {Badge} from "react-native-elements";
 import React, {useEffect, useState} from "react";
 import Colors from "../constants/Colors";
-import {Conversation, ConversationUpdateReason, Message} from "@twilio/conversations";
-import Moment from "moment";
+import {Message} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {from} from "rxjs";
-import {updateLastMessage, updateUnreadMessagesCount} from "../api/messages/messages.reducer";
 import {getFriendlyName, getImageUrl} from "../shared/conversation/conversation.util";
-import {APP_TIME_FORMAT} from "../constants/constants";
 import ProfilAvatar from "./ProfilAvatar";
+import {unexpectedErrorNotification, updateCurrentConvo} from "../shared/helpers";
+import {addNotifications} from "../api/notification/notification.reducer";
+import {setLastReadIndex} from "../api/last-read-index/last-read-index.reducer";
+import {updateCurrentConversation} from "../api/current-conv/current-conv.reducer";
+import {updateParticipants} from "../api/participants/participants.reducer";
+import {updateUnreadMessages} from "../api/unread-message/unread-messages.reducer";
 
 
-export default function ChatItem({item, navigation}: TwilioProps) {
+export default function ChatItem({item, navigation, lastMessage, unreadMessagesCount, messages}: TwilioProps) {
 
     const dispatch = useAppDispatch();
-    const lastMessages = useAppSelector(state => state.messages.lastMessages);
-    const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
     const account = useAppSelector(state => state.authentification.account);
     const [friendlyName, setFriendlyName] = useState("");
     const [imageUrl, setImageUrl] = useState("");
-
-    const updateMessage = (channelSid: string, message: string, dateUpdated: Date | null) => {
-        dispatch(updateLastMessage({
-            channelSid,
-            lastMessage: {
-                message,
-                dateUpdated
-            }
-        }));
-    }
-
-    const updateUnreadMessageCount = (item: Conversation) => {
-        from(item.getUnreadMessagesCount()).subscribe(nb => {
-            dispatch(updateUnreadMessagesCount({channelSid: item.sid, unreadCount: nb}))
-        })
-    }
+    const lastMessageTime = getLastMessageTime(messages);
 
     useEffect(() => {
-        updateUnreadMessageCount(item);
-        if(account){
-          setFriendlyName(getFriendlyName(item, account));
-          setImageUrl(getImageUrl(item, account));
-        }
-        // get last message
-        item.getMessages(1).then(res => {
-            if (res.items && res.items.length > 0) {
-                const message = res.items[0];
-                updateMessage(item.sid, message.body, message.dateUpdated);
-            }
-        })
-        item.addListener("updated", (data: { conversation: Conversation, updateReasons: ConversationUpdateReason[] }) => {
-            updateUnreadMessageCount(data.conversation);
-        });
-
-        return () => {
-            console.log("removeAllListeners chatitem")
-            item?.removeAllListeners();
+        if (account) {
+            setFriendlyName(getFriendlyName(item, account));
+            setImageUrl(getImageUrl(item, account));
         }
     }, []);
 
-    const onPress = () => {
+    function getLastMessageTime(messages: Message[]) {
+        if (messages === undefined || messages === null || messages.length === 0) {
+            return "";
+        }
+        const lastMessageDate = messages[messages.length - 1].dateCreated;
+        const today = new Date();
+        const diffInDates = Math.floor(today.getTime() - lastMessageDate.getTime());
+        const dayLength = 1000 * 60 * 60 * 24;
+        const weekLength = dayLength * 7;
+        const yearLength = weekLength * 52;
+        const diffInDays = Math.floor(diffInDates / dayLength);
+        const diffInWeeks = Math.floor(diffInDates / weekLength);
+        const diffInYears = Math.floor(diffInDates / yearLength);
+        if (diffInDays < 0) {
+            return "";
+        }
+        if (diffInDays === 0) {
+            const minutesLessThanTen = lastMessageDate.getMinutes() < 10 ? "0" : "";
+            return (
+                lastMessageDate.getHours().toString() +
+                ":" +
+                minutesLessThanTen +
+                lastMessageDate.getMinutes().toString()
+            );
+        }
+        if (diffInDays === 1) {
+            return "1 day ago";
+        }
+        if (diffInDays < 7) {
+            return diffInDays + " days ago";
+        }
+        if (diffInDays < 14) {
+            return "1 week ago";
+        }
+        if (diffInWeeks < 52) {
+            return diffInWeeks + " weeks ago";
+        }
+        if (diffInYears < 2) {
+            return "1 year ago";
+        }
+        return diffInYears + " years ago";
+    }
+
+    const onPress = async () => {
+        try {
+            dispatch(setLastReadIndex(item.lastReadMessageIndex ?? -1));
+            await updateCurrentConvo(
+                updateCurrentConversation,
+                item,
+                updateParticipants
+            );
+            //update unread messages
+            dispatch(updateUnreadMessages({
+                channelUniqId: item.sid,
+                unreadCount: 0
+            }));
+            //set messages to be read
+            const lastMessage =
+                messages.length &&
+                messages[item.sid]
+               ? messages[messages[item.sid].length - 1] : null;
+            if (lastMessage && lastMessage.index !== -1) {
+                await item.updateLastReadMessageIndex(lastMessage.index);
+            }
+        } catch (e) {
+            console.error(e);
+            unexpectedErrorNotification(addNotifications);
+        }
         navigation.navigate("Chat", {
             clickedConversation: {
                 sid: item.sid,
@@ -97,17 +133,17 @@ export default function ChatItem({item, navigation}: TwilioProps) {
                             badgeStyle={{backgroundColor: Colors.light.online, marginBottom: 8, marginLeft: 6}}
                         />
                     </View>
-                    {unreadmessageCount[item.sid] > 0 &&
-                    <Badge
-                        value={unreadmessageCount[item.sid]}
-                        badgeStyle={{backgroundColor: Colors.light.sekhmetGreen}}>
-                    </Badge>}
+                    {unreadMessagesCount > 0 &&
+                        <Badge
+                            value={unreadMessagesCount}
+                            badgeStyle={{backgroundColor: Colors.light.sekhmetGreen}}>
+                        </Badge>}
                 </View>
                 <View style={styles.row}>
                     <Text numberOfLines={1} style={styles.text}>
-                        {lastMessages[item.sid] && lastMessages[item.sid].message}
+                        {lastMessage}
                     </Text>
-                    <Text style={styles.text}>{lastMessages[item.sid] && Moment(lastMessages[item.sid].dateUpdated).format(APP_TIME_FORMAT)}</Text>
+                    <Text style={styles.text}>{lastMessage && lastMessageTime}</Text>
                 </View>
 
             </View>

@@ -7,19 +7,21 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import {Badge} from "react-native-elements";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {Conversation} from "@twilio/conversations";
+import {Conversation, Message} from "@twilio/conversations";
 import {TwilioProps} from "../types";
 import {reset} from "../api/settings/settings.reducer";
 import NewConversation from "../components/NewConversation";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
+import {getTypingMessage} from "../shared/helpers";
+import {ChannelMessageCountType} from "../api/unread-message/unread-messages.reducer";
 
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
-    const loginSuccess = useAppSelector(state => state.authentification.loginSuccess);
-    const unreadmessageCount = useAppSelector(state => state.messages.unreadMessagesCount);
+    const cons = useAppSelector(state => state.convos);
+    const unreadMessages = useAppSelector(state => state.unreadMessages);
     const [dualConversations, setDualConversations] = useState<Conversation[]>([]);
     const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
 
@@ -30,29 +32,24 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     const isConversationDual = (c: Conversation): boolean => {
         return isConversation(c, CONVERSATION_TYPE.DUAL);
     }
+
     const isConversation = (c: Conversation, type: string): boolean => {
-        return c.uniqueName.includes(type);
+        return isUniqueName(c.uniqueName, type);
+    }
+    const isUniqueName = (uniqueName: string, type: string): boolean => {
+        return uniqueName.includes(type);
+    }
+    const isUniqueNameDual = (uniqueName: string): boolean => {
+        return uniqueName.includes(CONVERSATION_TYPE.DUAL);
+    }
+    const isUniqueNameGroup = (uniqueName): boolean => {
+        return uniqueName.includes(CONVERSATION_TYPE.GROUP);
     }
 
     useEffect(() => {
         if (twilioClient) {
-            const initConversations = async () => {
-                const cons = await twilioClient.getSubscribedConversations();
-                setDualConversations(cons.items.filter(c => isConversationDual(c)));
-                setGroupConversations(cons.items.filter(c => isConversationGroup(c)));
-                twilioClient.addListener("conversationAdded", async (conversation: Conversation) => {
-                    conversation.setAllMessagesUnread();
-                    if (isConversationGroup(conversation)) {
-                        setGroupConversations(oldConversations => [conversation, ...oldConversations]);
-                    } else {
-                        setDualConversations(oldConversations => [conversation, ...oldConversations]);
-                    }
-                });
-                twilioClient.addListener("conversationRemoved", (conversation: Conversation) => {
-
-                });
-            }
-            initConversations();
+            setDualConversations(cons.filter(c => isConversationDual(c)));
+            setGroupConversations(cons.filter(c => isConversationGroup(c)));
         }
 
     }, [])
@@ -65,6 +62,13 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
 
 
     const Tab = createMaterialTopTabNavigator();
+
+    function getUnReadMessageCountCount(isUniqueName: (string)=> boolean) {
+        return unreadMessages.filter((un: ChannelMessageCountType) => isUniqueName(un.channelUniqId))
+            // @ts-ignore
+            .reduce((prev, curr) => prev.unreadCount + curr.unreadCount, 0);
+    }
+
     return (
         <Tab.Navigator initialRouteName={"Discussion"}
                        screenOptions={{
@@ -76,8 +80,8 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
             <Tab.Screen name="Discussion"
                         options={{
                             tabBarLabel: () => {
-                                const count = Object.values<number>(unreadmessageCount)
-                                    .reduce((prev, curr) => prev + curr, 0);
+
+                                const count = getUnReadMessageCountCount(isUniqueNameDual);
                                 return <View
                                     style={styles.tabItem}>
                                     <Text style={{color: Colors.light.sekhmetGreen}}>Discussions</Text>
@@ -91,9 +95,16 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
                         children={() => <Discussion navigation={navigation} conversations={dualConversations}/>}/>
             <Tab.Screen name="Groupes"
                         options={{
-                            tabBarLabel: () => <View style={styles.tabItem}>
-                                <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
-                            </View>
+                            tabBarLabel: () => {
+                                const count = getUnReadMessageCountCount(isUniqueNameGroup);
+                                return <View style={styles.tabItem}>
+                                    <Text style={{color: Colors.light.sekhmetGreen}}>Groupes</Text>
+                                    {count > 0 && <Badge
+                                        value={count}
+                                        badgeStyle={{marginVertical: 10, backgroundColor: Colors.light.sekhmetGreen}}
+                                    />}
+                                </View>
+                            }
                         }}
                         children={() => <Groupes navigation={navigation} conversations={groupConversations}/>}/>
 
@@ -102,12 +113,32 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
     );
 }
 
+
+function getLastMessage(messages: Message[], typingData: string[]) {
+    if (messages === undefined || messages === null) {
+        return "Loading...";
+    }
+    if (typingData.length) {
+        return getTypingMessage(typingData);
+    }
+    if (messages.length === 0) {
+        return "No messages";
+    }
+    if (!!messages[messages.length - 1].attachedMedia.length) {
+        return "Media message";
+    }
+    return messages[messages.length - 1].body;
+}
+
 const Discussion = ({navigation, conversations}: { conversations?: Conversation[]; navigation?: any; }) => {
     const dispatch = useAppDispatch();
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
 
+    const unreadMessages = useAppSelector(state => state.unreadMessages);
+    const typingData = useAppSelector(state => state.typingData);
+    const messages = useAppSelector(state => state.messageList);
     useEffect(() => {
         if (updateSuccess) {
             console.log('OK');
@@ -124,9 +155,22 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
     return (loadingConversation ? <SekhmetActivityIndicator/> : <View style={styles.container}>
         <FlatList
             data={conversations}
-            renderItem={({item}) => (
-                <ChatItem item={item} navigation={navigation}/>
-            )}
+            renderItem={({item}) => {
+                const unreadMessagesCount = unreadMessages.find(c => c.channelUniqId === item.sid)?.unreadCount ?? 0;
+                console.log("unreadMessagesCount", unreadMessagesCount);
+                return (
+                    <ChatItem item={item}
+                              messages={messages.find(m => m.channelSid === item.sid)?.messages}
+                              lastMessage={getLastMessage(
+                                  messages.find(tp => tp.channelSid === item.sid)?.messages ?? [],
+                                  typingData.find(tp => tp.channelSid === item.sid)?.participants ?? []
+                              )}
+                              unreadMessagesCount={
+                                  unreadMessagesCount
+                              }
+                              navigation={navigation}/>
+                );
+            }}
             keyExtractor={item => item.sid}
         />
         <NewConversation navigation={navigation}
@@ -134,14 +178,27 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
     </View>)
 }
 
+
 const Groupes = ({navigation, conversations}) => {
     const isAdmin = useAppSelector(state => hasAnyAuthority(state.authentification.account.authorities,
         [AUTHORITIES.ADMIN]));
+    const unreadMessages = useAppSelector(state => state.unreadMessages);
+    const typingData = useAppSelector(state => state.typingData);
+    const messages = useAppSelector(state => state.messageList);
     return <View style={styles.container}>
         <FlatList
             data={conversations}
             renderItem={({item}) => (
-                <ChatItem item={item} navigation={navigation}/>
+                <ChatItem item={item}
+                          messages={messages.find(m => m.channelSid === item.sid)?.messages}
+                          lastMessage={getLastMessage(
+                              messages.find(tp => tp.channelSid === item.sid)?.messages ?? [],
+                              typingData.find(tp => tp.channelSid === item.sid)?.participants ?? []
+                          )}
+                          unreadMessagesCount={
+                              unreadMessages.find(c => c.channelUniqId === item.sid)?.unreadCount ?? 0
+                          }
+                          navigation={navigation}/>
             )}
             keyExtractor={item => item.sid}
         />

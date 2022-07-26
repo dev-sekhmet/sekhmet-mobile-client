@@ -28,9 +28,9 @@ export default function UserItem({item, execSelection, creationType, isUserSelec
             }
             <ProfilAvatar
                 size={30}
-                key={item.imageUrl}
-                title={item.firstName.charAt(0)}
-                imageUrl={item.imageUrl}
+                key={item?.imageUrl}
+                title={item?.firstName?.charAt(0)}
+                imageUrl={item?.imageUrl}
             />
             <ListItem.Content>
                 <ListItem.Title>{`${item?.firstName} ${item?.lastName}`}</ListItem.Title>

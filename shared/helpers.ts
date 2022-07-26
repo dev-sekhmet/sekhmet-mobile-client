@@ -1,8 +1,19 @@
-import {NOTIFICATION_TIMEOUT, UNEXPECTED_ERROR_MESSAGE} from "../constants/constants";
+import {CONVERSATION_PAGE_SIZE, NOTIFICATION_TIMEOUT, UNEXPECTED_ERROR_MESSAGE} from "../constants/constants";
 import {NotificationsType, NotificationVariantType} from "../api/notification/notification.reducer";
 import store from "../api/store";
-import {Participant, User} from "@twilio/conversations";
+import {Client, Conversation, Message, Paginator, Participant, User} from "@twilio/conversations";
 import {AnyAction} from "redux";
+import {AddMessagesType, SetUreadMessagesType} from "../types";
+
+
+type SetConvosType = (convos: Conversation[]) => AnyAction;
+export type SetSidType = (sid: string) => AnyAction;
+export type SetParticipantsType = (chanParticipants: {
+                                       participants: Participant[],
+                                       channelSid: string
+                                   }
+) => AnyAction;
+
 
 export const getTypingMessage = (typingData: string[]): string =>
     typingData.length > 1
@@ -78,7 +89,7 @@ export const handlePromiseRejection = async (
     }
 };
 
-export const updateTypingIndicator = (participant: Participant, sid: string, logInUser: User,  callback: (ids: {channelSid:string, participant:string}) => AnyAction) => {
+export const updateTypingIndicator = (participant: Participant, sid: string, logInUser: User, callback: (ids: { channelSid: string, participant: string }) => AnyAction) => {
     if (participant.identity === logInUser.identity) {
         return;
     }
@@ -89,3 +100,68 @@ export const updateTypingIndicator = (participant: Participant, sid: string, log
         }
     ));
 }
+
+export async function updateConvoList(
+    client: Client,
+    conversation: Conversation,
+    setConvos: SetConvosType,
+    addMessages: AddMessagesType,
+    updateUnreadMessages: SetUreadMessagesType
+) {
+    const messages = await conversation.getMessages();
+    store().dispatch(addMessages({
+        channelSid: conversation.sid,
+        messages: messages.items
+    }));
+    loadUnreadMessagesCount(conversation, updateUnreadMessages);
+
+    const subscribedConversations = await client.getSubscribedConversations();
+    store().dispatch(setConvos(subscribedConversations.items));
+}
+
+async function loadUnreadMessagesCount(
+    convo: Conversation,
+    updateUnreadMessages: SetUreadMessagesType
+) {
+    const count = await convo.getUnreadMessagesCount();
+    store().dispatch(updateUnreadMessages({
+        channelUniqId: convo.sid,
+        unreadCount: count ?? 0
+    }));
+}
+
+export const conversationAbsent = (state, channelSid) => {
+    return !state.some(conv => {
+        if (channelSid in conv) {
+            return conv.channelSid === channelSid;
+        } else {
+            return conv.channelUniqId === channelSid;
+        }
+    });
+}
+
+export const updateCurrentConvo = async (
+    setSid: SetSidType,
+    convo: Conversation,
+    updateParticipants: SetParticipantsType
+) => {
+
+    setSid(convo.sid);
+    try {
+        const participants = await convo.getParticipants();
+        store().dispatch(updateParticipants(
+            {
+                channelSid: convo.sid,
+                participants
+            }
+        ));
+    } catch {
+        return Promise.reject(UNEXPECTED_ERROR_MESSAGE);
+    }
+}
+
+export const getMessages = async (
+    conversation: Conversation
+): Promise<Paginator<Message>> =>
+    await conversation.getMessages(CONVERSATION_PAGE_SIZE);
+

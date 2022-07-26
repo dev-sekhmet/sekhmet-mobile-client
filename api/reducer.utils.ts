@@ -8,6 +8,10 @@ import {
   ValidateSliceCaseReducers,
 } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
+import {successNotification, unexpectedErrorNotification} from "../shared/helpers";
+import {PARTICIPANT_MESSAGES, UNEXPECTED_ERROR_MESSAGE} from "../constants/constants";
+import {Conversation, Participant} from "@twilio/conversations";
+import {NotificationsType} from "./notification/notification.reducer";
 
 /**
  * Model for redux actions with pagination
@@ -151,3 +155,26 @@ export const overridePaginationStateWithQueryParams = (paginationBaseState: IPag
   }
   return paginationBaseState;
 };
+
+
+export const getConversationParticipants = async (
+    conversation: Conversation
+): Promise<Participant[]> => await conversation.getParticipants();
+
+export const removeParticipant = async (
+    conversation: Conversation,
+    participant: Participant,
+    addNotifications?: (notifications: NotificationsType) => void
+): Promise<void> => {
+  try {
+    await conversation.removeParticipant(participant);
+    successNotification({
+      message: PARTICIPANT_MESSAGES.REMOVED,
+      addNotifications,
+    });
+  } catch {
+    unexpectedErrorNotification(addNotifications);
+    return Promise.reject(UNEXPECTED_ERROR_MESSAGE);
+  }
+};
+

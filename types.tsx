@@ -7,6 +7,7 @@ import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Client, Conversation, Message as TwilioMessage} from "@twilio/conversations";
+import {AnyAction} from "redux";
 
 declare global {
     namespace ReactNavigation {
@@ -14,6 +15,11 @@ declare global {
         }
     }
 }
+export type AddMessagesType = (chanMessages: { channelSid: string, messages: TwilioMessage[] }) => AnyAction;
+export type SetUreadMessagesType = (chanUnreadCount: {
+    channelUniqId: string,
+    unreadCount: number
+}) => AnyAction;
 
 
 export type RootStackParamList = {
@@ -86,6 +92,9 @@ export type InputPhoneParamList = {
 export type TwilioProps = {
     twilioClient?: Client;
     item?: Conversation;
+    unreadMessagesCount?: number;
+    lastMessage?: string;
+    messages?: TwilioMessage[];
     route?: any;
     navigation?: any;
 };

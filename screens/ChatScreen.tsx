@@ -6,15 +6,18 @@ import Moment from 'moment';
 import 'moment/locale/fr'
 import {Text, View} from '../components/Themed';
 import {Conversation, Message as TwilioMessage, Paginator} from "@twilio/conversations";
-import {Message, TwilioProps} from "../types";
-import {useAppDispatch} from "../api/store";
+import {AddMessagesType, Message, TwilioProps} from "../types";
+import {useAppDispatch, useAppSelector} from "../api/store";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
-import {updateLastMessage} from "../api/messages/messages.reducer";
+import {getMessages} from "../shared/helpers";
+import {addMessages} from "../api/message-list/message-list.reducer";
+
 
 const pageSize = 10;
 
 export default function ChatScreen({route, navigation, twilioClient}: TwilioProps) {
     const dispatch = useAppDispatch();
+    const messageList = useAppSelector(state => state.messageList);
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageReplyTo, setMessageReplyTo] = useState<Message | null>(
         null
@@ -26,10 +29,28 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
         false
     );
 
+
+    const loadMessages = async (
+        conversation: Conversation,
+        currentMessages: Message[],
+        addMessage: AddMessagesType
+    ): Promise<void> => {
+        const convoSid: string = conversation.sid;
+        console.log("loadMessages", currentMessages.length);
+        if (!(convoSid in currentMessages)) {
+            const paginator = await getMessages(conversation);
+            const messages = paginator.items;
+            //save to redux
+            dispatch(addMessage({
+                channelSid: convoSid,
+                messages
+            }));
+        }
+    }
+
     useEffect(() => {
         fetchConversation();
         return () => {
-            console.log("removeAllListeners ChatScreen")
             conversation?.removeAllListeners();
         }
     }, []);
@@ -37,57 +58,20 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     useEffect(() => {
         if (conversation) {
             fetchMessages();
-
-            conversation.addListener("messageAdded", (event: TwilioMessage) => {
-                console.log("messageAdded: ", event.sid);
-                console.log("messages a: ", messages.length);
-                if (!messages.some(msg => msg.msg.sid === event.sid)) {
-                    console.log("messageAdded: IN ", event.sid);
-                    updateMessage(event.sid, event.body, event.dateUpdated);
-                    twilioClient.getUser(event.author).then(user => {
-                        setMessages(prevMsgs => {
-                            return [...prevMsgs, {msg: event, author: user.friendlyName, deleted: false}]
-                        });
-                    });
-                }
-            });
-
-            conversation.addListener("messageRemoved", (event: TwilioMessage) => {
-                console.log("messageRemoved: ", event.sid);
-                console.log("messages r: ", messages.length);
-                messages.forEach(msg => console.log("msg.msg", msg.msg.sid));
-                if (messages.some(msg => msg.msg.sid === event.sid)) {
-                    console.log("messageRemoved IN: ", event.sid);
-                    setMessages(prevMsgs => {
-                        const newMsgs = prevMsgs.map(msg => {
-                            if (msg.msg.sid === event.sid) {
-                                return {...msg, deleted: true};
-                            }
-                            return msg;
-                        });
-                        return [...newMsgs]
-                    });
-                }
-            });
         }
     }, [conversation]);
 
-
-    const updateMessage = (channelSid: string, message: string, dateUpdated: Date | null) => {
-        dispatch(updateLastMessage({
-            channelSid,
-            lastMessage: {
-                message,
-                dateUpdated
-            }
-        }));
-    }
 
     const fetchConversation = async () => {
         const sid = route.params.clickedConversation.sid;
         if (twilioClient && sid) {
             twilioClient.getConversationBySid(sid).then(conversation => {
                 setConversation(conversation);
+                console.log("messages", messages?.length);
+                if (!messageList && messageList.length <= 0 && conversation) {
+                    console.log("messages", messages?.length);
+                    loadMessages(conversation, messages, addMessages);
+                }
             });
         }
     };
@@ -108,7 +92,6 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
 
                 (async () => {
                     const msges = await addAuthors(paginator.items);
-                    console.log("msges", msges.length);
                     setMessages(msges);
                 })();
                 conversation.setAllMessagesRead();

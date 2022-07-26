@@ -7,13 +7,20 @@ import {FontAwesome, MaterialIcons} from '@expo/vector-icons';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
-import {createContext, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Pressable, View} from 'react-native';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, InputPhoneParamList, ProductParamList, UserListParamList,} from '../types';
+import {
+    AddMessagesType,
+    ChatParamList,
+    InputPhoneParamList,
+    ProductParamList,
+    SetUreadMessagesType,
+    UserListParamList,
+} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -34,7 +41,7 @@ import {
     onRefreshSuccess,
     refreshTwilioToken
 } from "../api/authentification/authentication.reducer";
-import {Client, Conversation} from "@twilio/conversations";
+import {Client, Conversation, Message, Participant} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
@@ -43,9 +50,16 @@ import UserListScreen from "../screens/UserListScreen";
 import {Text} from "../components/Themed";
 import ConversationProfileSreen from "../screens/ConversationProfileSreen";
 import Toast from "react-native-toast-message";
-import {handlePromiseRejection, updateTypingIndicator} from "../shared/helpers";
+import {handlePromiseRejection, SetParticipantsType, updateConvoList, updateTypingIndicator} from "../shared/helpers";
 import {addNotifications} from "../api/notification/notification.reducer";
 import {endTyping, startTyping} from "../api/typing-data/typing-data.reducer";
+import {getConversationParticipants} from "../api/reducer.utils";
+import {updateParticipants} from "../api/participants/participants.reducer";
+import {listConversations, removeConversation} from "../api/convos/convos.reducer";
+import {addMessages, removeMessages} from "../api/message-list/message-list.reducer";
+import {updateUnreadMessages} from "../api/unread-message/unread-messages.reducer";
+import {updateCurrentConversation} from "../api/current-conv/current-conv.reducer";
+
 export default function Navigation({colorScheme}) {
     const notifications = useAppSelector(state => state.notifications);
     useEffect(() => {
@@ -116,20 +130,95 @@ function RootNavigator() {
                 if (state === 'initialized') {
                     setTwilioClient(client);
 
-
-
                     client.addListener("conversationAdded", async (conversation: Conversation) => {
                         conversation.addListener("typingStarted", (participant) => {
                             handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, startTyping), addNotifications);
                         });
-                        client.user
 
                         conversation.addListener("typingEnded", (participant) => {
                             handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, endTyping), addNotifications);
                         });
+
+                        handlePromiseRejection(async () => {
+                            if (conversation.status === "joined") {
+                                console.log("conversationJoined", conversation.sid);
+                                const result = await getConversationParticipants(conversation);
+                                dispatch(updateParticipants(
+                                    {
+                                        channelSid: conversation.sid,
+                                        participants: result
+                                    }
+                                ));
+                            }
+                            updateConvoList(
+                                client,
+                                conversation,
+                                listConversations,
+                                addMessages,
+                                updateUnreadMessages
+                            );
+                        }, addNotifications);
+
+                    });
+                    client.addListener("conversationRemoved", (conversation: Conversation) => {
+                        console.log("conversationRemoved")
+                        dispatch(updateCurrentConversation(""));
+                        handlePromiseRejection(() => {
+                            dispatch(removeConversation(conversation.sid));
+                            dispatch(updateParticipants(
+                                {
+                                    channelSid: conversation.sid,
+                                    participants: []
+                                }
+                            ));
+                        }, addNotifications);
+                    });
+                    client.addListener("messageAdded", (event: Message) => {
+                        console.log("Message", event.sid)
+                        addMessage(event, addMessages, updateUnreadMessages);
+                    });
+
+                    client.addListener("participantLeft", (participant) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantUpdated", (event) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(event.participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantJoined", (participant) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
                     });
 
 
+                    client.addListener("conversationUpdated", ({conversation, updateReasons}) => {
+                        console.log("conversationUpdated status", conversation.status);
+                        console.log("updateReasons status", updateReasons);
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageUpdated", ({message}) => {
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            message.conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageRemoved", (message) => {
+                        handlePromiseRejection(() => dispatch(removeMessages(
+                            {
+                                channelSid: message.conversation.sid,
+                                messageSid: [message]
+                            }
+                        )), addNotifications);
+                    });
 
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
@@ -146,6 +235,50 @@ function RootNavigator() {
             twilioClient?.removeAllListeners();
         }
     }, [isAuthenticated, refreshSuccess]);
+
+    async function handleParticipantsUpdate(
+        participant: Participant,
+        updateParticipants: SetParticipantsType
+    ) {
+        const result = await getConversationParticipants(participant.conversation);
+        dispatch(updateParticipants({
+            channelSid: participant.conversation.sid,
+            participants: result
+        }));
+    }
+
+
+
+    function addMessage(
+        message: Message,
+        addMessages: AddMessagesType,
+        updateUnreadMessages: SetUreadMessagesType,
+    ) {
+        //transform the message and add it to redux
+        handlePromiseRejection(() => {
+            /*            if (sidRef.current === message.conversation.sid) {
+                            message.conversation.updateLastReadMessageIndex(message.index);
+                        }*/
+            dispatch(addMessages({
+                channelSid: message.conversation.sid,
+                messages: [message]
+            }));
+            loadUnreadMessagesCount(message.conversation, updateUnreadMessages);
+        }, addNotifications);
+    }
+
+    async function loadUnreadMessagesCount(
+        convo: Conversation,
+        updateUnreadMessages: SetUreadMessagesType
+    ) {
+        const count = await convo.getUnreadMessagesCount();
+        dispatch(updateUnreadMessages(
+            {
+                channelUniqId: convo.sid,
+                unreadCount: count ?? 0
+            }
+        ));
+    }
 
 
     useEffect(() => {
