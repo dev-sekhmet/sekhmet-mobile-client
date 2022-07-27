@@ -135,7 +135,6 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
     const updateSuccess = useAppSelector<boolean>(state => state.conversationWrite.updateSuccess);
     const loadingConversation = useAppSelector<boolean>(state => state.conversationWrite.loading);
     const updateFailure = useAppSelector<boolean>(state => state.conversationWrite.updateFailure);
-
     const unreadMessages = useAppSelector(state => state.unreadMessages);
     const typingData = useAppSelector(state => state.typingData);
     const messages = useAppSelector(state => state.messageList);
@@ -165,6 +164,7 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
                                   messages.find(tp => tp.channelSid === item.sid)?.messages ?? [],
                                   typingData.find(tp => tp.channelSid === item.sid)?.participants ?? []
                               )}
+
                               unreadMessagesCount={
                                   unreadMessagesCount
                               }
