@@ -27,9 +27,9 @@ export const MessageListSlice = createSlice({
         addMessages(state, action) {
             const {channelSid, messages: messagesToAdd} = action.payload;
             if (conversationAbsent(state, channelSid)) {
-                const newVar = [...state, {channelSid, messages: messagesToAdd}];
-                return newVar;
+                return [...state, {channelSid, messages: messagesToAdd}];
             } else {
+
                 //get existing messages for the convo
                 const existingMessages = state.find(c => c.channelSid === channelSid)?.messages ?? [];
                 const filteredExistingMessages = existingMessages.filter(
@@ -57,6 +57,8 @@ export const MessageListSlice = createSlice({
                     }
                     return conv;
                 });
+                const messages = map.find(c=>c.channelSid === channelSid).messages;
+                console.log("elseMessage", messages[messages.length-1].body);
                 return map;
             }
         },

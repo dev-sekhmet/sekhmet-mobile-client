@@ -7,30 +7,17 @@ import Colors from "../constants/Colors";
 import {Conversation, Participant} from "@twilio/conversations";
 import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 import Moment from "moment";
+import {useAppSelector} from "../api/store";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
 export default function ConversationProfileSreen({route, navigation, twilioClient}: TwilioProps) {
+    const conversations = useAppSelector(state => state.convos);
+    const participantsList = useAppSelector(state => state.participants);
+    const [conversation, setConversation] = useState<Conversation>(conversations.find(c => c.sid === route.params.clickedConversation.sid));
+    const [participants, setParticipants] = useState<Participant[]>(participantsList.find(c => c.channelSid === route.params.clickedConversation.sid).participants);
 
-    const [conversation, setConversation] = useState<Conversation>({} as Conversation);
-    const [participants, setParticipants] = useState<Participant[]>([]);
-    useEffect(() => {
-        fetchConversation();
-    }, []);
-
-
-    const fetchConversation = async () => {
-        const sid = route.params.clickedConversation.sid;
-        if (twilioClient && sid) {
-            twilioClient.getConversationBySid(sid).then(conversation => {
-                setConversation(conversation);
-                conversation.getParticipants().then(participants => {
-                    setParticipants(participants);
-                });
-            });
-        }
-    };
     const pickImage = async () => {
 
     }
@@ -75,7 +62,7 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                         <TouchableOpacity style={[styles.card]}>
 
                             <Text style={[styles.number, {color: Colors.light.sekhmetGreen}]}>Voir médias</Text>
-                            <Text style={{color: Colors.light.colorTextGrey}}>Liens, Images, docs</Text>
+                            <Text style={[{color: Colors.light.colorTextGrey, fontSize:10}]}>Liens, Images, docs</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -125,7 +112,7 @@ const styles = StyleSheet.create({
     },
     number: {
         marginTop: 10,
-        fontSize: 20
+        fontSize: 15
     },
     fontCommon: {
         justifyContent: 'center',

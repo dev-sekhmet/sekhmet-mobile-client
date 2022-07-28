@@ -132,7 +132,7 @@ async function loadUnreadMessagesCount(
 
 export const conversationAbsent = (state, channelSid) => {
     return !state.some(conv => {
-        if (channelSid in conv) {
+        if ('channelSid' in conv) {
             return conv.channelSid === channelSid;
         } else {
             return conv.channelUniqId === channelSid;

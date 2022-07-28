@@ -174,7 +174,6 @@ function RootNavigator() {
                         }, addNotifications);
                     });
                     client.addListener("messageAdded", (event: Message) => {
-                        console.log("Message", event.sid)
                         addMessage(event, addMessages, updateUnreadMessages);
                     });
 
@@ -190,8 +189,6 @@ function RootNavigator() {
 
 
                     client.addListener("conversationUpdated", ({conversation, updateReasons}) => {
-                        console.log("conversationUpdated status", conversation.status);
-                        console.log("updateReasons status", updateReasons);
                         handlePromiseRejection(() => updateConvoList(
                             client,
                             conversation,

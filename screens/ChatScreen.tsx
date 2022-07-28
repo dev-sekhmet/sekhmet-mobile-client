@@ -33,12 +33,16 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     );
 
 
-    useEffect(() => {
+    function getConMessages() {
         const msgs = messageList.find(m => m.channelSid === conversation.sid).messages;
         setAuthorMessages(msgs);
         if (!messages && conversation) {
             loadMessages(conversation, messages, addMessages);
         }
+    }
+
+    useEffect(() => {
+        getConMessages();
     }, []);
 
     useEffect(() => {
@@ -49,8 +53,9 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     }, [conversation]);
 
     useEffect(() => {
+        getConMessages();
         updateLastReadIndex();
-    }, [messages, conversation]);
+    }, [messageList, conversations]);
 
     const updateLastReadIndex = () => {
         if (messages?.length && messages[messages.length - 1].msg.index !== -1) {
