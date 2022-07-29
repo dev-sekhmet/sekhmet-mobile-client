@@ -156,7 +156,6 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
             data={conversations}
             renderItem={({item}) => {
                 const unreadMessagesCount = unreadMessages.find(c => c.channelUniqId === item.sid)?.unreadCount ?? 0;
-                console.log('unreadMessagesCount', unreadMessagesCount, item.friendlyName);
                 return (
                     <ChatItem conversation={item}
                               messages={messages.find(m => m.channelSid === item.sid)?.messages}

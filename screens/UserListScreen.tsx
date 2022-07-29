@@ -113,15 +113,13 @@ export default function UserListScreen({navigation, route}) {
         );
     };
 
-
+    if (loading) {
+        return <SekhmetActivityIndicator/>;
+    }
     let usersWithoutMe = [];
     if (users) {
         usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
     }
-    if (loading) {
-        return <SekhmetActivityIndicator/>;
-    }
-
     const canCreateGroup = isAdmin && route.params.conversationInfo.type === CONVERSATION_TYPE.GROUP;
     return <View>
         <View style={[styles.view, {marginTop: 15}]}>

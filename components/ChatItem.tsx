@@ -90,8 +90,7 @@ export default function ChatItem({conversation, navigation, lastMessage, unreadM
             //set messages to be read
             const lastMessage =
                 messages.length &&
-                messages[conversation.sid]
-               ? messages[messages[conversation.sid].length - 1] : null;
+                messages[messages.length - 1]?messages[messages.length - 1] : null;
             if (lastMessage && lastMessage.index !== -1) {
                 await conversation.updateLastReadMessageIndex(lastMessage.index);
             }
