@@ -49,23 +49,6 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
     }, [propMessage]);
 
     useEffect(() => {
-        // subscription to websocket chat
-        /*  const subscription = DataStore.observe(MessageModel, message.id).subscribe(
-              (msg) => {
-                  if (msg.model === MessageModel) {
-                      if (msg.opType === "UPDATE") {
-                          setMessage((message) => ({ ...message, ...msg.element }));
-                      } else if (msg.opType === "DELETE") {
-                          setIsDeleted(true);
-                      }
-                  }
-              }
-          );
-
-          return () => subscription.unsubscribe();*/
-    }, []);
-
-    useEffect(() => {
         setAsRead();
     }, [isMe, message]);
 
@@ -168,9 +151,6 @@ const MessageBox = (props: { navigation?: any, message: Message, authUser?: User
             },
             onActionPress
         );
-    };
-    const getFileUrl = async (media: Media): Promise<string> => {
-        return await media.getContentTemporaryUrl().then();
     };
     if (!message.msg.author) {
         return <ActivityIndicator/>;

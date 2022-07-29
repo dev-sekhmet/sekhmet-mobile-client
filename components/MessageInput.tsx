@@ -3,6 +3,7 @@ import {Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, Text
 import {AntDesign, Feather, Ionicons, MaterialCommunityIcons, SimpleLineIcons,} from '@expo/vector-icons';
 import EmojiSelector from 'react-native-emoji-selector';
 import * as ImagePicker from 'expo-image-picker';
+import {ImageInfo} from 'expo-image-picker';
 import {Audio} from 'expo-av';
 import AudioPlayer from './media/AudioPlayer';
 import MessageBox from './MessageBox';
@@ -10,8 +11,6 @@ import {useNavigation} from '@react-navigation/core';
 import Colors from "../constants/Colors";
 import {Conversation} from "@twilio/conversations";
 import {Message} from "../types";
-import {ImageInfo, ImagePickerCancelledResult} from "expo-image-picker";
-import VideoPlayer from "./media/video/VideoPlayer";
 
 
 const MessageInput = ({
@@ -87,7 +86,7 @@ const MessageInput = ({
     };
 
     const sendMessage = async () => {
-        conversation.sendMessage(message);
+        return conversation.sendMessage(message);
     };
 
     const updateLastMessage = async (newMessage) => {
@@ -98,25 +97,19 @@ const MessageInput = ({
         );*/
     };
 
-    const onPlusClicked = () => {
-        // console.warn("On plus clicked");
-    };
-
-    const onPress = () => {
+    const onPress = async () => {
+        let messageIndex: number = null;
         if (videoURI) {
-            sendVideo();
-        }
-        if (image) {
-            sendImage();
+            messageIndex = await sendVideo();
+        } else if (image) {
+            messageIndex = await sendImage();
         } else if (soundURI) {
-            sendAudio();
-        } else if (message) {
-            sendMessage();
+            messageIndex = await sendAudio();
         } else {
-            onPlusClicked();
+            messageIndex = await sendMessage();
         }
         resetFields();
-        conversation.setAllMessagesRead();
+        conversation.updateLastReadMessageIndex(messageIndex)
     };
 
     const resetFields = () => {
@@ -174,17 +167,6 @@ const MessageInput = ({
         return {filename, type};
     }
 
-    const sendImage = async () => {
-        if (!image) {
-            return;
-        }
-        const fileData = new FormData();
-        let {filename, type} = buildFileInfo("image", image);
-        // @ts-ignore
-        fileData.append("image", {uri: image, name: filename, type});
-        conversation.sendMessage(fileData);
-    };
-
     async function startRecording() {
         try {
             await Audio.setAudioModeAsync({
@@ -223,26 +205,29 @@ const MessageInput = ({
         setSoundURI(uri);
     }
 
-    const sendAudio = async () => {
-        if (!soundURI) {
+    const sendMedia = async (mediaURI: string, typeMedia: string) => {
+        if (!mediaURI) {
             return;
         }
         const fileData = new FormData();
-        let {filename, type} = buildFileInfo("audio", soundURI);
+        let {filename, type} = buildFileInfo(typeMedia, mediaURI);
         // @ts-ignore
-        fileData.append("audio", {uri: soundURI, name: filename, type});
-        conversation.sendMessage(fileData);
+        fileData.append(typeMedia, {uri: mediaURI, name: filename, type});
+        return await conversation.sendMessage(fileData);
+    }
+
+    const sendAudio = async () => {
+        return sendMedia(soundURI, "audio");
     };
 
+
+    const sendImage = async () => {
+        return sendMedia(image, "image");
+    };
+
+
     const sendVideo = async () => {
-        if (!videoURI) {
-            return;
-        }
-        const fileData = new FormData();
-        let {filename, type} = buildFileInfo("video", videoURI);
-        // @ts-ignore
-        fileData.append("video", {uri: videoURI, name: filename, type});
-        conversation.sendMessage(fileData);
+        return sendMedia(videoURI, "video");
     };
 
     return (
@@ -312,7 +297,7 @@ const MessageInput = ({
             )}
 
             {soundURI && <AudioPlayer soundURI={soundURI}/>}
-{/*            {videoURI && <VideoPlayer
+            {/*            {videoURI && <VideoPlayer
                 style={{
                     minHeight: 150,
                     minWidth: 150

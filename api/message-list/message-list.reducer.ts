@@ -50,16 +50,13 @@ export const MessageListSlice = createSlice({
                     (a, b) => a.dateCreated.getTime() - b.dateCreated.getTime()
                 );
 
-                const map = state.map(conv => {
+                return state.map(conv => {
                     if (conv.channelSid === channelSid) {
                         // @ts-ignore
                         return {channelSid, messages: sortedMessages};
                     }
                     return conv;
                 });
-                const messages = map.find(c=>c.channelSid === channelSid).messages;
-                console.log("elseMessage", messages[messages.length-1].body);
-                return map;
             }
         },
         removeMessages(state, action) {
