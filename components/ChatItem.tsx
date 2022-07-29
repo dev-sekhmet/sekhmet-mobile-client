@@ -16,7 +16,7 @@ import {updateParticipants} from "../api/participants/participants.reducer";
 import {updateUnreadMessages} from "../api/unread-message/unread-messages.reducer";
 
 
-export default function ChatItem({item, navigation, lastMessage, unreadMessagesCount, messages}: TwilioProps) {
+export default function ChatItem({conversation, navigation, lastMessage, unreadMessagesCount, messages}: TwilioProps) {
 
     const dispatch = useAppDispatch();
     const account = useAppSelector(state => state.authentification.account);
@@ -26,8 +26,8 @@ export default function ChatItem({item, navigation, lastMessage, unreadMessagesC
 
     useEffect(() => {
         if (account) {
-            setFriendlyName(getFriendlyName(item, account));
-            setImageUrl(getImageUrl(item, account));
+            setFriendlyName(getFriendlyName(conversation, account));
+            setImageUrl(getImageUrl(conversation, account));
         }
     }, []);
 
@@ -76,24 +76,24 @@ export default function ChatItem({item, navigation, lastMessage, unreadMessagesC
 
     const onPress = async () => {
         try {
-            dispatch(setLastReadIndex(item.lastReadMessageIndex ?? -1));
+            dispatch(setLastReadIndex(conversation.lastReadMessageIndex ?? -1));
             await updateCurrentConvo(
                 updateCurrentConversation,
-                item,
+                conversation,
                 updateParticipants
             );
             //update unread messages
             dispatch(updateUnreadMessages({
-                channelUniqId: item.sid,
+                channelUniqId: conversation.sid,
                 unreadCount: 0
             }));
             //set messages to be read
             const lastMessage =
                 messages.length &&
-                messages[item.sid]
-               ? messages[messages[item.sid].length - 1] : null;
+                messages[conversation.sid]
+               ? messages[messages[conversation.sid].length - 1] : null;
             if (lastMessage && lastMessage.index !== -1) {
-                await item.updateLastReadMessageIndex(lastMessage.index);
+                await conversation.updateLastReadMessageIndex(lastMessage.index);
             }
         } catch (e) {
             console.error(e);
@@ -101,7 +101,7 @@ export default function ChatItem({item, navigation, lastMessage, unreadMessagesC
         }
         navigation.navigate("Chat", {
             clickedConversation: {
-                sid: item.sid,
+                sid: conversation.sid,
                 name: friendlyName,
                 imageUrl: imageUrl
             }

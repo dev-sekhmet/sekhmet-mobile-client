@@ -91,7 +91,7 @@ export type InputPhoneParamList = {
 
 export type TwilioProps = {
     twilioClient?: Client;
-    item?: Conversation;
+    conversation?: Conversation;
     unreadMessagesCount?: number;
     lastMessage?: string;
     messages?: TwilioMessage[];

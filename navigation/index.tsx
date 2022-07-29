@@ -269,6 +269,7 @@ function RootNavigator() {
         updateUnreadMessages: SetUreadMessagesType
     ) {
         const count = await convo.getUnreadMessagesCount();
+        console.log("getUnreadMessagesCount", count);
         dispatch(updateUnreadMessages(
             {
                 channelUniqId: convo.sid,

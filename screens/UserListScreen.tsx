@@ -6,21 +6,20 @@ import UserItem from "../components/UserItem";
 import {Alert, FlatList, StyleSheet, TextInput} from "react-native";
 import {IUser} from "../model/user.model";
 import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
-import {
-    findOrCreateConversation,
-    reset
-} from "../api/conversation-write/conversation-write.reducer";
-import {getFriendlyName} from "../shared/conversation/conversation.util";
+import {findOrCreateConversation, reset} from "../api/conversation-write/conversation-write.reducer";
 import {getUsers} from "../api/user-management/user-management.reducer";
 import Colors from "../constants/Colors";
 import {FAB} from "react-native-elements";
 import {hasAnyAuthority} from "../components/PrivateRoute";
+import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
 
 export default function UserListScreen({navigation, route}) {
     const dispatch = useAppDispatch();
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const [searchValue, setSearchValue] = useState('');
+    const [loading, setLoading] = useState(false);
     const account = useAppSelector(state => state.authentification.account);
+    const conversations = useAppSelector(state => state.convos);
     const selectedConversation = useAppSelector<Conversation>(state => state.conversationWrite.selectedConversation);
     const [pagination, setPagination] = useState<{ activePage: number, order: string, sort: string }>({
         activePage: 0,
@@ -35,13 +34,9 @@ export default function UserListScreen({navigation, route}) {
 
     useEffect(() => {
         if (selectedConversation) {
-            console.log("selectedConversation", selectedConversation.attributes);
-            navigation.navigate("Chat", {
-                clickedConversation: {
-                    sid: selectedConversation.sid,
-                    name: getFriendlyName(selectedConversation, account)
-                }
-            });
+            setLoading(false);
+            navigation.goBack()
+            dispatch(reset());
         }
     }, [selectedConversation]);
 
@@ -68,7 +63,7 @@ export default function UserListScreen({navigation, route}) {
 
     const selectedUser = (user: IUser, isSelected) => {
         if (route.params.conversationInfo.type === CONVERSATION_TYPE.DUAL) {
-            console.log("selectedUser", user);
+            setLoading(true);
             dispatch(findOrCreateConversation({
                 ids: [user.id],
                 friendlyName: "testDualGO",
@@ -81,16 +76,17 @@ export default function UserListScreen({navigation, route}) {
         }
     }
 
-    const isValidUserNumber = () =>{
+    const isValidUserNumber = () => {
         return selectedUsers.length >= 2;
     }
 
     const createGroup = (groupName: string) => {
-        if (!groupName){
+        if (!groupName) {
             enterGroupName();
             return;
         }
         if (isValidUserNumber()) {
+            setLoading(true);
             dispatch(findOrCreateConversation({
                 ids: selectedUsers.map(user => user.id),
                 friendlyName: groupName,
@@ -122,46 +118,56 @@ export default function UserListScreen({navigation, route}) {
     if (users) {
         usersWithoutMe = users.filter(user => user.id.toLowerCase() !== account.id.toLowerCase());
     }
+    if (loading) {
+        return <SekhmetActivityIndicator/>;
+    }
 
     const canCreateGroup = isAdmin && route.params.conversationInfo.type === CONVERSATION_TYPE.GROUP;
-    return <View style={[styles.view, {marginTop: 15}]}>
-        <TextInput
-            style={styles.inputText}
-            placeholder={'Taper le nom ou le numéro'}
-            onChangeText={onChangeSearch}
-            value={searchValue}
-        />
-        <FlatList
-            data={usersWithoutMe}
-            renderItem={({item}) => (
-                <UserItem
-                    item={item}
-                    execSelection={selectedUser}
-                    creationType={route.params.conversationInfo.type}
-                    isUserSelected={selectedUsers.some(selectedUser => selectedUser.id === item.id)}
-                />
-            )}
-            keyExtractor={item => item.id}
-        />
-        {canCreateGroup &&  <FAB
-            style={styles.fab}
-            size="small"
-            disabled={!isValidUserNumber()}
-            color={Colors.light.sekhmetOrange}
-            title={"Suivant"}
-            icon={{name: "comment", color: "white"}}
-            onPress={enterGroupName}
-        />}
+    return <View>
+        <View style={[styles.view, {marginTop: 15}]}>
+            <TextInput
+                style={styles.inputText}
+                placeholder={'Taper le nom ou le numéro'}
+                onChangeText={onChangeSearch}
+                value={searchValue}
+            />
+
+            <FlatList
+                data={usersWithoutMe}
+                renderItem={({item}) => (
+                    <UserItem
+                        item={item}
+                        execSelection={selectedUser}
+                        creationType={route.params.conversationInfo.type}
+                        isUserSelected={selectedUsers.some(selectedUser => selectedUser.id === item.id)}
+                    />
+                )}
+                keyExtractor={item => item.id}
+            />
+            {canCreateGroup && <FAB
+                style={styles.fab}
+                size="small"
+                disabled={!isValidUserNumber()}
+                color={Colors.light.sekhmetOrange}
+                title={"Suivant"}
+                icon={{name: "comment", color: "white"}}
+                onPress={enterGroupName}
+            />}
+        </View>
     </View>;
 }
 
 const styles = StyleSheet.create({
     inputText: {
         height: 40,
-        borderColor: 'grey',
-        borderWidth: 0.5,
-        borderRadius: 3,
-        paddingHorizontal: 8
+        backgroundColor: '#fff',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 30,
+        marginBottom: 10,
+        fontSize: 16,
     },
     view: {marginRight: 20, marginLeft: 20, marginTop: 20, flexDirection: "column", height: "100%"},
     fab: {

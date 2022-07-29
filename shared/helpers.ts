@@ -114,7 +114,6 @@ export async function updateConvoList(
         messages: messages.items
     }));
     loadUnreadMessagesCount(conversation, updateUnreadMessages);
-
     const subscribedConversations = await client.getSubscribedConversations();
     store().dispatch(setConvos(subscribedConversations.items));
 }

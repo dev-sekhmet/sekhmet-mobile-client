@@ -20,7 +20,7 @@ import {ChannelMessageCountType} from "../api/unread-message/unread-messages.red
 const height = Dimensions.get('screen').height;
 
 export default function MessagesScreen({navigation, twilioClient}: TwilioProps) {
-    const cons = useAppSelector(state => state.convos);
+    const conversations = useAppSelector(state => state.convos);
     const unreadMessages = useAppSelector(state => state.unreadMessages);
     const [dualConversations, setDualConversations] = useState<Conversation[]>([]);
     const [groupConversations, setGroupConversations] = useState<Conversation[]>([]);
@@ -48,11 +48,11 @@ export default function MessagesScreen({navigation, twilioClient}: TwilioProps) 
 
     useEffect(() => {
         if (twilioClient) {
-            setDualConversations(cons.filter(c => isConversationDual(c)));
-            setGroupConversations(cons.filter(c => isConversationGroup(c)));
+            setDualConversations(conversations.filter(c => isConversationDual(c)));
+            setGroupConversations(conversations.filter(c => isConversationGroup(c)));
         }
 
-    }, [])
+    }, [conversations])
 
     useEffect(() => {
         return () => {
@@ -156,8 +156,9 @@ const Discussion = ({navigation, conversations}: { conversations?: Conversation[
             data={conversations}
             renderItem={({item}) => {
                 const unreadMessagesCount = unreadMessages.find(c => c.channelUniqId === item.sid)?.unreadCount ?? 0;
+                console.log('unreadMessagesCount', unreadMessagesCount, item.friendlyName);
                 return (
-                    <ChatItem item={item}
+                    <ChatItem conversation={item}
                               messages={messages.find(m => m.channelSid === item.sid)?.messages}
                               lastMessage={getLastMessage(
                                   messages.find(tp => tp.channelSid === item.sid)?.messages ?? [],
@@ -188,7 +189,7 @@ const Groupes = ({navigation, conversations}) => {
         <FlatList
             data={conversations}
             renderItem={({item}) => (
-                <ChatItem item={item}
+                <ChatItem conversation={item}
                           messages={messages.find(m => m.channelSid === item.sid)?.messages}
                           lastMessage={getLastMessage(
                               messages.find(tp => tp.channelSid === item.sid)?.messages ?? [],

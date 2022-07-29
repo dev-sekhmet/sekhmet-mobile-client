@@ -44,6 +44,9 @@ export default function ChatScreen({route, navigation, twilioClient}: TwilioProp
     useEffect(() => {
         getConMessages();
     }, []);
+    useEffect(() => {
+        setConversation(conversations.find(c => c.sid === route.params.clickedConversation.sid))
+    }, [conversations]);
 
     useEffect(() => {
         getMessages(conversation).then((paginator) => {
