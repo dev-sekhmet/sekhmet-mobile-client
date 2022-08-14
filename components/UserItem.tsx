@@ -12,7 +12,7 @@ export default function UserItem({item, execSelection, creationType, isUserSelec
                                          creationType: CONVERSATION_TYPE,
                                          item: IUser,
                                          execSelection: (user: IUser, isSelected: boolean) => void,
-                                         isUserSelected: boolean
+                                         isUserSelected?: boolean
                                      }) {
 
     return (

@@ -57,21 +57,21 @@ export default function ChatItem({conversation, navigation, lastMessage, unreadM
             );
         }
         if (diffInDays === 1) {
-            return "1 day ago";
+            return "il y a 1 jour";
         }
         if (diffInDays < 7) {
-            return diffInDays + " days ago";
+            return `il y a ${diffInDays} jours`;
         }
         if (diffInDays < 14) {
-            return "1 week ago";
+            return "Il ya 1 semaine";
         }
         if (diffInWeeks < 52) {
-            return diffInWeeks + " weeks ago";
+            return `Il y a ${diffInWeeks} semaines`;
         }
         if (diffInYears < 2) {
-            return "1 year ago";
+            return "il y a 1 an";
         }
-        return diffInYears + " years ago";
+        return `Il ya ${diffInYears} ans`;
     }
 
     const onPress = async () => {

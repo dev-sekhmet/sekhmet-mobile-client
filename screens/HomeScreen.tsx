@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    admincontainer: {
+    adminContainer: {
         flex: 1,
         backgroundColor: '#F9F8FD'
     },
