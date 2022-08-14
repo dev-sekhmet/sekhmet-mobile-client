@@ -9,6 +9,11 @@ export enum CONVERSATION_TYPE {
     DUAL = 'DUAL'
 }
 
+export enum TWILIO_ROLE {
+    CHANNEL_USER = 'CHANNEL_USER',
+    CHANNEL_ADMIN = 'CHANNEL_ADMIN'
+}
+
 export const messages = {
     DATA_ERROR_ALERT: 'Internal Error',
 };

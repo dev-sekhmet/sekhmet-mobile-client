@@ -1,3 +1,5 @@
+import {TWILIO_ROLE} from "../constants/constants";
+
 export interface IUser {
   id?: any;
   login?: string;
@@ -14,6 +16,7 @@ export interface IUser {
   lastModifiedDate?: Date | null;
   resetDate?: Date | null;
   password?: string;
+  twilioRole?: TWILIO_ROLE;
 }
 
 export const defaultValue: Readonly<IUser> = {

@@ -1,10 +1,11 @@
-import {CheckBox, Icon, ListItem} from "react-native-elements";
-import React, {useState} from "react";
-import Colors from "../constants/Colors";
+import {Icon, ListItem} from "react-native-elements";
+import React from "react";
 import {IUser} from "../model/user.model";
 import ProfilAvatar from "./ProfilAvatar";
-import {CONVERSATION_TYPE} from "../constants/constants";
-import {View} from "./Themed";
+import {CONVERSATION_TYPE, TWILIO_ROLE} from "../constants/constants";
+import {useAppSelector} from "../api/store";
+import {Text, View} from "./Themed";
+import Colors from "../constants/Colors";
 
 
 export default function UserItem({item, execSelection, creationType, isUserSelected}:
@@ -14,6 +15,15 @@ export default function UserItem({item, execSelection, creationType, isUserSelec
                                          execSelection: (user: IUser, isSelected: boolean) => void,
                                          isUserSelected?: boolean
                                      }) {
+    const account = useAppSelector(state => state.authentification.account);
+
+    const getUserFullName = () => {
+        return account.id === item.id ? 'Vous' : `${item?.firstName} ${item?.lastName}`;
+    }
+
+    const getUserRole = () => {
+        return item?.twilioRole === TWILIO_ROLE.CHANNEL_ADMIN ? 'Admin' : '';
+    }
 
     return (
         <ListItem
@@ -36,8 +46,13 @@ export default function UserItem({item, execSelection, creationType, isUserSelec
                         color={item?.imageUrl? 'white' : 'black'}
                         tvParallaxProperties={{enabled: false}}
                         containerStyle={{ position: 'absolute', left: -40, top: 0 }}
-                        name="check" size={20}/>}
-                <ListItem.Title>{`${item?.firstName} ${item?.lastName}`}</ListItem.Title>
+                        name="check"
+                        size={20}/>
+                }
+                <ListItem.Title>{getUserFullName()}</ListItem.Title>
+            </ListItem.Content>
+            <ListItem.Content right>
+                <ListItem.Title style={{marginLeft: 10, color: Colors.light.sekhmetGreen}}>{getUserRole()}</ListItem.Title>
             </ListItem.Content>
         </ListItem>
     );

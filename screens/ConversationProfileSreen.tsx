@@ -11,7 +11,8 @@ import Moment from "moment";
 import {useAppSelector} from "../api/store";
 import {AntDesign} from "@expo/vector-icons";
 import UserItem from "../components/UserItem";
-import {CONVERSATION_TYPE} from "../constants/constants";
+import {AUTHORITIES, CONVERSATION_TYPE, TWILIO_ROLE} from "../constants/constants";
+import {hasAnyAuthority} from "../components/PrivateRoute";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -22,21 +23,26 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
     const [conversation, setConversation] = useState<Conversation>(conversations.find(c => c.sid === route.params.clickedConversation.sid));
     const [participants, setParticipants] = useState<Participant[]>(participantsList.find(c => c.channelSid === route.params.clickedConversation.sid).participants);
     const [allParticipants, setAllParticipants] = useState<IUser[]>([]);
-
+    const [isGroupAdmin, setIsGroupAdmin] = useState<boolean>(false);
+    const account = useAppSelector(state => state.authentification.account);
 
     const mapParticipantToIUser = (p: Participant) => {
+        const user = JSON.parse(p.attributes['participant']);
         return {
-            id: p.attributes['id'],
-            firstName: p.attributes['firstName'],
-            lastName: p.attributes['lastName'],
-            imageUrl: p.attributes['imageUrl'],
-        };
+            id: user['id'],
+            firstName: user['firstName'],
+            lastName: user['lastName'],
+            imageUrl: user['imageUrl'],
+            twilioRole: p.attributes['role'] as TWILIO_ROLE
+        } as IUser;
     }
 
     useEffect(() => {
         const iUsers = participants.map(p => {
             return mapParticipantToIUser(p);
         });
+        // is channel admin
+        setIsGroupAdmin(iUsers.filter(u => u.id === account.id).pop().twilioRole === TWILIO_ROLE.CHANNEL_ADMIN);
         setAllParticipants(iUsers);
     }, [participants]);
     const pickImage = async () => {
@@ -51,6 +57,12 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
 
     const addParticipant = (event) => {
         console.log("addParticipant", event);
+    }
+    const leaveGroup = () => {
+        console.log("leaveGroup");
+        conversation.leave().then(() => {
+            navigation.navigate('Message');
+        });
     }
     const selectedUser = (event) => {
         console.log("addParticipant", event);
@@ -101,12 +113,12 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                     placeholder={'Cherchez un participant'}
                     onChangeText={onChangeSearch}
                 />
-                <TouchableOpacity style={[styles.ajouterButton]} onPress={() => addParticipant(null)}>
+                {isGroupAdmin && <TouchableOpacity style={[styles.ajoutParticipant]} onPress={() => addParticipant(null)}>
                     <AntDesign name="plus" size={24} color="black"/>
                     <Text style={{marginLeft: 10, color: Colors.light.colorTextGrey}}>Ajouter un Participant</Text>
-                </TouchableOpacity>
+                </TouchableOpacity>}
                 <FlatList
-                    style={styles.inputText}
+                    style={styles.listUsers}
                     data={allParticipants}
                     renderItem={({item}) => (
                         <UserItem
@@ -117,6 +129,10 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                     )}
                     keyExtractor={item => item.id}
                 />
+                 <TouchableOpacity style={[styles.leaveGroup]} onPress={() => leaveGroup()}>
+                    <AntDesign name="plus" size={24} color={Colors.light.sekhmetOrange}/>
+                    <Text style={{marginLeft: 10, color: Colors.light.sekhmetOrange}}>Quitter le groupe</Text>
+                </TouchableOpacity>
             </View>
 
         </SafeAreaView>
@@ -177,12 +193,49 @@ const styles = StyleSheet.create({
         padding: 5,
         borderRadius: 10,
         maxHeight: height * 0.05,
-        flexDirection: 'row', justifyContent: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
         backgroundColor: "white",
         marginHorizontal: "2%",
         marginLeft: 10,
         marginRight: 10,
         marginTop: 5,
         alignItems: 'center'
+    },
+    ajoutParticipant: {
+        flex: 1,
+        padding: 5,
+        borderRadius: 5,
+        maxHeight: height * 0.05,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        backgroundColor: "white",
+        marginHorizontal: "2%",
+        marginLeft: 10,
+        marginRight: 10,
+        marginTop: 5,
+        alignItems: 'center'
+    },
+    leaveGroup: {
+        flex: 1,
+        padding: 5,
+        borderRadius: 5,
+        color: Colors.light.sekhmetOrange,
+        maxHeight: height * 0.05,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        backgroundColor: "white",
+        marginHorizontal: "2%",
+        margin: 20,
+        alignItems: 'center'
+    },
+    listUsers: {
+        height: 30,
+        backgroundColor: 'white',
+        paddingHorizontal: 15,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        margin: 10,
+        fontSize: 16,
     }
 });
