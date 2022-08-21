@@ -19,7 +19,7 @@ import {
     InputPhoneParamList,
     ProductParamList,
     SetUreadMessagesType,
-    UserListParamList,
+    ConversationParam,
 } from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
@@ -46,9 +46,9 @@ import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
 import SearchHidableBar from "../components/SearchHidableBar";
-import UserListScreen from "../screens/UserListScreen";
+import CreateConversationScreen from "../screens/conversartion/CreateConversationScreen";
 import {Text} from "../components/Themed";
-import ConversationProfileSreen from "../screens/ConversationProfileSreen";
+import ConversationProfileSreen from "../screens/conversartion/ConversationProfileSreen";
 import Toast from "react-native-toast-message";
 import {handlePromiseRejection, SetParticipantsType, updateConvoList, updateTypingIndicator} from "../shared/helpers";
 import {addNotifications} from "../api/notification/notification.reducer";
@@ -59,6 +59,7 @@ import {listConversations, removeConversation} from "../api/convos/convos.reduce
 import {addMessages, removeMessages} from "../api/message-list/message-list.reducer";
 import {updateUnreadMessages} from "../api/unread-message/unread-messages.reducer";
 import {updateCurrentConversation} from "../api/current-conv/current-conv.reducer";
+import ConversationAddParticipantsScreen from "../screens/conversartion/ConversationAddParticipantsScreen";
 
 export default function Navigation({colorScheme}) {
     const notifications = useAppSelector(state => state.notifications);
@@ -92,7 +93,7 @@ export default function Navigation({colorScheme}) {
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
-const UserList = createStackNavigator<UserListParamList>();
+const ConversationStack = createStackNavigator<ConversationParam>();
 const ProductStack = createStackNavigator<ProductParamList>();
 const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 
@@ -181,9 +182,11 @@ function RootNavigator() {
                         handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
                     });
                     client.addListener("participantUpdated", (event) => {
+                        console.log("participantUpdated", event.participant.attributes);
                         handlePromiseRejection(() => handleParticipantsUpdate(event.participant, updateParticipants), addNotifications);
                     });
                     client.addListener("participantJoined", (participant) => {
+                        console.log("participantJoined", participant.attributes);
                         handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
                     });
 
@@ -300,9 +303,14 @@ function RootNavigator() {
                         {props => <BottomTabNavigator twilioClient={twilioClient} {...props} />}
                     </Stack.Screen>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
-                    <UserList.Screen name="UserList" component={UserListScreen} options={({route}) => ({
+                    <ConversationStack.Screen name="CreateConversation" component={CreateConversationScreen} options={({route}) => ({
                         title: route.params.title,
                         headerBackTitle: 'Messages'
+                    })}/>
+
+                    <ConversationStack.Screen name="ConversationAddParticipants" component={ConversationAddParticipantsScreen} options={({route}) => ({
+                        title: "Ajout de Participants",
+                        headerBackTitle: ''
                     })}/>
                     <MsgStack.Screen name="ConversationProfile"
                                      options={({route}) => ({

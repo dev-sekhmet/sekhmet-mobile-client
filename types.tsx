@@ -8,6 +8,8 @@ import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/nat
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Client, Conversation, Message as TwilioMessage} from "@twilio/conversations";
 import {AnyAction} from "redux";
+import CreateConversationScreen from "./screens/conversartion/CreateConversationScreen";
+import {CONVERSATION_TYPE} from "./constants/constants";
 
 declare global {
     namespace ReactNavigation {
@@ -56,10 +58,13 @@ export type ChatParamList = {
         }
     }
 };
-export type UserListParamList = {
-    UserList: {
+export type ConversationParam = {
+    CreateConversation: {
         title: undefined,
-        conversationInfo: undefined
+        conversationInfo: {label: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}
+    },
+    ConversationAddParticipants: {
+        sid: 'aaaaaaaaaaa'
     }
 };
 export type ProductParamList = {

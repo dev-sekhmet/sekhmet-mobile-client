@@ -9,6 +9,11 @@ export enum CONVERSATION_TYPE {
     DUAL = 'DUAL'
 }
 
+export enum USER_LIST_SELECTION_MODE {
+    SINGLE = 'SINGLE',
+    MULTIPLE = 'MULTIPLE'
+}
+
 export enum TWILIO_ROLE {
     CHANNEL_USER = 'CHANNEL_USER',
     CHANNEL_ADMIN = 'CHANNEL_ADMIN'

@@ -1,19 +1,19 @@
-import {useAppDispatch, useAppSelector} from "../api/store";
+import {useAppDispatch, useAppSelector} from "../../api/store";
 import React, {useEffect, useState} from "react";
 import {Conversation} from "@twilio/conversations";
-import {View} from "../components/Themed";
-import UserItem from "../components/UserItem";
+import {View} from "../../components/Themed";
+import UserItem from "../../components/UserItem";
 import {Alert, FlatList, StyleSheet, TextInput} from "react-native";
-import {IUser} from "../model/user.model";
-import {AUTHORITIES, CONVERSATION_TYPE} from "../constants/constants";
-import {findOrCreateConversation, reset} from "../api/conversation-write/conversation-write.reducer";
-import {getUsers} from "../api/user-management/user-management.reducer";
-import Colors from "../constants/Colors";
+import {IUser} from "../../model/user.model";
+import {AUTHORITIES, CONVERSATION_TYPE} from "../../constants/constants";
+import {findOrCreateConversation, reset} from "../../api/conversation-write/conversation-write.reducer";
+import {getUsers} from "../../api/user-management/user-management.reducer";
+import Colors from "../../constants/Colors";
 import {FAB} from "react-native-elements";
-import {hasAnyAuthority} from "../components/PrivateRoute";
-import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
+import {hasAnyAuthority} from "../../components/PrivateRoute";
+import SekhmetActivityIndicator from "../../components/SekhmetActivityIndicator";
 
-export default function UserListScreen({navigation, route}) {
+export default function CreateConversationScreen({navigation, route}) {
     const dispatch = useAppDispatch();
     const users = useAppSelector<ReadonlyArray<IUser>>(state => state.userManagement.users);
     const [searchValue, setSearchValue] = useState('');
@@ -42,9 +42,7 @@ export default function UserListScreen({navigation, route}) {
 
     useEffect(() => {
         onChangeSearch('');
-    }, []);
-
-    useEffect(() => {
+        console.log('selectedUsers', users);
         return () => {
             dispatch(reset());
         };
@@ -52,8 +50,7 @@ export default function UserListScreen({navigation, route}) {
 
     const onChangeSearch = (searchQuery) => {
         setSearchValue(searchQuery);
-        dispatch(
-            getUsers({
+        dispatch(getUsers({
                 page: pagination.activePage,
                 size: 10,
                 sort: `${pagination.sort},${pagination.order}`,
@@ -70,7 +67,6 @@ export default function UserListScreen({navigation, route}) {
                 description: "testDualDescriptionGO",
             }));
         } else {
-            console.log("selectedUser", selectedUsers.length);
             setSelectedUsers(isSelected ?
                 [...selectedUsers, user] : selectedUsers.filter(selectedUser => selectedUser.id !== user.id));
         }
@@ -134,9 +130,8 @@ export default function UserListScreen({navigation, route}) {
                 data={usersWithoutMe}
                 renderItem={({item}) => (
                     <UserItem
-                        item={item}
+                        user={item}
                         execSelection={selectedUser}
-                        creationType={route.params.conversationInfo.type}
                         isUserSelected={selectedUsers.some(selectedUser => selectedUser.id === item.id)}
                     />
                 )}

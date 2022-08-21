@@ -1,18 +1,18 @@
-import {TwilioProps} from "../types";
-import {Text, View} from "../components/Themed";
+import {TwilioProps} from "../../types";
+import {Text, View} from "../../components/Themed";
 import {Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, TouchableOpacity} from "react-native";
-import ProfilAvatar from "../components/ProfilAvatar";
+import ProfilAvatar from "../../components/ProfilAvatar";
 import React, {useEffect, useState} from "react";
-import Colors from "../constants/Colors";
+import Colors from "../../constants/Colors";
 import {Conversation, Participant} from "@twilio/conversations";
-import {IUser} from "../model/user.model";
-import SekhmetActivityIndicator from "../components/SekhmetActivityIndicator";
+import {IUser} from "../../model/user.model";
+import SekhmetActivityIndicator from "../../components/SekhmetActivityIndicator";
 import Moment from "moment";
-import {useAppSelector} from "../api/store";
+import {useAppSelector} from "../../api/store";
 import {AntDesign} from "@expo/vector-icons";
-import UserItem from "../components/UserItem";
-import {AUTHORITIES, CONVERSATION_TYPE, TWILIO_ROLE} from "../constants/constants";
-import {hasAnyAuthority} from "../components/PrivateRoute";
+import UserItem from "../../components/UserItem";
+import {AUTHORITIES, CONVERSATION_TYPE, TWILIO_ROLE} from "../../constants/constants";
+import {hasAnyAuthority} from "../../components/PrivateRoute";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -27,7 +27,13 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
     const account = useAppSelector(state => state.authentification.account);
 
     const mapParticipantToIUser = (p: Participant) => {
-        const user = JSON.parse(p.attributes['participant']);
+        console.log("USER", p.attributes['participant']);
+        let user = null;
+        if (typeof p.attributes['participant'] === 'string') {
+           user =  JSON.parse(p.attributes['participant'])
+        }else {
+            user = p.attributes['participant']
+        }
         return {
             id: user['id'],
             firstName: user['firstName'],
@@ -55,13 +61,16 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
         console.log("searchQuery participant", searchQuery);
     }
 
-    const addParticipant = (event) => {
-        console.log("addParticipant", event);
+    const addParticipant = () => {
+        navigation.navigate("ConversationAddParticipants", {
+            sid: conversation.sid
+        });
     }
     const leaveGroup = () => {
         console.log("leaveGroup");
         conversation.leave().then(() => {
-            navigation.navigate('Message');
+            console.log("leaveGroup success");
+            //navigation.navigate('Message');
         });
     }
     const selectedUser = (event) => {
@@ -113,7 +122,7 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                     placeholder={'Cherchez un participant'}
                     onChangeText={onChangeSearch}
                 />
-                {isGroupAdmin && <TouchableOpacity style={[styles.ajoutParticipant]} onPress={() => addParticipant(null)}>
+                {isGroupAdmin && <TouchableOpacity style={[styles.ajoutParticipant]} onPress={() => addParticipant()}>
                     <AntDesign name="plus" size={24} color="black"/>
                     <Text style={{marginLeft: 10, color: Colors.light.colorTextGrey}}>Ajouter un Participant</Text>
                 </TouchableOpacity>}
@@ -122,9 +131,8 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                     data={allParticipants}
                     renderItem={({item}) => (
                         <UserItem
-                            item={item}
+                            user={item}
                             execSelection={selectedUser}
-                            creationType={CONVERSATION_TYPE.GROUP}
                         />
                     )}
                     keyExtractor={item => item.id}

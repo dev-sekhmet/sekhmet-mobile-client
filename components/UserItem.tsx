@@ -8,42 +8,41 @@ import {Text, View} from "./Themed";
 import Colors from "../constants/Colors";
 
 
-export default function UserItem({item, execSelection, creationType, isUserSelected}:
+export default function UserItem({user, execSelection, isUserSelected}:
                                      {
-                                         creationType: CONVERSATION_TYPE,
-                                         item: IUser,
+                                         user: IUser,
                                          execSelection: (user: IUser, isSelected: boolean) => void,
                                          isUserSelected?: boolean
                                      }) {
     const account = useAppSelector(state => state.authentification.account);
 
     const getUserFullName = () => {
-        return account.id === item.id ? 'Vous' : `${item?.firstName} ${item?.lastName}`;
+        return account.id === user.id ? 'Vous' : `${user?.firstName} ${user?.lastName}`;
     }
 
     const getUserRole = () => {
-        return item?.twilioRole === TWILIO_ROLE.CHANNEL_ADMIN ? 'Admin' : '';
+        return user?.twilioRole === TWILIO_ROLE.CHANNEL_ADMIN ? 'Admin' : '';
     }
 
     return (
         <ListItem
             bottomDivider
-            key={item.id}
+            key={user.id}
             containerStyle={{backgroundColor: isUserSelected ? '#F6FFEC' : 'white'}}
             onPress={() => {
-                execSelection(item, !isUserSelected);
+                execSelection(user, !isUserSelected);
             }}>
 
             <ProfilAvatar
                 size={30}
-                key={item?.imageUrl}
-                title={item?.firstName?.charAt(0)}
-                imageUrl={item?.imageUrl}/>
+                key={user?.imageUrl}
+                title={user?.firstName?.charAt(0)}
+                imageUrl={user?.imageUrl}/>
 
             <ListItem.Content>
                 {isUserSelected &&
                     <Icon
-                        color={item?.imageUrl? 'white' : 'black'}
+                        color={user?.imageUrl? 'white' : 'black'}
                         tvParallaxProperties={{enabled: false}}
                         containerStyle={{ position: 'absolute', left: -40, top: 0 }}
                         name="check"

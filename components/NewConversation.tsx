@@ -9,8 +9,8 @@ const NewConversation = ({
                              navigation,
                              conversationInfo
                          }: NewConversationParam) => {
-    const openUserList = () => {
-        navigation.navigate("UserList", {
+    const createNewConversation = () => {
+        navigation.navigate("CreateConversation", {
             title: conversationInfo.label,
             conversationInfo
         });
@@ -23,7 +23,7 @@ const NewConversation = ({
             color={Colors.light.sekhmetOrange}
             title={conversationInfo.label}
             icon={{name: "comment", color: "white"}}
-            onPress={() => openUserList()}
+            onPress={() => createNewConversation()}
         />
     </>
 }
