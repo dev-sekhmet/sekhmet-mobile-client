@@ -1,6 +1,6 @@
 import {TwilioProps} from "../../types";
 import {Text, View} from "../../components/Themed";
-import {Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, TouchableOpacity} from "react-native";
+import {Alert, Dimensions, FlatList, SafeAreaView, StyleSheet, TextInput, TouchableOpacity} from "react-native";
 import ProfilAvatar from "../../components/ProfilAvatar";
 import React, {useEffect, useState} from "react";
 import Colors from "../../constants/Colors";
@@ -13,11 +13,13 @@ import {AntDesign} from "@expo/vector-icons";
 import UserItem from "../../components/UserItem";
 import {AUTHORITIES, CONVERSATION_TYPE, TWILIO_ROLE} from "../../constants/constants";
 import {hasAnyAuthority} from "../../components/PrivateRoute";
+import {useActionSheet} from "@expo/react-native-action-sheet";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
 
 export default function ConversationProfileSreen({route, navigation, twilioClient}: TwilioProps) {
+    const {showActionSheetWithOptions} = useActionSheet();
     const conversations = useAppSelector(state => state.convos);
     const participantsList = useAppSelector(state => state.participants);
     const [conversation, setConversation] = useState<Conversation>(conversations.find(c => c.sid === route.params.clickedConversation.sid));
@@ -26,14 +28,17 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
     const [isGroupAdmin, setIsGroupAdmin] = useState<boolean>(false);
     const account = useAppSelector(state => state.authentification.account);
 
-    const mapParticipantToIUser = (p: Participant) => {
-        console.log("USER", p.attributes['participant']);
+    const parseParticipantAttributes = (p: Participant) => {
         let user = null;
         if (typeof p.attributes['participant'] === 'string') {
-           user =  JSON.parse(p.attributes['participant'])
-        }else {
-            user = p.attributes['participant']
+            return JSON.parse(p.attributes['participant'])
+        } else {
+            return p.attributes['participant']
         }
+    }
+
+    const mapParticipantToIUser = (p: Participant) => {
+        let user = parseParticipantAttributes(p);
         return {
             id: user['id'],
             firstName: user['firstName'],
@@ -73,9 +78,55 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
             //navigation.navigate('Message');
         });
     }
-    const selectedUser = (event) => {
-        console.log("addParticipant", event);
+    const removeParticipant = (user: IUser) => {
+     conversation.removeParticipant(user.id).then(() => {
+         console.log("removeParticipant success");
+     });
     }
+
+    const openActionMenu = (user: IUser) => {
+        if (isGroupAdmin) {
+            const options = ["Retirer", "Definir en tant qu'administrateur", "Annuler"];
+            const destructiveButtonIndex = 1;
+            const cancelButtonIndex = 2;
+            showActionSheetWithOptions(
+                {
+                    options,
+                    destructiveButtonIndex,
+                    cancelButtonIndex
+                },
+                (index) => onActionPress(index, user)
+            );
+        }
+    };
+    const onActionPress = (index, user: IUser) => {
+        switch (index) {
+            case 0:
+                console.log("remove participant");
+                Alert.alert(
+                    `Etes vous sur de vouloir retirer  ${user.firstName} ${user.lastName} ?`,
+                    "Voulez vous vraiment retirer cet utilisateur ?",
+                    [
+                        {
+                            text: "Retirer",
+                            onPress: ()=>removeParticipant(user),
+                            style: "destructive",
+                        },
+                        {
+                            text: "Cancel",
+                        },
+                    ]
+                );
+                break;
+            case 1:
+                console.log("set admin");
+                break;
+            case 2:
+                console.log("cancel");
+                break;
+        }
+
+    };
 
     return (
         <SafeAreaView style={{flex: 1}}>
@@ -132,7 +183,7 @@ export default function ConversationProfileSreen({route, navigation, twilioClien
                     renderItem={({item}) => (
                         <UserItem
                             user={item}
-                            execSelection={selectedUser}
+                            execSelection={openActionMenu}
                         />
                     )}
                     keyExtractor={item => item.id}
