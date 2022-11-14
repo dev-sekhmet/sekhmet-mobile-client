@@ -6,7 +6,10 @@
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {CompositeScreenProps, NavigatorScreenParams} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {Client, Conversation} from "@twilio/conversations";
+import {Client, Conversation, Message as TwilioMessage} from "@twilio/conversations";
+import {AnyAction} from "redux";
+import CreateConversationScreen from "./screens/conversartion/CreateConversationScreen";
+import {CONVERSATION_TYPE} from "./constants/constants";
 
 declare global {
     namespace ReactNavigation {
@@ -14,6 +17,11 @@ declare global {
         }
     }
 }
+export type AddMessagesType = (chanMessages: { channelSid: string, messages: TwilioMessage[] }) => AnyAction;
+export type SetUreadMessagesType = (chanUnreadCount: {
+    channelUniqId: string,
+    unreadCount: number
+}) => AnyAction;
 
 
 export type RootStackParamList = {
@@ -43,6 +51,20 @@ export type ChatParamList = {
             sid: 'aaaaaaaaaaa',
             name: "Gaetan TEMATE"
         }
+    },
+    ConversationProfile: {
+        clickedConversation: {
+            sid: 'aaaaaaaaaaa'
+        }
+    }
+};
+export type ConversationParam = {
+    CreateConversation: {
+        title: undefined,
+        conversationInfo: {label: "Nouvelle discussion", type: CONVERSATION_TYPE.DUAL}
+    },
+    ConversationAddParticipants: {
+        sid: 'aaaaaaaaaaa'
     }
 };
 export type ProductParamList = {
@@ -74,10 +96,15 @@ export type InputPhoneParamList = {
 
 export type TwilioProps = {
     twilioClient?: Client;
-    item?: Conversation;
+    conversation?: Conversation;
+    unreadMessagesCount?: number;
+    lastMessage?: string;
+    messages?: TwilioMessage[];
     route?: any;
     navigation?: any;
 };
+
+export type Message = { msg: TwilioMessage, author: string, deleted?: boolean };
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> = CompositeScreenProps<BottomTabScreenProps<RootTabParamList, Screen>,
     NativeStackScreenProps<RootStackParamList>>;

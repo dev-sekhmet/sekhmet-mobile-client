@@ -1,18 +1,19 @@
 import {ColorValue, Dimensions, FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet} from 'react-native';
 import {Text, View} from '../components/Themed';
-import {Avatar, Badge, Icon, ListItem, Switch} from "react-native-elements";
+import {Avatar, Icon, ListItem, Switch} from "react-native-elements";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import Colors from "../constants/Colors";
 import {IUser} from "../model/user.model";
-import {FontAwesome} from "@expo/vector-icons";
 import {useActionSheet} from "@expo/react-native-action-sheet";
 import {errorToast, successToast} from "../components/toast";
 import {useAppDispatch, useAppSelector} from "../api/store";
-import {logout} from "../api/authentification/authentication.reducer";
 import {Controller, useForm} from "react-hook-form";
-import {reset, saveAccountSettings} from "../api/settings/settings.reducer";
+import {reset, saveAccountSettings, saveProfilPicture} from "../api/settings/settings.reducer";
 import PhoneInput from "react-native-phone-number-input";
 import {BottomSheetModal, BottomSheetTextInput} from '@gorhom/bottom-sheet';
+import * as ImagePicker from "expo-image-picker";
+import ProfilAvatar from "../components/ProfilAvatar";
+import {logout} from "../api/authentification/authentication.reducer";
 
 const width = Dimensions.get('screen').width;
 const height = Dimensions.get('screen').height;
@@ -30,6 +31,7 @@ export default function ProfilScreen({navigation}) {
     const {showActionSheetWithOptions} = useActionSheet();
     const account = useAppSelector(state => state.authentification.account);
     const successMessage = useAppSelector(state => state.settings.successMessage);
+    const successMessageProfilPic = useAppSelector(state => state.settings.updateProfilPictureSuccess);
     const errorMessage = useAppSelector(state => state.settings.errorMessage);
     const phoneInput = useRef<PhoneInput>(null);
     const {control, handleSubmit, formState: {errors}} = useForm({
@@ -40,6 +42,7 @@ export default function ProfilScreen({navigation}) {
             phoneNumber: account?.phoneNumber
         }
     });
+
     // ref
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -65,10 +68,13 @@ export default function ProfilScreen({navigation}) {
             dispatch(reset());
             successToast('Enregistrement avec succès', 'Enregistrement des vos informations avec succès');
         }
+        if (successMessageProfilPic) {
+            dispatch(reset());
+        }
         if (errorMessage) {
             errorToast('Erreur', errorMessage);
         }
-    }, [successMessage, errorMessage]);
+    }, [successMessage, errorMessage, successMessageProfilPic]);
 
 
     const languageOptions = ["Francais", "Anglais", "Annuler"];
@@ -135,9 +141,6 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
-    const onChangeAvatar = () => {
-
-    }
     const onSave = (values) => {
         dispatch(
             saveAccountSettings({
@@ -166,7 +169,7 @@ export default function ProfilScreen({navigation}) {
         return (
             <ListItem
                 bottomDivider
-                onPress={() => action(item)}>
+                onPress={() => action(item)} hasTVPreferredFocus={undefined} tvParallaxProperties={undefined}>
                 <Icon tvParallaxProperties={false} color={item.color} name={item.icon}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.title}</ListItem.Title>
@@ -194,8 +197,7 @@ export default function ProfilScreen({navigation}) {
         }
     };
 
-
-    const menuData =[
+    const menuData = [
         {nameMenu: "Mon Compte", data: accountItems},
         {nameMenu: "Notifications", data: notificationItems},
         {nameMenu: "Plus", data: plusItems}
@@ -231,17 +233,12 @@ export default function ProfilScreen({navigation}) {
                         }>
                         <View
                             style={styles.row}>
-                            <Avatar
+                            <ProfilAvatar
                                 size={60}
-                                rounded
-                                source={require("../assets/images/photoprofil.png")}
-                                containerStyle={
-                                    {
-                                        borderColor: 'grey',
-                                        borderStyle: 'solid',
-                                        borderWidth: 1,
-                                    }
-                                }/>
+                                key={account.imageUrl}
+                                title={account?.firstName?.charAt(0)}
+                                imageUrl={account.imageUrl}
+                            />
                             <Pressable onPress={handleSubmit(onSave)}>
                                 <Text style={{color: Colors.light.sekhmetGreen}}>Enregistrer</Text>
                             </Pressable>
@@ -378,27 +375,49 @@ export default function ProfilScreen({navigation}) {
             </SafeAreaView>
         </BottomSheetModal>
     }
+    // Image picker
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.5,
+        });
+
+        if (!result.canceled) {
+            // @ts-ignore
+            const split = result.assets[0].uri.split('/')
+            const fileName = split[split.length - 1]
+            const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+            const profilPic = {
+                type: 'image/' + fileExtension,
+                name: fileName,
+                //uri: Platform.OS === 'android' ? result.uri : result.uri.replace('file://', ''),
+                // @ts-ignore
+                uri: result.assets[0].uri
+            };
+
+            let formData = new FormData();
+            // @ts-ignore
+            formData.append("file", profilPic);
+            dispatch(saveProfilPicture(formData));
+        }
+    };
     const borderTopRadius = 33;
     return (
-        <View style={{backgroundColor: '#eaeaea', flex: 1, height: height}}>
+        <View style={{backgroundColor: '#eaeaea', flex: 1, height}}>
 
             <SafeAreaView style={{flex: 1}}>
                 <View style={{paddingVertical: 10, alignItems: 'center', backgroundColor: '#eaeaea'}}>
-                    <Avatar
-                        size={height<670? 45:80}
-                        rounded
-                        source={require("../assets/images/photoprofil.png")}
-                        containerStyle={{
-                            borderColor: 'grey',
-                            borderStyle: 'solid',
-                            borderWidth: 1,
-                        }}
-                    />
-                    <Badge
-                        value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
-                        badgeStyle={styles.pencilContainer}
-                    />
 
+                    <ProfilAvatar
+                        size={height < 670 ? 45 : 80}
+                        key={account.imageUrl}
+                        title={account?.firstName?.charAt(0)}
+                        imageUrl={account.imageUrl}
+                        badge={{styles: styles.pencilContainer}}
+                        onPress={pickImage}
+                    />
                     <Text style={{
                         textAlign: 'center',
                         marginTop: 5,
@@ -407,11 +426,16 @@ export default function ProfilScreen({navigation}) {
                     }}>{`${account?.firstName} ${account?.lastName}`}</Text>
                     <Text style={{textAlign: 'center', marginBottom: 4, fontSize: 12}}>+237 691 380 458</Text>
                 </View>
-                <View style={{backgroundColor: 'white',flex: 1,borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}>
+                <View style={{
+                    backgroundColor: 'white',
+                    flex: 1,
+                    borderTopLeftRadius: borderTopRadius,
+                    borderTopRightRadius: borderTopRadius
+                }}>
                     <FlatList
                         data={menuData}
-                        style={{borderTopLeftRadius: borderTopRadius,borderTopRightRadius: borderTopRadius}}
-                        renderItem={({ item }) => {
+                        style={{borderTopLeftRadius: borderTopRadius, borderTopRightRadius: borderTopRadius}}
+                        renderItem={({item}) => {
                             return <View style={{backgroundColor: 'transparent'}}>
                                 <Text style={styles.titleMenu}>{item.nameMenu}</Text>
                                 <FlatList
@@ -425,12 +449,11 @@ export default function ProfilScreen({navigation}) {
 
                 </View>
 
-            {getAccountModal()}
+                {getAccountModal()}
             </SafeAreaView>
         </View>
     )
 }
-
 
 const styles = StyleSheet.create({
     titleMenu: {

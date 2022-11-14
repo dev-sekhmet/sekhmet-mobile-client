@@ -26,7 +26,7 @@ const AdminHomeScreen = ({navigation}) => {
     }
 
     return (
-        <View style={styles.admincontainer}>
+        <View style={styles.adminContainer}>
             <View style={{flexDirection: "row", backgroundColor: 'transparent'}}>
                 <TouchableOpacity style={styles.card}>
                     <View style={[styles.fontCommon, {backgroundColor: '#fff6ee'}]}>
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    admincontainer: {
+    adminContainer: {
         flex: 1,
         backgroundColor: '#F9F8FD'
     },

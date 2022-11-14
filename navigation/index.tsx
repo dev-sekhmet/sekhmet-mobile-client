@@ -7,14 +7,20 @@ import {FontAwesome, MaterialIcons} from '@expo/vector-icons';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {DarkTheme, DefaultTheme, NavigationContainer} from '@react-navigation/native';
 import * as React from 'react';
-import {createContext, useEffect, useState} from 'react';
-import {Dimensions, Pressable, View} from 'react-native';
-import useColorScheme from '../hooks/useColorScheme';
+import {useEffect, useState} from 'react';
+import {Pressable, View} from 'react-native';
 import ModalScreen from '../screens/ModalScreen';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import HomeScreen from '../screens/HomeScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
-import {ChatParamList, InputPhoneParamList, ProductParamList,} from '../types';
+import {
+    AddMessagesType,
+    ChatParamList,
+    InputPhoneParamList,
+    ProductParamList,
+    SetUreadMessagesType,
+    ConversationParam,
+} from '../types';
 import LinkingConfiguration from './LinkingConfiguration';
 import MessagesScreen from "../screens/MessagesScreen";
 import ProfilScreen from "../screens/ProfilScreen";
@@ -31,24 +37,46 @@ import {useAppDispatch, useAppSelector} from '../api/store';
 import {
     getOnBoarding,
     getSession,
-    getTwilioToken, onRefreshSuccess,
+    getTwilioToken,
+    onRefreshSuccess,
     refreshTwilioToken
 } from "../api/authentification/authentication.reducer";
-import {Searchbar} from 'react-native-paper';
-import {onPerformSearchQuery} from "../api/search/search.reducer";
-import {Client} from "@twilio/conversations";
+import {Client, Conversation, Message, Participant} from "@twilio/conversations";
 import {hasAnyAuthority} from "../components/PrivateRoute";
 import {AUTHORITIES} from "../constants/constants";
 import AddOrModifyProductScreen from "../screens/admin/AddOrModifyProductScreen";
-import SearchWidget from "../components/SearchWidget";
-
-const width = Dimensions.get('screen').width;
-const height = Dimensions.get('screen').height;
-
-export const ChatContext = createContext({});
+import SearchHidableBar from "../components/SearchHidableBar";
+import CreateConversationScreen from "../screens/conversartion/CreateConversationScreen";
+import {Text} from "../components/Themed";
+import ConversationProfileSreen from "../screens/conversartion/ConversationProfileSreen";
+import Toast from "react-native-toast-message";
+import {handlePromiseRejection, SetParticipantsType, updateConvoList, updateTypingIndicator} from "../shared/helpers";
+import {addNotifications} from "../api/notification/notification.reducer";
+import {endTyping, startTyping} from "../api/typing-data/typing-data.reducer";
+import {getConversationParticipants} from "../api/reducer.utils";
+import {updateParticipants} from "../api/participants/participants.reducer";
+import {listConversations, removeConversation} from "../api/convos/convos.reducer";
+import {addMessages, removeMessages} from "../api/message-list/message-list.reducer";
+import {updateUnreadMessages} from "../api/unread-message/unread-messages.reducer";
+import {updateCurrentConversation} from "../api/current-conv/current-conv.reducer";
+import ConversationAddParticipantsScreen from "../screens/conversartion/ConversationAddParticipantsScreen";
 
 export default function Navigation({colorScheme}) {
+    const notifications = useAppSelector(state => state.notifications);
+    useEffect(() => {
+        if (!notifications.length) {
+            return;
+        }
+        notifications.forEach(notification =>
+            Toast.show({
+                type: notification.type,
+                text1: notification.title,
+                position: 'bottom',
+                text2: notification.message
+            })
+        );
 
+    }, [notifications]);
     return (
         <NavigationContainer
             linking={LinkingConfiguration}
@@ -65,6 +93,7 @@ export default function Navigation({colorScheme}) {
 // const Stack = createNativeStackNavigator<RootStackParamList>();
 const Stack = createStackNavigator();
 const MsgStack = createStackNavigator<ChatParamList>();
+const ConversationStack = createStackNavigator<ConversationParam>();
 const ProductStack = createStackNavigator<ProductParamList>();
 const InputPhoneStack = createStackNavigator<InputPhoneParamList>();
 
@@ -97,26 +126,159 @@ function RootNavigator() {
         dispatch(getTwilioToken());
         if (twilioToken) {
             // const client = new Client(twilioToken, {logLevel: "debug"}).on('stateChanged', (state) => {
-            const client = new Client(twilioToken).on('stateChanged', (state) => {
+            const client = new Client(twilioToken).addListener('stateChanged', (state) => {
                 console.log("stateChanged", state);
                 if (state === 'initialized') {
                     setTwilioClient(client);
-                    console.log("Init Good");
+
+                    client.addListener("conversationAdded", async (conversation: Conversation) => {
+                        conversation.addListener("typingStarted", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, startTyping), addNotifications);
+                        });
+
+                        conversation.addListener("typingEnded", (participant) => {
+                            handlePromiseRejection(() => updateTypingIndicator(participant, conversation.sid, client.user, endTyping), addNotifications);
+                        });
+
+                        handlePromiseRejection(async () => {
+                            if (conversation.status === "joined") {
+                                console.log("conversationJoined", conversation.sid);
+                                const result = await getConversationParticipants(conversation);
+                                dispatch(updateParticipants(
+                                    {
+                                        channelSid: conversation.sid,
+                                        participants: result
+                                    }
+                                ));
+                            }
+                            updateConvoList(
+                                client,
+                                conversation,
+                                listConversations,
+                                addMessages,
+                                updateUnreadMessages
+                            );
+                        }, addNotifications);
+
+                    });
+                    client.addListener("conversationRemoved", (conversation: Conversation) => {
+                        console.log("conversationRemoved")
+                        dispatch(updateCurrentConversation(""));
+                        handlePromiseRejection(() => {
+                            dispatch(removeConversation(conversation.sid));
+                            dispatch(updateParticipants(
+                                {
+                                    channelSid: conversation.sid,
+                                    participants: []
+                                }
+                            ));
+                        }, addNotifications);
+                    });
+                    client.addListener("messageAdded", (event: Message) => {
+                        addMessage(event, addMessages, updateUnreadMessages);
+                    });
+
+                    client.addListener("participantLeft", (participant) => {
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantUpdated", (event) => {
+                        // console.log("participantUpdated", event.participant.attributes);
+                        handlePromiseRejection(() => handleParticipantsUpdate(event.participant, updateParticipants), addNotifications);
+                    });
+                    client.addListener("participantJoined", (participant) => {
+                        // console.log("participantJoined", participant.attributes);
+                        handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
+                    });
+
+
+                    client.addListener("conversationUpdated", ({conversation, updateReasons}) => {
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageUpdated", ({message}) => {
+                        handlePromiseRejection(() => updateConvoList(
+                            client,
+                            message.conversation,
+                            listConversations,
+                            addMessages,
+                            updateUnreadMessages
+                        ), addNotifications);
+                    });
+
+                    client.addListener("messageRemoved", (message) => {
+                        handlePromiseRejection(() => dispatch(removeMessages(
+                            {
+                                channelSid: message.conversation.sid,
+                                messageSid: [message]
+                            }
+                        )), addNotifications);
+                    });
+
                     client.addListener("tokenExpired", () => {
                         console.log("Token expired");
                         refreshingTwilioToken();
                     });
                 }
+
                 if (state === 'failed') {
                     refreshingTwilioToken();
                 }
             });
-            console.log(account);
         }
         return () => {
             twilioClient?.removeAllListeners();
         }
     }, [isAuthenticated, refreshSuccess]);
+
+    async function handleParticipantsUpdate(
+        participant: Participant,
+        updateParticipants: SetParticipantsType
+    ) {
+        const result = await getConversationParticipants(participant.conversation);
+        dispatch(updateParticipants({
+            channelSid: participant.conversation.sid,
+            participants: result
+        }));
+    }
+
+
+
+    function addMessage(
+        message: Message,
+        addMessages: AddMessagesType,
+        updateUnreadMessages: SetUreadMessagesType,
+    ) {
+        //transform the message and add it to redux
+        handlePromiseRejection(() => {
+            /*            if (sidRef.current === message.conversation.sid) {
+                            message.conversation.updateLastReadMessageIndex(message.index);
+                        }*/
+            dispatch(addMessages({
+                channelSid: message.conversation.sid,
+                messages: [message]
+            }));
+            loadUnreadMessagesCount(message.conversation, updateUnreadMessages);
+        }, addNotifications);
+    }
+
+    async function loadUnreadMessagesCount(
+        convo: Conversation,
+        updateUnreadMessages: SetUreadMessagesType
+    ) {
+        const count = await convo.getUnreadMessagesCount();
+        dispatch(updateUnreadMessages(
+            {
+                channelUniqId: convo.sid,
+                unreadCount: count ?? 0
+            }
+        ));
+    }
 
 
     useEffect(() => {
@@ -124,7 +286,13 @@ function RootNavigator() {
         dispatch(getOnBoarding());
     }, []);
 
-
+    const gotToConvProfil = (sid: string, navigation) => {
+        navigation.navigate("ConversationProfile", {
+            clickedConversation: {
+                sid
+            }
+        });
+    };
     return (
         onBoardingFinish ?
             account?.firstName && account?.lastName && account?.email ?
@@ -134,12 +302,33 @@ function RootNavigator() {
                         {props => <BottomTabNavigator twilioClient={twilioClient} {...props} />}
                     </Stack.Screen>
                     <Stack.Screen name="NotFound" component={NotFoundScreen} options={{title: 'Oops!'}}/>
+                    <ConversationStack.Screen name="CreateConversation" component={CreateConversationScreen} options={({route}) => ({
+                        title: route.params.title,
+                        headerBackTitle: 'Messages'
+                    })}/>
+
+                    <ConversationStack.Screen name="ConversationAddParticipants" component={ConversationAddParticipantsScreen} options={({route}) => ({
+                        title: "Ajout de Participants",
+                        headerBackTitle: ''
+                    })}/>
+                    <MsgStack.Screen name="ConversationProfile"
+                                     options={({route}) => ({
+                                         sid: route.params.clickedConversation.sid,
+                                         title: '',
+                                         headerBackTitle: 'Messages'
+                                     })}>
+                        {props => <ConversationProfileSreen twilioClient={twilioClient} {...props} />}
+                    </MsgStack.Screen>
                     <Stack.Group screenOptions={{presentation: 'modal'}}>
                         <Stack.Screen name="Modal" component={ModalScreen}/>
                     </Stack.Group>
                     <MsgStack.Screen name="Chat"
-                                     options={({route}) => ({
-                                         title: route.params.clickedConversation.name,
+                                     options={({route, navigation}) => ({
+                                         headerTitle: () =>
+                                             <Pressable
+                                                 onPress={() => gotToConvProfil(route.params.clickedConversation.sid, navigation)}>
+                                                 <Text>{route.params.clickedConversation.name}</Text>
+                                             </Pressable>,
                                          headerBackTitle: 'Messages'
                                      })}>
                         {props => <ChatScreen twilioClient={twilioClient} {...props} />}
@@ -199,6 +388,27 @@ function RootNavigator() {
 }
 
 
+const getRightView = (onChangeSearch) => {
+    return <View style={{flexDirection: 'row'}}>
+
+        <SearchHidableBar onChangeSearch={onChangeSearch} />
+        <Pressable
+            onPress={() => {
+            }}
+            style={({pressed}) => ({
+                opacity: pressed ? 0.5 : 1,
+            })}>
+            <MaterialIcons
+                name="more-vert"
+                size={25}
+                color="grey"
+                style={{marginRight: 15, fontWeight: 'bold'}}
+            />
+        </Pressable>
+    </View>;
+}
+
+
 /**
  * A bottom tab navigator displays tab buttons on the bottom of the display to switch screens.
  * https://reactnavigation.org/docs/bottom-tab-navigator
@@ -206,12 +416,7 @@ function RootNavigator() {
 const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
-    const colorScheme = useColorScheme();
-    const dispatch = useAppDispatch();
-    const onChangeSearch = query => {
-        dispatch(onPerformSearchQuery(query))
-    };
-
+    const unreadMessages = useAppSelector(state => state.unreadMessages);
     return (
         <BottomTab.Navigator
             initialRouteName="Home"
@@ -240,23 +445,8 @@ function BottomTabNavigator({twilioClient}) {
 
                     tabBarLabelPosition: 'below-icon',
                     tabBarIcon: ({color}) => <TabBarIcon name="home" color={color}/>,
-                    headerRight: () =>  <View style={{flexDirection: 'row'}}>
-                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true} />
-                        <Pressable
-                            onPress={() => {
-                            }}
-                            style={({pressed}) => ({
-                                opacity: pressed ? 0.5 : 1,
-                            })}>
-                            <MaterialIcons
-                                name="more-vert"
-                                size={25}
-                                color="grey"
-                                style={{marginRight: 15, fontWeight: 'bold'}}
-                            />
-                        </Pressable>
-
-                    </View>
+                    headerRight: () => getRightView((search) => console.log('Search', {search})
+                    )
                 })}
             />
             <BottomTab.Screen
@@ -264,23 +454,10 @@ function BottomTabNavigator({twilioClient}) {
                 options={({route, navigation}) => ({
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
-                    tabBarBadge: 5,
-                    headerRight: () => <View style={{flexDirection: 'row'}}>
-                        <SearchWidget onChangeSearch={onChangeSearch} useLoop={true}/>
-                        <Pressable
-                            onPress={() => {
-                            }}
-                            style={({pressed}) => ({
-                                opacity: pressed ? 0.5 : 1,
-                            })}>
-                            <MaterialIcons
-                                name="more-vert"
-                                size={25}
-                                color="grey"
-                                style={{marginRight: 15, fontWeight: 'bold'}}
-                            />
-                        </Pressable>
-                    </View>,
+                    tabBarBadge: unreadMessages.reduce((accumulator, object) => {
+                        return accumulator + object.unreadCount;
+                    }, 0),
+                    headerRight: () => getRightView((search) => console.log('Search', {search})),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
             >

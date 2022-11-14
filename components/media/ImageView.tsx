@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Image, Pressable, StyleSheet, View} from "react-native";
 import SekhmetActivityIndicator from "../SekhmetActivityIndicator";
 
@@ -11,10 +11,10 @@ const ImageView = ({uri, style, navigator}) => {
         });
     }
 
-    const onLoading = (value, lable) => {
+    /*const onLoading = (value, lable) => {
         console.log(value, lable);
         setLoading(value);
-    }
+    }*/
 
     return (
         <View>
@@ -22,8 +22,8 @@ const ImageView = ({uri, style, navigator}) => {
                 onPress={showFullScreen}>
                 <Image style={[style, {display: loading? 'none':'flex'}]}
                        source={{uri}}
-                       onLoadStart={() => onLoading(true, 'onLoadStart')}
-                       onLoadEnd={() => onLoading(false, 'onLoadEnd')}
+/*                       onLoadStart={() => onLoading(true, 'Start')}
+                       onLoadEnd={() => onLoading(false, 'End')}*/
                 />
             </Pressable>
             {loading && <SekhmetActivityIndicator size="small" />}

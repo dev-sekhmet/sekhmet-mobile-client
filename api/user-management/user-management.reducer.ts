@@ -19,8 +19,8 @@ const apiUrl = 'users';
 const adminUrl = '/admin/users';
 // Async Actions
 
-export const getUsers = createAsyncThunk('userManagement/fetch_users', async ({ page, size, sort }: IQueryParams) => {
-  const requestUrl = `${apiUrl}${sort ? `?page=${page}&size=${size}&sort=${sort}` : ''}`;
+export const getUsers = createAsyncThunk('userManagement/fetch_users', async ({ page, size, sort, search }: IQueryParams) => {
+  const requestUrl = `${apiUrl}/search/${sort ? `?page=${page}&size=${size}&sort=${sort}&search=${search}` : ''}`;
   return axiosInstance.get<IUser[]>(requestUrl);
 });
 
