@@ -25,7 +25,7 @@ const ProfilAvatar = (props) => {
             rounded
             {...props}
             title={props.title?.charAt(0).toUpperCase()}
-            source={{uri: props.imageUrl ? `${axiosInstance.defaults.baseURL}/${props.imageUrl}?access_token=${token}` : 'null'}}
+            source={{uri: props.imageUrl ? `${axiosInstance.defaults.baseURL}/${props.imageUrl}?access_token=${token}` : undefined}}
             containerStyle={styles.profilAvatar}>
             {props.badge && <Badge
                 value={<FontAwesome style={{color: 'white',}} size={10} name="pencil"/>}
@@ -40,7 +40,8 @@ const styles = StyleSheet.create({
     profilAvatar: {
         borderColor: 'grey',
         borderStyle: 'solid',
-        borderWidth: 1
+        borderWidth: 1,
+        backgroundColor: 'grey',
     }
 });
 

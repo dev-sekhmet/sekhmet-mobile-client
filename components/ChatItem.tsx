@@ -111,7 +111,7 @@ export default function ChatItem({conversation, navigation, lastMessage, unreadM
         <Pressable onPress={onPress} style={styles.container}>
             <ProfilAvatar
                 size={60}
-                key={account.imageUrl}
+                key={imageUrl}
                 title={friendlyName.charAt(0)}
                 imageUrl={imageUrl}
             />

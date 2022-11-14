@@ -169,7 +169,7 @@ export default function ProfilScreen({navigation}) {
         return (
             <ListItem
                 bottomDivider
-                onPress={() => action(item)}>
+                onPress={() => action(item)} hasTVPreferredFocus={undefined} tvParallaxProperties={undefined}>
                 <Icon tvParallaxProperties={false} color={item.color} name={item.icon}/>
                 <ListItem.Content>
                     <ListItem.Title>{item.title}</ListItem.Title>
@@ -384,9 +384,9 @@ export default function ProfilScreen({navigation}) {
             quality: 0.5,
         });
 
-        if (!result.cancelled) {
+        if (!result.canceled) {
             // @ts-ignore
-            const split = result.uri.split('/')
+            const split = result.assets[0].uri.split('/')
             const fileName = split[split.length - 1]
             const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
             const profilPic = {
@@ -394,7 +394,7 @@ export default function ProfilScreen({navigation}) {
                 name: fileName,
                 //uri: Platform.OS === 'android' ? result.uri : result.uri.replace('file://', ''),
                 // @ts-ignore
-                uri: result.uri
+                uri: result.assets[0].uri
             };
 
             let formData = new FormData();

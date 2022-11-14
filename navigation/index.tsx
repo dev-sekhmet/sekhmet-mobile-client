@@ -182,11 +182,11 @@ function RootNavigator() {
                         handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
                     });
                     client.addListener("participantUpdated", (event) => {
-                        console.log("participantUpdated", event.participant.attributes);
+                        // console.log("participantUpdated", event.participant.attributes);
                         handlePromiseRejection(() => handleParticipantsUpdate(event.participant, updateParticipants), addNotifications);
                     });
                     client.addListener("participantJoined", (participant) => {
-                        console.log("participantJoined", participant.attributes);
+                        // console.log("participantJoined", participant.attributes);
                         handlePromiseRejection(() => handleParticipantsUpdate(participant, updateParticipants), addNotifications);
                     });
 
@@ -272,7 +272,6 @@ function RootNavigator() {
         updateUnreadMessages: SetUreadMessagesType
     ) {
         const count = await convo.getUnreadMessagesCount();
-        console.log("getUnreadMessagesCount", count);
         dispatch(updateUnreadMessages(
             {
                 channelUniqId: convo.sid,
@@ -417,6 +416,7 @@ const getRightView = (onChangeSearch) => {
 const BottomTab = createBottomTabNavigator();
 
 function BottomTabNavigator({twilioClient}) {
+    const unreadMessages = useAppSelector(state => state.unreadMessages);
     return (
         <BottomTab.Navigator
             initialRouteName="Home"
@@ -454,7 +454,9 @@ function BottomTabNavigator({twilioClient}) {
                 options={({route, navigation}) => ({
                     title: 'Messages',
                     tabBarLabelPosition: 'below-icon',
-                    tabBarBadge: 5,
+                    tabBarBadge: unreadMessages.reduce((accumulator, object) => {
+                        return accumulator + object.unreadCount;
+                    }, 0),
                     headerRight: () => getRightView((search) => console.log('Search', {search})),
                     tabBarIcon: ({color}) => <TabBarIcon name="comments" color={color}/>
                 })}
